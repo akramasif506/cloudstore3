@@ -31,8 +31,10 @@ async function getUserProducts(userId: string): Promise<Product[]> {
   }
   try {
     const productsRef = ref(db, 'products');
-    const userProductsQuery = query(productsRef, orderByChild('seller/id'), equalTo(userId));
-    const snapshot = await get(userProductsQuery);
+    // Note: The orderByChild query requires a .indexOn rule in Firebase.
+    // To avoid this, we fetch all products and filter on the server.
+    // This is less efficient for very large datasets but avoids config changes.
+    const snapshot = await get(productsRef);
     if (snapshot.exists()) {
       const productsData = snapshot.val();
       const allProducts: Product[] = Object.keys(productsData).map(key => ({
@@ -40,8 +42,8 @@ async function getUserProducts(userId: string): Promise<Product[]> {
         id: key,
         price: Number(productsData[key].price) || 0,
       }));
-      // Only show active products on public profile pages
-      return allProducts.filter(p => p.status === 'active');
+      // Filter by seller ID and show only active products on public profile
+      return allProducts.filter(p => p.seller.id === userId && p.status === 'active');
     }
     return [];
   } catch (error) {
