@@ -50,7 +50,6 @@ export function LoginForm() {
         description: "Welcome back!",
       });
       const redirectUrl = searchParams.get('redirect') || '/';
-      // Use router.replace for a cleaner history stack
       router.replace(redirectUrl);
     } else {
       toast({
@@ -63,7 +62,7 @@ export function LoginForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="email"

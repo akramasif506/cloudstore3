@@ -57,23 +57,23 @@ function StatusBadge({ status }: { status: Order['status'] }) {
 export function MyOrdersClient() {
     const { user } = useAuth();
     const [orders, setOrders] = useState<Order[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
 
     useEffect(() => {
         if (user?.id) {
-            setLoading(true);
+            setIsLoading(true);
             getMyOrders(user.id)
                 .then(setOrders)
                 .catch(console.error)
-                .finally(() => setLoading(false));
+                .finally(() => setIsLoading(false));
         } else {
             setOrders([]);
-            setLoading(false);
+            setIsLoading(false);
         }
     }, [user]);
 
-    if (loading) {
+    if (isLoading) {
         return (
             <div className="flex justify-center items-center p-20">
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -85,7 +85,10 @@ export function MyOrdersClient() {
         return (
             <Card className="flex flex-col items-center justify-center text-center py-20">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Frown /> You're Not Logged In</CardTitle>
+                    <div className="mx-auto bg-muted rounded-full p-4 w-fit mb-4">
+                        <Frown className="h-12 w-12 text-muted-foreground" />
+                    </div>
+                    <CardTitle>You're Not Logged In</CardTitle>
                     <CardDescription>You must be logged in to view your orders.</CardDescription>
                 </CardHeader>
                 <CardContent>

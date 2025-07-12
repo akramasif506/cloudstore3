@@ -16,12 +16,12 @@ import { Separator } from '@/components/ui/separator';
 export function MyListingsClient() {
   const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     if (user?.id) {
-      setLoading(true);
+      setIsLoading(true);
       getMyListings(user.id)
         .then(userProducts => {
           setProducts(userProducts);
@@ -31,19 +31,16 @@ export function MyListingsClient() {
           setProducts([]);
         })
         .finally(() => {
-          setLoading(false);
+          setIsLoading(false);
         });
     } else {
-      // If there's no user, we might not need to set loading to false
-      // if the main layout is handling the auth loading state.
-      // However, for components with their own data fetching, it's safer.
       setProducts([]);
-      setLoading(false);
+      setIsLoading(false);
     }
   }, [user]);
 
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center p-20">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -55,7 +52,10 @@ export function MyListingsClient() {
      return (
         <Card className="flex flex-col items-center justify-center text-center py-20">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Frown /> You're Not Logged In</CardTitle>
+             <div className="mx-auto bg-muted rounded-full p-4 w-fit mb-4">
+               <Frown className="h-12 w-12 text-muted-foreground" />
+             </div>
+            <CardTitle>You're Not Logged In</CardTitle>
             <CardDescription>You must be logged in to view your listings.</CardDescription>
           </CardHeader>
           <CardContent>
