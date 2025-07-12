@@ -29,27 +29,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     
     const unsubscribeAuth = onAuthStateChanged(auth, (currentFirebaseUser) => {
-      setLoading(true);
-      if (currentFirebaseUser) {
-        setFirebaseUser(currentFirebaseUser);
-        // DB fetch will be triggered by the other effect. Loading will be set to false there.
-      } else {
-        setFirebaseUser(null);
-        setUser(null);
-        setLoading(false); // No user, so loading is complete.
-      }
+      setFirebaseUser(currentFirebaseUser);
+      // The loading state will be managed by the database listener effect.
     });
 
     return () => unsubscribeAuth();
   }, []);
 
   useEffect(() => {
-    // This effect handles fetching the user profile from the database.
+    setLoading(true); // Start loading whenever the firebaseUser changes.
     if (firebaseUser) {
         if (!db) {
             console.warn("Firebase DB not configured. Cannot fetch user profile.");
             setUser(null);
-            setLoading(false); // Stop loading if DB is not available.
+            setLoading(false);
             return;
         }
         const userRef = ref(db, `users/${firebaseUser.uid}`);
@@ -61,16 +54,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 console.warn(`User profile for UID ${firebaseUser.uid} not found in database.`);
                 setUser(null); 
             }
-            // This is the final step, so now we can set loading to false.
-            setLoading(false);
+            setLoading(false); // Final step, loading is complete.
         }, (error) => {
             console.error("Error fetching user profile:", error);
             setUser(null);
             setLoading(false); // Stop loading on error.
         });
 
-        // Cleanup the database listener when the firebaseUser changes or component unmounts.
         return () => off(userRef, 'value', onValueChange);
+    } else {
+      // No firebaseUser, so we are not logged in.
+      setUser(null);
+      setLoading(false);
     }
   }, [firebaseUser]);
 

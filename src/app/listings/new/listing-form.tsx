@@ -24,20 +24,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Sparkles } from 'lucide-react';
+import { Loader2, Sparkles, Frown } from 'lucide-react';
 import { suggestListingDetails } from '@/ai/flows/suggest-listing-details';
 import { useToast } from "@/hooks/use-toast";
 import { createListing } from './actions';
 import { listingSchema } from '@/lib/schemas';
 import { useAuth } from '@/context/auth-context';
 import { useRouter } from 'next/navigation';
-import { Frown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Link from 'next/link';
 
 const isBrowser = typeof window !== 'undefined';
 
-// Client schema handles the FileList for the image.
 const clientListingSchema = listingSchema.extend({
   productImage: isBrowser
     ? z.instanceof(FileList).refine((files) => files?.length === 1, 'Product image is required.')
@@ -148,7 +146,6 @@ export function ListingForm() {
     setIsSubmitting(true);
 
     const formData = new FormData();
-    // Append user ID to form data
     formData.append('userId', user.id);
 
     for (const key in values) {
@@ -190,6 +187,34 @@ export function ListingForm() {
   
   const selectedCategory = form.watch('category');
   const productImageRef = form.register("productImage");
+
+  if (authLoading) {
+    return (
+      <div className="flex justify-center items-center p-20">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Card className="flex flex-col items-center justify-center text-center py-20">
+        <CardHeader>
+          <div className="mx-auto bg-muted rounded-full p-4 w-fit mb-4">
+            <Frown className="h-12 w-12 text-muted-foreground" />
+          </div>
+          <CardTitle>You're Not Logged In</CardTitle>
+          <CardDescription>You must be logged in to create a new listing.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={() => router.push('/login?redirect=/listings/new')}>
+            Go to Login Page
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
 
   return (
     <Form {...form}>
