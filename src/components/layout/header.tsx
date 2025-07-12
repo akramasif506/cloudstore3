@@ -42,6 +42,11 @@ export function Header() {
           <Link href="/" className="transition-colors hover:text-foreground/80 text-foreground/60">
             Home
           </Link>
+          {user && (
+            <Link href="/listings/new" className="transition-colors hover:text-foreground/80 text-foreground/60">
+              Sell
+            </Link>
+          )}
         </nav>
 
         <div className="flex flex-1 items-center justify-end space-x-2">
@@ -53,15 +58,6 @@ export function Header() {
               className="pl-9"
             />
           </div>
-
-          {user && (
-            <Button variant="outline" asChild>
-                <Link href="/listings/new">
-                    <FilePlus2 className="mr-2 h-4 w-4" />
-                    Sell
-                </Link>
-            </Button>
-          )}
 
           <Button variant="ghost" size="icon" asChild>
             <Link href="/cart" className="relative">
