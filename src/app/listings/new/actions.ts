@@ -2,37 +2,18 @@
 'use server';
 
 import { z } from 'zod';
-import admin from 'firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
 import { listingSchema } from '@/lib/schemas';
 import { redirect } from 'next/navigation';
 import type { User } from '@/lib/types';
+import { adminDb, adminStorage } from '@/lib/firebase-admin';
 
 // This action now requires a userId
 const listingActionSchema = listingSchema.extend({
   userId: z.string().min(1, { message: 'User must be logged in.' }),
 });
 
-function initializeAdmin() {
-  if (admin.apps.length) {
-    return admin.app();
-  }
-  return admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    }),
-    databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  });
-}
-
 export async function createListing(formData: FormData) {
-  const adminApp = initializeAdmin();
-  const adminDb = adminApp.database();
-  const adminStorage = adminApp.storage();
-
   const rawFormData = Object.fromEntries(formData.entries());
 
   const validatedFields = listingActionSchema.safeParse({
