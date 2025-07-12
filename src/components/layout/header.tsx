@@ -43,11 +43,9 @@ export function Header() {
           <Link href="/" className="transition-colors hover:text-foreground/80 text-foreground">
             Home
           </Link>
-          {user && (
-            <Link href="/listings/new" className="transition-colors hover:text-foreground/80 text-foreground">
-              Sell
-            </Link>
-          )}
+          <Link href="/listings/new" className="transition-colors hover:text-foreground/80 text-foreground">
+            Sell
+          </Link>
         </nav>
 
         <div className="flex flex-1 items-center justify-end space-x-2">
