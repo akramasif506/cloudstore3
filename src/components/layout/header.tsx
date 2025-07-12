@@ -22,7 +22,7 @@ export function Header() {
         <div className="mr-4 flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <Leaf className="h-6 w-6 text-primary" />
-            <span className="font-bold font-headline text-lg">ReNest</span>
+            <span className="font-bold font-headline text-lg">CloudStore</span>
           </Link>
           <nav className="hidden items-center space-x-6 text-sm font-medium md:flex">
             <Link href="/" className="transition-colors hover:text-foreground/80 text-foreground/60">

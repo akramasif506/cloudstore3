@@ -8,7 +8,7 @@ export function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center space-x-2 mb-4 md:mb-0">
             <Leaf className="h-6 w-6 text-primary" />
-            <span className="font-bold font-headline text-lg">ReNest</span>
+            <span className="font-bold font-headline text-lg">CloudStore</span>
           </div>
           <nav className="flex space-x-6 text-sm text-muted-foreground">
             <Link href="#" className="hover:text-foreground">About</Link>
@@ -18,7 +18,7 @@ export function Footer() {
           </nav>
         </div>
         <div className="mt-8 text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} ReNest. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} CloudStore. All rights reserved.</p>
         </div>
       </div>
     </footer>

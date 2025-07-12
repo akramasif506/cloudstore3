@@ -6,7 +6,7 @@ import { Footer } from '@/components/layout/footer';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'ReNest - Buy and sell with trust',
+  title: 'CloudStore - A Akram Product',
   description: 'A marketplace for secondhand goods with an AI-powered listing assistant.',
 };
 
