@@ -1,3 +1,4 @@
+
 // src/app/test-user/test-user-client.tsx
 "use client";
 
@@ -5,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Beaker, ShieldAlert, UserCheck } from 'lucide-react';
 import type { User as FirebaseUser } from 'firebase/auth';
 import { LoginForm } from '@/app/login/login-form';
-import { useRouter } from 'next/navigation';
 
 interface TestUserClientProps {
     user: FirebaseUser | null;
@@ -17,11 +17,9 @@ interface TestUserClientProps {
 }
 
 export function TestUserClient({ user, profileResult }: TestUserClientProps) {
-    const router = useRouter();
-
     const handleLoginSuccess = () => {
         // Refresh the page to re-run server components and get new data
-        router.refresh();
+        window.location.reload();
     };
 
     return (
