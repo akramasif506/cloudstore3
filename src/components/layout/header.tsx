@@ -45,7 +45,7 @@ export function Header() {
             </Link>
              {user && (
               <Link href="/listings/new" className="transition-colors hover:text-foreground/80 text-foreground/60">
-                Add Product
+                Sell
               </Link>
             )}
           </nav>
