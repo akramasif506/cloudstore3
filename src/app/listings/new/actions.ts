@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 import { db, storage } from '@/lib/firebase';
-import { ref as dbRef, set, get, child } from 'firebase/database';
+import { ref as dbRef, set } from 'firebase/database';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
 import { listingSchema } from '@/lib/schemas';
@@ -18,6 +18,13 @@ export async function createListing(formData: FormData) {
   const userId = formData.get('userId') as string;
   const userName = formData.get('userName') as string;
   const userAvatarUrl = formData.get('userAvatarUrl') as string;
+
+  if (!userId || !userName || !userAvatarUrl) {
+    return {
+      success: false,
+      message: 'You must be logged in to create a listing. Your user details could not be found.',
+    };
+  }
 
   const rawFormData = Object.fromEntries(formData.entries());
   
@@ -72,7 +79,7 @@ export async function createListing(formData: FormData) {
       status: 'under_review', // All new products are under review
     };
     
-    // 3. Save to the new database path
+    // 3. Save to the database path
     const productPath = `/CloudStore/products/under_review/${currentDate}/${category}/${productId}`;
     await set(dbRef(db, productPath), newProductData);
 
