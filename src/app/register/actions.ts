@@ -38,7 +38,7 @@ export async function registerUser(values: z.infer<typeof registerSchema>) {
       gender: values.gender,
       createdAt: new Date().toISOString(),
       role: 'user', // Default role
-      profileImageUrl: `https://placehold.co/100x100.png?text=${values.name.charAt(0)}`
+      profileImageUrl: `https://placehold.co/100x100.png`
     });
 
     return { success: true, userId: user.uid };
