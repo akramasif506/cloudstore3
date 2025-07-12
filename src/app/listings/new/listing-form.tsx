@@ -27,11 +27,11 @@ import {
 import { Loader2, Sparkles, Frown, LogIn } from 'lucide-react';
 import { suggestListingDetails } from '@/ai/flows/suggest-listing-details';
 import { useToast } from "@/hooks/use-toast";
-import { createListing } from './actions';
 import { listingSchema } from '@/lib/schemas';
 import { useAuth } from '@/context/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
 const isBrowser = typeof window !== 'undefined';
 
@@ -52,6 +52,34 @@ const categories = {
   'Grocery': ['Snacks', 'Beverages', 'Pantry Staples'],
   'Other': ['Miscellaneous'],
 };
+
+async function createListing(formData: FormData) {
+  try {
+    const response = await fetch('/api/listings', {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: result.message || 'An error occurred.',
+        errors: result.errors,
+      };
+    }
+    
+    return { success: true, message: 'Listing submitted successfully!' };
+    
+  } catch (error) {
+    console.error('Error calling create listing API:', error);
+    if (error instanceof Error) {
+        return { success: false, message: `Failed to create listing: ${error.message}` };
+    }
+    return { success: false, message: 'An unknown error occurred while creating the listing.' };
+  }
+}
 
 export function ListingForm() {
   const [isSuggesting, setIsSuggesting] = useState(false);
@@ -141,7 +169,6 @@ export function ListingForm() {
     setIsSubmitting(true);
 
     const formData = new FormData();
-    formData.append('userId', user.id);
     
     for (const key in values) {
       if (key === 'productImage') {
@@ -157,6 +184,8 @@ export function ListingForm() {
     }
 
     const result = await createListing(formData);
+
+    setIsSubmitting(false);
 
     if (result?.success === false) {
       toast({
@@ -180,9 +209,9 @@ export function ListingForm() {
             title: "Listing Submitted!",
             description: "Your item is now under review by our team.",
          });
+         // Redirect on success
+         window.location.href = '/my-listings';
     }
-    
-    setIsSubmitting(false);
   };
   
   const selectedCategory = form.watch('category');

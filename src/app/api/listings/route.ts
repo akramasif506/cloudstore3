@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import type { User } from '@/lib/types';
 import { listingSchema } from '@/lib/schemas';
+import 'dotenv/config';
 
 // --- Firebase Admin Initialization ---
 function initializeAdmin() {
@@ -42,10 +43,6 @@ function initializeAdmin() {
   };
 }
 
-// --- Zod Schema for validation ---
-const apiListingSchema = listingSchema.extend({
-  productImage: z.instanceof(File),
-});
 
 // --- API Route Handler ---
 export async function POST(request: NextRequest) {
@@ -58,7 +55,8 @@ export async function POST(request: NextRequest) {
     storage = adminApp.storage;
   } catch (error) {
      console.error("Firebase Admin Init Error:", error);
-     return NextResponse.json({ message: "Server configuration error." }, { status: 500 });
+     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+     return NextResponse.json({ message: `Server configuration error: ${errorMessage}` }, { status: 500 });
   }
 
   const session = cookies().get('session')?.value;
