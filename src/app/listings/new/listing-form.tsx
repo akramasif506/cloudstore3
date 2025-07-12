@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { useForm, type FieldPath } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -56,7 +56,7 @@ const categories = {
 
 export function ListingForm() {
   const [isSuggesting, setIsSuggesting] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   const router = useRouter();
@@ -73,8 +73,7 @@ export function ListingForm() {
     },
   });
 
-  const { isSubmitting } = form.formState;
-  const isLoading = isSuggesting || isPending || isSubmitting;
+  const isLoading = isSuggesting || isSubmitting;
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -131,7 +130,7 @@ export function ListingForm() {
     }
   };
 
-  const onSubmit = (values: ClientListingSchema) => {
+  const onSubmit = async (values: ClientListingSchema) => {
     if (!user) {
       toast({
         variant: "destructive",
@@ -141,6 +140,8 @@ export function ListingForm() {
       router.push('/login');
       return;
     }
+
+    setIsSubmitting(true);
 
     const formData = new FormData();
     
@@ -154,28 +155,28 @@ export function ListingForm() {
     }
     formData.append('userId', user.id);
     
-    startTransition(async () => {
-      const result = await createListing(formData);
+    const result = await createListing(formData);
 
-      if (result?.success === false) {
-        toast({
-          variant: "destructive",
-          title: "Oh no! Something went wrong.",
-          description: result.message,
-        });
+    if (result?.success === false) {
+      toast({
+        variant: "destructive",
+        title: "Oh no! Something went wrong.",
+        description: result.message,
+      });
 
-        if (result.errors) {
-          for (const [field, messages] of Object.entries(result.errors)) {
-            if (messages) {
-                form.setError(field as FieldPath<ClientListingSchema>, {
-                    type: 'server',
-                    message: messages[0]
-                });
-            }
+      if (result.errors) {
+        for (const [field, messages] of Object.entries(result.errors)) {
+          if (messages) {
+              form.setError(field as FieldPath<ClientListingSchema>, {
+                  type: 'server',
+                  message: messages[0]
+              });
           }
         }
       }
-    });
+    }
+    
+    setIsSubmitting(false);
   };
   
   const selectedCategory = form.watch('category');
@@ -325,7 +326,7 @@ export function ListingForm() {
         />
         <Button type="submit" size="lg" className="w-full md:w-auto" disabled={isLoading}>
           {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          {isPending ? 'Creating Listing...' : 'Create Listing'}
+          {isSubmitting ? 'Creating Listing...' : 'Create Listing'}
         </Button>
       </form>
     </Form>
