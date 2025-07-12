@@ -53,6 +53,16 @@ export default async function Home({
     return categoryMatch && subcategoryMatch && priceMatch;
   });
 
+  let adProducts: Product[] = [];
+  if (filteredProducts.length === 0 && allProducts.length > 0) {
+    // If no products match filter, show a few other products as ads
+    // This simple logic takes up to 3 products that were NOT in the filtered list
+    adProducts = allProducts
+      .filter(p => !filteredProducts.some(fp => fp.id === p.id))
+      .slice(0, 3);
+  }
+
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
       <div className="lg:col-span-1">
@@ -61,7 +71,7 @@ export default async function Home({
         </div>
       </div>
       <div className="lg:col-span-3">
-        <ProductGrid products={filteredProducts} />
+        <ProductGrid products={filteredProducts} adProducts={adProducts} />
       </div>
     </div>
   );
