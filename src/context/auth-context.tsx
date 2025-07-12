@@ -28,17 +28,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     
-    // This listener handles the initial auth state check and any subsequent changes (login/logout).
     const unsubscribeAuth = onAuthStateChanged(auth, (currentFirebaseUser) => {
-      setLoading(true); // Always set loading to true when auth state might be changing.
+      setLoading(true);
       if (currentFirebaseUser) {
         setFirebaseUser(currentFirebaseUser);
-        // The profile fetching will happen in the next effect, which will set loading to false.
+        // DB fetch will be triggered by the other effect. Loading will be set to false there.
       } else {
-        // User is logged out.
         setFirebaseUser(null);
         setUser(null);
-        setLoading(false);
+        setLoading(false); // No user, so loading is complete.
       }
     });
 
@@ -46,36 +44,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // This effect is dedicated to fetching the user profile from the database when a firebaseUser exists.
+    // This effect handles fetching the user profile from the database.
     if (firebaseUser) {
         if (!db) {
             console.warn("Firebase DB not configured. Cannot fetch user profile.");
             setUser(null);
-            setLoading(false);
+            setLoading(false); // Stop loading if DB is not available.
             return;
         }
         const userRef = ref(db, `users/${firebaseUser.uid}`);
         
-        const unsubscribeDb = onValue(userRef, (snapshot) => {
+        const onValueChange = onValue(userRef, (snapshot) => {
             if (snapshot.exists()) {
                 setUser(snapshot.val() as AppUser);
             } else {
                 console.warn(`User profile for UID ${firebaseUser.uid} not found in database.`);
                 setUser(null); 
             }
-            // Critical: Set loading to false only after we have the profile data (or know it's missing).
+            // This is the final step, so now we can set loading to false.
             setLoading(false);
         }, (error) => {
             console.error("Error fetching user profile:", error);
             setUser(null);
-            setLoading(false);
+            setLoading(false); // Stop loading on error.
         });
 
-        // Cleanup the database listener when the component unmounts or firebaseUser changes.
-        return () => off(userRef, 'value', unsubscribeDb);
-    } else {
-        // If there's no firebaseUser, we're not waiting for a DB fetch, so loading is done.
-        setLoading(false);
+        // Cleanup the database listener when the firebaseUser changes or component unmounts.
+        return () => off(userRef, 'value', onValueChange);
     }
   }, [firebaseUser]);
 
@@ -83,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     if (auth) {
       await auth.signOut();
-      // onAuthStateChanged will handle setting user to null and loading to false.
+      // onAuthStateChanged will handle setting user to null.
     }
   };
   
