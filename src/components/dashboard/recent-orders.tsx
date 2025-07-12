@@ -59,7 +59,7 @@ export async function RecentOrders() {
                         <TableCell className="font-medium">#{order.id.substring(0, 8)}</TableCell>
                         <TableCell><Badge variant={order.status === 'Pending' ? 'secondary' : 'default'}>{order.status}</Badge></TableCell>
                         <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
-                        <TableCell className="text-right">Rs {order.total.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">Rs {typeof order.total === 'number' ? order.total.toFixed(2) : '0.00'}</TableCell>
                     </TableRow>
                 ))}
             </TableBody>
