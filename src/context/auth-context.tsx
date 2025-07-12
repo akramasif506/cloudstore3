@@ -35,14 +35,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const listener = onValue(userRef, (snapshot) => {
           const userData = snapshot.val();
           if (userData) {
-            setUser(userData as AppUser);
+            setUser({
+              ...userData,
+              // Ensure we have the latest photoURL from auth, as it's the source of truth
+              profileImageUrl: fbUser.photoURL || userData.profileImageUrl,
+            } as AppUser);
           } else {
             // This might happen if user record creation fails after auth creation
              setUser({
               id: fbUser.uid,
               name: fbUser.displayName || 'User',
               email: fbUser.email || '',
-              profileImageUrl: fbUser.photoURL || `https://placehold.co/100x100?text=${fbUser.email?.charAt(0) || 'U'}`,
+              profileImageUrl: fbUser.photoURL || `https://placehold.co/100x100`,
               createdAt: new Date().toISOString(),
             });
           }

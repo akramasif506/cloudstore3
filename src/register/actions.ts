@@ -22,7 +22,7 @@ export async function registerUser(values: z.infer<typeof registerSchema>) {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
     const user = userCredential.user;
-    const profileImageUrl = `https://placehold.co/100x100?text=${values.name.charAt(0)}`;
+    const profileImageUrl = `https://placehold.co/100x100`;
 
     // Update Firebase Auth profile
     await updateProfile(user, {
