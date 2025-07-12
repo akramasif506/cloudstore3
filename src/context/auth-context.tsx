@@ -6,7 +6,6 @@ import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { ref, onValue } from 'firebase/database';
 import { auth, db } from '@/lib/firebase';
 import type { User as AppUser } from '@/lib/types';
-import { Loader2 } from 'lucide-react';
 
 interface AuthContextType {
   user: AppUser | null;
@@ -60,8 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     if (auth) {
       await auth.signOut();
-      setUser(null);
-      setFirebaseUser(null);
+      // State updates will be triggered by onAuthStateChanged
     }
   };
   
@@ -69,13 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {loading ? (
-        <div className="flex justify-center items-center h-screen w-full">
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        </div>
-      ) : (
-        children
-      )}
+      {children}
     </AuthContext.Provider>
   );
 }
