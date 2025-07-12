@@ -31,25 +31,23 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
-        <div className="mr-4 flex">
-          <Link href="/" className="mr-6 flex items-center space-x-2">
-            <Leaf className="h-6 w-6 text-primary" />
-            <div>
-                <span className="font-bold font-headline text-lg">CloudStore</span>
-                <p className="text-xs text-muted-foreground -mt-1">A Akram Product</p>
-            </div>
+        <Link href="/" className="mr-6 flex items-center space-x-2">
+          <Leaf className="h-6 w-6 text-primary" />
+          <div>
+              <span className="font-bold font-headline text-lg">CloudStore</span>
+              <p className="text-xs text-muted-foreground -mt-1">A Akram Product</p>
+          </div>
+        </Link>
+        <nav className="flex items-center space-x-6 text-sm font-medium">
+          <Link href="/" className="transition-colors hover:text-foreground/80 text-foreground/60">
+            Home
           </Link>
-          <nav className="flex items-center space-x-6 text-sm font-medium">
-            <Link href="/" className="transition-colors hover:text-foreground/80 text-foreground/60">
-              Home
+            {user && (
+            <Link href="/listings/new" className="transition-colors hover:text-foreground/80 text-foreground/60">
+              Sell
             </Link>
-             {user && (
-              <Link href="/listings/new" className="transition-colors hover:text-foreground/80 text-foreground/60">
-                Sell
-              </Link>
-            )}
-          </nav>
-        </div>
+          )}
+        </nav>
 
         <div className="flex flex-1 items-center justify-end space-x-2">
           <div className="relative w-full max-w-sm">
