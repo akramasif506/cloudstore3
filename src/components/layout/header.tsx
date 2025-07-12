@@ -39,7 +39,7 @@ export function Header() {
                 <p className="text-xs text-muted-foreground -mt-1">A Akram Product</p>
             </div>
           </Link>
-          <nav className="hidden items-center space-x-6 text-sm font-medium md:flex">
+          <nav className="flex items-center space-x-6 text-sm font-medium">
             <Link href="/" className="transition-colors hover:text-foreground/80 text-foreground/60">
               Home
             </Link>
