@@ -25,16 +25,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let databaseSubscription: Unsubscribe | undefined;
 
     const authSubscription = onAuthStateChanged(auth, (fbUser) => {
-      // If a database listener exists, tear it down.
+      setFirebaseUser(fbUser);
       if (databaseSubscription) {
         databaseSubscription();
         databaseSubscription = undefined;
       }
-      
-      setFirebaseUser(fbUser);
 
       if (fbUser) {
-        // User is logged in. Start loading until we get their profile.
         setLoading(true);
         const userProfileRef = ref(db!, `users/${fbUser.uid}`);
         
@@ -42,12 +39,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (snapshot.exists()) {
             setUser(snapshot.val() as AppUser);
           } else {
-            // User exists in auth but not in DB. This is an inconsistent state.
-            // Log them out of the app state.
             setUser(null);
-            console.warn("User authenticated with Firebase but no database profile found.");
           }
-          // We have a definitive answer (or lack thereof), so we're done loading.
           setLoading(false);
         }, (error) => {
             console.error("Error fetching user profile:", error);
@@ -55,13 +48,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setLoading(false);
         });
       } else {
-        // User is logged out. Clear app state and stop loading.
         setUser(null);
         setLoading(false);
       }
     });
 
-    // Cleanup function for the main effect
     return () => {
         authSubscription();
         if (databaseSubscription) {
@@ -73,7 +64,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     if (auth) {
       await auth.signOut();
-      // onAuthStateChanged will handle clearing user state and db listeners.
     }
   };
   

@@ -9,18 +9,13 @@ import { Footer } from '@/components/layout/footer';
 import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider, useAuth } from '@/context/auth-context';
 import { Loader2 } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { CartProvider } from '@/context/cart-context';
 
 function AppContent({ children }: { children: React.ReactNode }) {
   const { loading } = useAuth();
-  const [isMounted, setIsMounted] = useState(false);
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted || loading) {
+  if (loading) {
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-background z-50">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
