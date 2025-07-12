@@ -1,6 +1,7 @@
 
 import { ProductFilters } from '@/components/products/product-filters';
 import { ProductGrid } from '@/components/products/product-grid';
+import { ProductSort } from '@/components/products/product-sort';
 import { db } from '@/lib/firebase';
 import type { Product } from '@/lib/types';
 import { get, ref } from 'firebase/database';
@@ -39,18 +40,33 @@ export default async function Home({
     subcategory?: string;
     minPrice?: string;
     maxPrice?: string;
+    sortBy?: string;
   };
 }) {
   const allProducts = await getProducts();
 
   const minPrice = searchParams?.minPrice ? Number(searchParams.minPrice) : 0;
   const maxPrice = searchParams?.maxPrice ? Number(searchParams.maxPrice) : Infinity;
+  const sortBy = searchParams?.sortBy || 'newest';
 
   const filteredProducts = allProducts.filter(product => {
     const categoryMatch = searchParams?.category ? product.category === searchParams.category : true;
     const subcategoryMatch = searchParams?.subcategory ? product.subcategory === searchParams.subcategory : true;
     const priceMatch = product.price >= minPrice && product.price <= maxPrice;
     return categoryMatch && subcategoryMatch && priceMatch;
+  });
+
+  // Sort products
+  filteredProducts.sort((a, b) => {
+    switch (sortBy) {
+      case 'price-asc':
+        return a.price - b.price;
+      case 'price-desc':
+        return b.price - a.price;
+      case 'newest':
+      default:
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
   });
 
   let adProducts: Product[] = [];
@@ -70,7 +86,8 @@ export default async function Home({
           <ProductFilters />
         </div>
       </div>
-      <div className="lg:col-span-3">
+      <div className="lg:col-span-3 space-y-6">
+        <ProductSort />
         <ProductGrid products={filteredProducts} adProducts={adProducts} />
       </div>
     </div>
