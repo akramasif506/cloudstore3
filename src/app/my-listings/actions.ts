@@ -1,24 +1,9 @@
 
 'use server';
 
-import type { Product, User } from '@/lib/types';
-import { get, ref, child } from 'firebase/database';
+import type { Product } from '@/lib/types';
+import { get, ref, query, orderByChild, equalTo } from 'firebase/database';
 import { db } from '@/lib/firebase';
-
-
-async function getCurrentUser(userId: string): Promise<User | null> {
-    if (!db) return null;
-    try {
-      const userSnapshot = await get(child(ref(db), `users/${userId}`));
-      if (userSnapshot.exists()) {
-        return userSnapshot.val() as User;
-      }
-      return null;
-    } catch (error) {
-      console.error('Error fetching current user:', error);
-      return null;
-    }
-}
 
 
 export async function getMyListings(userId: string): Promise<Product[]> {
@@ -27,39 +12,25 @@ export async function getMyListings(userId: string): Promise<Product[]> {
   }
   
   try {
-    const user = await getCurrentUser(userId);
-    if (!user || !user.mobileNumber) {
-        console.log("User or user mobile not found, cannot fetch listings.");
-        return [];
-    }
-
-    const userListingsRef = ref(db, user.mobileNumber);
-    const snapshot = await get(userListingsRef);
+    // We will query the main 'products' node to find all products by this user.
+    // This is more efficient and scalable than trying to traverse unknown user-specific paths.
+    const productsRef = ref(db, 'products');
+    const userProductsQuery = query(productsRef, orderByChild('seller/id'), equalTo(userId));
+    
+    const snapshot = await get(userProductsQuery);
     
     if (snapshot.exists()) {
       const data = snapshot.val();
-      const allProducts: Product[] = [];
-      
-      // The data is structured as {date: {category: {productId: product}}}
-      // We need to iterate through all of it.
-      Object.keys(data).forEach(date => { // Iterate over dates
-        const categories = data[date];
-        Object.keys(categories).forEach(category => { // Iterate over categories
-          const products = categories[category];
-          Object.keys(products).forEach(productId => { // Iterate over products
-            const product = products[productId];
-            // The seller ID check is an extra safeguard
-            if (product.seller && product.seller.id === userId) {
-              allProducts.push({
-                ...product,
-                id: productId,
-                price: Number(product.price) || 0,
-              });
-            }
-          });
-        });
+      const allProducts: Product[] = Object.keys(data).map(productId => {
+        const product = data[productId];
+        return {
+            ...product,
+            id: productId,
+            price: Number(product.price) || 0,
+        }
       });
       
+      // Sort by creation date, newest first
       return allProducts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
     return [];

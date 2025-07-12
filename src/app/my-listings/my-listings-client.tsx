@@ -23,7 +23,7 @@ export function MyListingsClient() {
         const userProducts = await getMyListings(user.id);
         setProducts(userProducts);
         setLoading(false);
-      } else if (!user) {
+      } else if (user === null) {
         // If user is explicitly null (not just loading), stop loading.
         setLoading(false);
         setProducts([]);
