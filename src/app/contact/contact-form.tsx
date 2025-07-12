@@ -15,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from "@/hooks/use-toast";
+import { sendMessage } from './actions';
 
 const contactSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -34,8 +35,8 @@ export function ContactForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof contactSchema>) {
-    console.log(values);
+  async function onSubmit(values: z.infer<typeof contactSchema>) {
+    await sendMessage(values);
     toast({
       title: "Message Sent!",
       description: "Thanks for reaching out. We'll get back to you soon.",
@@ -88,7 +89,9 @@ export function ContactForm() {
           )}
         />
         
-        <Button type="submit">Send Message</Button>
+        <Button type="submit" disabled={form.formState.isSubmitting}>
+          {form.formState.isSubmitting ? 'Sending...' : 'Send Message'}
+        </Button>
       </form>
     </Form>
   );
