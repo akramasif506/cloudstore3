@@ -65,33 +65,24 @@ export async function createListing(formData: FormData) {
   }
 
   try {
-    const { category } = validatedFields.data;
-    const uploadDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    
     // 1. Upload image to Firebase Storage
     const imageBuffer = Buffer.from(await imageFile.arrayBuffer());
-    const fileExtension = imageFile.name.split('.').pop();
-    const imageFileName = `${uuidv4()}.${fileExtension}`;
-    
-    const imageStoragePath = `CloudStor/upload/under_review/${uploadDate}/product/${category}/${imageFileName}`;
-    const imageStorageRef = storageRef(storage, imageStoragePath);
+    const imageFileName = `${uuidv4()}.${imageFile.name.split('.').pop()}`;
+    const imageStorageRef = storageRef(storage, `product-images/${imageFileName}`);
     
     await uploadBytes(imageStorageRef, imageBuffer);
     const imageUrl = await getDownloadURL(imageStorageRef);
 
     // 2. Get a unique product ID for the database path
-    const tempProductsRef = dbRef(db, 'products'); // Temporary ref to get a key
-    const newProductRef = push(tempProductsRef);
+    const productsRef = dbRef(db, 'products');
+    const newProductRef = push(productsRef);
     const productId = newProductRef.key;
 
     if (!productId) {
         throw new Error("Failed to generate a new product ID.");
     }
     
-    // 3. Construct the new database path
-    const newProductDbPath = `CloudStore/products/under_review/${uploadDate}/${category}/${productId}`;
-
-    // 4. Prepare product data to be saved to Realtime Database
+    // 3. Prepare product data to be saved to Realtime Database
     const newProductData = {
       ...validatedFields.data,
       id: productId,
@@ -107,12 +98,8 @@ export async function createListing(formData: FormData) {
       status: 'under_review',
     };
     
-    // 5. Save product data to the specified path
-    await set(dbRef(db, newProductDbPath), newProductData);
-
-    // 6. Also save to the general `products` path for easier querying
+    // 4. Save product data to the general `products` path
     await set(dbRef(db, `products/${productId}`), newProductData);
-
 
   } catch (error) {
     console.error('Error creating listing:', error);
