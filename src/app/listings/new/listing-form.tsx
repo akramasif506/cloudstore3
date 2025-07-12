@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -273,8 +274,16 @@ export function ListingForm() {
                         <span className="text-gray-500 sm:text-sm">₹</span>
                     </div>
                     <FormControl>
-                        <Input type="number" placeholder="0.00" className="pl-7" {...field} 
-                          onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                        <Input
+                          type="number"
+                          placeholder="0.00"
+                          className="pl-7"
+                          {...field}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            field.onChange(value === '' ? '' : e.target.valueAsNumber);
+                          }}
+                          value={field.value || ''}
                         />
                     </FormControl>
                 </div>
