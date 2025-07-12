@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { useForm, type FieldPath } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -48,6 +48,7 @@ const categories = {
 
 export function ListingForm() {
   const [isSuggesting, setIsSuggesting] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   
   const form = useForm<ClientListingSchema>({
@@ -63,6 +64,7 @@ export function ListingForm() {
   });
 
   const { isSubmitting } = form.formState;
+  const isLoading = isSuggesting || isPending || isSubmitting;
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -121,32 +123,38 @@ export function ListingForm() {
 
   const onSubmit = async (values: ClientListingSchema) => {
     const formData = new FormData();
-    Object.entries(values).forEach(([key, value]) => {
-      if (key === 'productImage') {
-        formData.append(key, (value as FileList)[0]);
-      } else if (value !== undefined && value !== null) {
-        formData.append(key, String(value));
-      }
-    });
+    
+    formData.append('productName', values.productName);
+    formData.append('productDescription', values.productDescription);
+    formData.append('price', String(values.price));
+    formData.append('category', values.category);
+    formData.append('subcategory', values.subcategory);
+    if (values.productImage && values.productImage.length > 0) {
+      formData.append('productImage', values.productImage[0]);
+    }
 
-    const result = await createListing(formData);
+    startTransition(async () => {
+      const result = await createListing(formData);
 
-    if (result?.success === false) {
-      toast({
-        variant: "destructive",
-        title: "Oh no! Something went wrong.",
-        description: result.message,
-      });
+      if (result?.success === false) {
+        toast({
+          variant: "destructive",
+          title: "Oh no! Something went wrong.",
+          description: result.message,
+        });
 
-      if (result.errors) {
-        for (const [field, messages] of Object.entries(result.errors)) {
-          form.setError(field as FieldPath<ClientListingSchema>, {
-            type: 'server',
-            message: messages?.[0]
-          });
+        if (result.errors) {
+          for (const [field, messages] of Object.entries(result.errors)) {
+            if (messages) {
+                form.setError(field as FieldPath<ClientListingSchema>, {
+                    type: 'server',
+                    message: messages[0]
+                });
+            }
+          }
         }
       }
-    }
+    });
   };
   
   const selectedCategory = form.watch('category');
@@ -162,7 +170,7 @@ export function ListingForm() {
             <FormItem>
               <FormLabel>Product Image</FormLabel>
               <FormControl>
-                <Input type="file" accept="image/*" {...productImageRef} />
+                <Input type="file" accept="image/*" {...productImageRef} disabled={isLoading} />
               </FormControl>
               <FormDescription>Upload a clear photo of your item.</FormDescription>
               <FormMessage />
@@ -177,10 +185,14 @@ export function ListingForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Category</FormLabel>
-                <Select onValueChange={(value) => {
-                  field.onChange(value)
-                  form.setValue('subcategory', '');
-                }} defaultValue={field.value}>
+                <Select
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    form.setValue('subcategory', '');
+                  }}
+                  defaultValue={field.value}
+                  disabled={isLoading}
+                >
                   <FormControl>
                     <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
                   </FormControl>
@@ -200,7 +212,7 @@ export function ListingForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Subcategory</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory || isLoading}>
                   <FormControl>
                     <SelectTrigger><SelectValue placeholder="Select a subcategory" /></SelectValue>
                   </FormControl>
@@ -217,23 +229,22 @@ export function ListingForm() {
         </div>
 
         <div className="space-y-2">
-            <Button
+          <Button
             type="button"
             variant="outline"
             onClick={handleSuggestDetails}
-            disabled={isSuggesting || isSubmitting}
+            disabled={isLoading}
             className="w-full md:w-auto"
-            >
+          >
             {isSuggesting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-                <Sparkles className="mr-2 h-4 w-4" />
+              <Sparkles className="mr-2 h-4 w-4" />
             )}
             Suggest with AI
-            </Button>
-            <p className="text-sm text-muted-foreground">Let AI write your title and description based on your image and category.</p>
+          </Button>
+          <p className="text-sm text-muted-foreground">Let AI write your title and description based on your image and category.</p>
         </div>
-
 
         <FormField
           control={form.control}
@@ -242,7 +253,7 @@ export function ListingForm() {
             <FormItem>
               <FormLabel>Listing Title</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Vintage Leather Armchair" {...field} />
+                <Input placeholder="e.g. Vintage Leather Armchair" {...field} disabled={isLoading} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -255,7 +266,7 @@ export function ListingForm() {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea placeholder="Describe your item in detail..." rows={6} {...field} />
+                <Textarea placeholder="Describe your item in detail..." rows={6} {...field} disabled={isLoading} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -267,31 +278,33 @@ export function ListingForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Price</FormLabel>
-                <div className="relative">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <span className="text-gray-500 sm:text-sm">₹</span>
-                    </div>
-                    <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="0.00"
-                          className="pl-7"
-                          {...field}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            field.onChange(value === '' ? undefined : Number(value));
-                          }}
-                          value={field.value ?? ''}
-                        />
-                    </FormControl>
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <span className="text-gray-500 sm:text-sm">₹</span>
                 </div>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder="0.00"
+                    className="pl-7"
+                    step="0.01"
+                    disabled={isLoading}
+                    {...field}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      field.onChange(value === '' ? undefined : Number(value));
+                    }}
+                    value={field.value ?? ''}
+                  />
+                </FormControl>
+              </div>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type="submit" size="lg" className="w-full md:w-auto" disabled={isSubmitting}>
-            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            {isSubmitting ? 'Creating Listing...' : 'Create Listing'}
+        <Button type="submit" size="lg" className="w-full md:w-auto" disabled={isLoading}>
+          {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          {isPending ? 'Creating Listing...' : 'Create Listing'}
         </Button>
       </form>
     </Form>
