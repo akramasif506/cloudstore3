@@ -33,7 +33,8 @@ const listingSchema = z.object({
   price: z.coerce.number().positive('Price must be a positive number.'),
   category: z.string().nonempty('Please select a category.'),
   subcategory: z.string().nonempty('Please select a subcategory.'),
-  productImage: z.instanceof(FileList).refine(files => files?.length === 1, 'Product image is required.'),
+  productImage: z.any()
+    .refine((files) => files?.length === 1, 'Product image is required.')
 });
 
 const categories = {
