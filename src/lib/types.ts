@@ -27,3 +27,11 @@ export interface Product {
   reviews: Review[];
   distance: number; // in km
 }
+
+export interface ContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  timestamp: string;
+}

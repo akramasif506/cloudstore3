@@ -4,8 +4,36 @@ import { Users, Package, MessageSquare, ShieldAlert } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { CategoryChart } from '@/components/dashboard/category-chart';
 import { RecentProducts } from '@/components/dashboard/recent-products';
+import { RecentMessages } from '@/components/dashboard/recent-messages';
+import { db } from '@/lib/firebase';
+import { ref, get, query, limitToLast } from 'firebase/database';
+import type { ContactMessage } from '@/lib/types';
 
-export default function DashboardPage() {
+async function getRecentMessages(): Promise<ContactMessage[]> {
+  if (!db) {
+    console.warn("Firebase is not configured. Returning empty messages.");
+    return [];
+  }
+  try {
+    const messagesRef = ref(db, 'messages');
+    // Fetch the last 10 messages
+    const messagesQuery = query(messagesRef, limitToLast(10));
+    const snapshot = await get(messagesQuery);
+    if (snapshot.exists()) {
+      const messagesData = snapshot.val();
+      // Convert the object of messages into an array
+      return Object.keys(messagesData)
+        .map(key => ({ id: key, ...messagesData[key] }))
+        .reverse(); // Show newest messages first
+    }
+    return [];
+  } catch (error) {
+    console.error("Error fetching messages from Firebase:", error);
+    return [];
+  }
+}
+
+export default async function DashboardPage() {
   if (mockUser.role !== 'admin') {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
@@ -28,6 +56,7 @@ export default function DashboardPage() {
   const chartData = Object.entries(productsByCategory).map(([name, products]) => ({ name, products }));
 
   const recentProducts = [...mockProducts].reverse().slice(0, 5);
+  const recentMessages = await getRecentMessages();
 
   return (
     <div className="space-y-8">
@@ -72,6 +101,15 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Messages</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <RecentMessages messages={recentMessages} />
+        </CardContent>
+      </Card>
     </div>
   );
 }
