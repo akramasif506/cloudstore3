@@ -1,16 +1,11 @@
 
 'use server';
 
-import { z } from 'zod';
-import { listingSchema } from '@/lib/schemas';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 
 
 export async function createListing(formData: FormData) {
-  // We no longer need validation or Firebase logic here.
-  // We just pass the form data to the API route.
-  
   const session = cookies().get('session')?.value;
   if (!session) {
     return {
@@ -20,9 +15,13 @@ export async function createListing(formData: FormData) {
   }
 
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/listings`, {
+    // We construct the full URL for the API route.
+    const apiUrl = new URL('/api/listings', process.env.NEXT_PUBLIC_URL);
+
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
+        // Pass the session cookie to the API route for authentication.
         'Cookie': `session=${session}`
       },
       body: formData,
@@ -46,5 +45,6 @@ export async function createListing(formData: FormData) {
     return { success: false, message: 'An unknown error occurred while creating the listing.' };
   }
 
+  // If successful, redirect the user to their listings page.
   redirect('/my-listings');
 }
