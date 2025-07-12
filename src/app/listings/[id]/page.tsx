@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { mockProducts } from '@/lib/data';
 import { Button } from '@/components/ui/button';
@@ -74,16 +75,16 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
                     <CardTitle className="text-xl">Seller Information</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="flex items-center gap-4">
+                    <Link href={`/users/${product.seller.id}`} className="flex items-center gap-4 group">
                         <Avatar className="h-16 w-16">
                             <AvatarImage src={product.seller.avatarUrl} alt={product.seller.name} data-ai-hint="seller avatar" />
                             <AvatarFallback>{product.seller.name.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div>
-                            <p className="font-semibold text-lg">{product.seller.name}</p>
+                            <p className="font-semibold text-lg group-hover:underline">{product.seller.name}</p>
                             <p className="text-sm text-muted-foreground">Member since 2022</p>
                         </div>
-                    </div>
+                    </Link>
                     <div className="flex items-center gap-2 text-muted-foreground">
                         <MapPin className="h-4 w-4" />
                         <span>{product.distance}km away</span>
