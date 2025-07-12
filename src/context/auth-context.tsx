@@ -27,11 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onIdTokenChanged(auth, async (fbUser) => {
       // First, clean up any existing database listener
       if (databaseSubscription) {
-        // Use a local variable to capture the current firebaseUser's uid for cleanup
-        const uidToUnsubscribe = firebaseUser?.uid;
-        if (uidToUnsubscribe) {
-            off(ref(db!, `users/${uidToUnsubscribe}`), 'value', databaseSubscription);
-        }
+        databaseSubscription(); // Unsubscribe from the listener
         databaseSubscription = undefined;
       }
       
@@ -63,18 +59,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(null);
             setLoading(false);
         });
+
       } else {
         // User is signed out.
         // Clear session cookie by calling the API
-         await fetch('/api/auth/logout', { method: 'POST' });
+        await fetch('/api/auth/logout', { method: 'POST' });
         setUser(null);
         setFirebaseUser(null);
         setLoading(false);
       }
     });
 
-    return () => unsubscribe();
-  }, [firebaseUser?.uid]); // Add firebaseUser?.uid to dependencies to correctly manage subscription cleanup
+    // Cleanup subscription on component unmount
+    return () => {
+        unsubscribe();
+        if (databaseSubscription) {
+            databaseSubscription();
+        }
+    };
+  }, []);
 
   const logout = async () => {
     if (auth) {
