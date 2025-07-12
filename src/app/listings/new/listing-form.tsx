@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useForm, type FieldPath } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -77,7 +77,7 @@ export function ListingForm() {
     },
   });
 
-  const isLoading = isSuggesting || isSubmitting;
+  const isFormProcessing = isSuggesting || isSubmitting;
 
   if (authLoading) {
     return (
@@ -216,7 +216,7 @@ export function ListingForm() {
             <FormItem>
               <FormLabel>Product Image</FormLabel>
               <FormControl>
-                <Input type="file" accept="image/*" {...productImageRef} disabled={isLoading} />
+                <Input type="file" accept="image/*" {...productImageRef} disabled={isFormProcessing} />
               </FormControl>
               <FormDescription>Upload a clear photo of your item.</FormDescription>
               <FormMessage />
@@ -237,7 +237,7 @@ export function ListingForm() {
                     form.setValue('subcategory', '');
                   }}
                   defaultValue={field.value}
-                  disabled={isLoading}
+                  disabled={isFormProcessing}
                 >
                   <FormControl>
                     <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
@@ -258,7 +258,7 @@ export function ListingForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Subcategory</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory || isLoading}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory || isFormProcessing}>
                   <FormControl>
                     <SelectTrigger><SelectValue placeholder="Select a subcategory" /></SelectTrigger>
                   </FormControl>
@@ -279,7 +279,7 @@ export function ListingForm() {
             type="button"
             variant="outline"
             onClick={handleSuggestDetails}
-            disabled={isLoading}
+            disabled={isFormProcessing}
             className="w-full md:w-auto"
           >
             {isSuggesting ? (
@@ -299,7 +299,7 @@ export function ListingForm() {
             <FormItem>
               <FormLabel>Listing Title</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Vintage Leather Armchair" {...field} disabled={isLoading} />
+                <Input placeholder="e.g. Vintage Leather Armchair" {...field} disabled={isFormProcessing} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -312,7 +312,7 @@ export function ListingForm() {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea placeholder="Describe your item in detail..." rows={6} {...field} disabled={isLoading} />
+                <Textarea placeholder="Describe your item in detail..." rows={6} {...field} disabled={isFormProcessing} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -334,7 +334,7 @@ export function ListingForm() {
                     placeholder="0.00"
                     className="pl-8"
                     step="0.01"
-                    disabled={isLoading}
+                    disabled={isFormProcessing}
                     {...field}
                     onChange={(e) => {
                       const value = e.target.value;
@@ -348,8 +348,8 @@ export function ListingForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" size="lg" className="w-full md:w-auto" disabled={isLoading}>
-          {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+        <Button type="submit" size="lg" className="w-full md:w-auto" disabled={isFormProcessing}>
+          {isFormProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           {isSubmitting ? 'Submitting for Review...' : 'Submit for Review'}
         </Button>
       </form>
