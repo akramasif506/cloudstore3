@@ -22,64 +22,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!auth || !db) {
-      console.warn("Firebase not configured. Auth services disabled.");
-      setLoading(false);
-      return;
-    }
-
+    let userProfileListener: DatabaseReference | null = null;
+    let onProfileValue: ((snapshot: any) => void) | null = null;
+    
     const unsubscribeAuth = onAuthStateChanged(auth, (fbUser) => {
+      // First, always clean up the previous listener if it exists
+      if (userProfileListener && onProfileValue) {
+        off(userProfileListener, 'value', onProfileValue);
+      }
+      
       setFirebaseUser(fbUser);
-      if (!fbUser) {
-        // User logged out
+
+      if (fbUser) {
+        // User is logged in, set up a new listener for their profile
+        setLoading(true);
+        userProfileListener = ref(db!, `users/${fbUser.uid}`);
+        
+        onProfileValue = (snapshot: any) => {
+          if (snapshot.exists()) {
+            setUser(snapshot.val() as AppUser);
+          } else {
+            // This can happen if the db entry isn't created yet or was deleted
+            setUser(null);
+          }
+          setLoading(false);
+        };
+        onValue(userProfileListener, onProfileValue, (error) => {
+            console.error("Error fetching user profile:", error);
+            setUser(null);
+            setLoading(false);
+        });
+
+      } else {
+        // User is logged out
         setUser(null);
         setLoading(false);
       }
-      // If user is logged in, the profile fetching will be handled below.
     });
 
-    return () => unsubscribeAuth();
-  }, []);
-
-  useEffect(() => {
-    let userRef: DatabaseReference | null = null;
-    let onProfileValue: ((snapshot: any) => void) | null = null;
-
-    if (firebaseUser) {
-      // User is authenticated, now fetch their profile from the database
-      setLoading(true);
-      userRef = ref(db!, `users/${firebaseUser.uid}`);
-      
-      onProfileValue = (snapshot: any) => {
-        if (snapshot.exists()) {
-          setUser(snapshot.val() as AppUser);
-        } else {
-          console.warn(`User profile for UID ${firebaseUser.uid} not found in database.`);
-          setUser(null);
-        }
-        setLoading(false);
-      };
-
-      onValue(userRef, onProfileValue);
-    } else {
-      // No firebase user, so no profile to fetch.
-      setUser(null);
-      setLoading(false);
-    }
-
-    // Cleanup function to detach the listener
+    // Cleanup the auth subscription on component unmount
     return () => {
-      if (userRef && onProfileValue) {
-        off(userRef, 'value', onProfileValue);
-      }
+        unsubscribeAuth();
+        if (userProfileListener && onProfileValue) {
+            off(userProfile_listener, 'value', onProfileValue);
+        }
     };
-  }, [firebaseUser]);
+  }, []);
 
 
   const logout = async () => {
     if (auth) {
       await auth.signOut();
-      // onAuthStateChanged will handle setting user to null and updating state.
+      // onAuthStateChanged will handle clearing user state
     }
   };
   
