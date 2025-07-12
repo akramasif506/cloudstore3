@@ -2,8 +2,8 @@
 'use server';
 
 import { z } from 'zod';
-import { db } from '@/lib/firebase';
-import { ref, set, push } from 'firebase/database';
+import { initializeAdmin } from '@/lib/firebase-admin';
+import { ref, set } from 'firebase/database';
 import { v4 as uuidv4 } from 'uuid';
 import type { CartItem } from '@/context/cart-context';
 
@@ -22,8 +22,14 @@ export async function placeOrder(values: {
     shippingAddress: string;
     contactNumber: string;
 }): Promise<{ success: boolean; orderId?: string; message?: string }> {
-  if (!db) {
-    return { success: false, message: 'Firebase database is not configured.' };
+  
+  let adminDb;
+  try {
+    const { db } = initializeAdmin();
+    adminDb = db;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+    return { success: false, message: `Server configuration error: ${errorMessage}` };
   }
 
   const validatedFields = placeOrderSchema.safeParse(values);
@@ -52,7 +58,7 @@ export async function placeOrder(values: {
   };
 
   try {
-    const ordersRef = ref(db, `orders/${orderId}`);
+    const ordersRef = ref(adminDb, `orders/${orderId}`);
     await set(ordersRef, orderData);
     console.log(`Order ${orderId} saved to Firebase.`);
     return { success: true, orderId };
