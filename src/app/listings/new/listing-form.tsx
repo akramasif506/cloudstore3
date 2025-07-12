@@ -30,10 +30,14 @@ import { useToast } from "@/hooks/use-toast";
 import { createListing } from './actions';
 import { listingSchema } from '@/lib/schemas';
 
+const isBrowser = typeof window !== 'undefined';
+
 const clientListingSchema = listingSchema.extend({
-  productImage: z.instanceof(FileList)
-    .refine((files) => files?.length === 1, 'Product image is required.')
+  productImage: isBrowser
+    ? z.instanceof(FileList).refine((files) => files?.length === 1, 'Product image is required.')
+    : z.any(),
 });
+
 
 type ClientListingSchema = z.infer<typeof clientListingSchema>;
 
