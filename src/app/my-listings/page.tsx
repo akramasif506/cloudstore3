@@ -7,7 +7,7 @@ import { db } from '@/lib/firebase';
 import type { Product } from '@/lib/types';
 import { get, ref } from 'firebase/database';
 
-async function getUserProducts(): Promise<Product[]> {
+async function getUserProducts(userId: string): Promise<Product[]> {
   if (!db) {
     console.warn("Firebase is not configured. Returning empty products.");
     return [];
@@ -23,7 +23,7 @@ async function getUserProducts(): Promise<Product[]> {
         price: Number(productsData[key].price) || 0,
       }));
       // Filter products by seller ID in the code
-      return allProducts.filter(product => product.seller && product.seller.id === mockUser.id);
+      return allProducts.filter(product => product.seller && product.seller.id === userId);
     }
     return [];
   } catch (error) {
@@ -33,7 +33,7 @@ async function getUserProducts(): Promise<Product[]> {
 }
 
 export default async function MyListingsPage() {
-  const userProducts = await getUserProducts();
+  const userProducts = await getUserProducts(mockUser.id);
 
   return (
     <div>

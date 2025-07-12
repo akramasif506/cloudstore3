@@ -17,7 +17,7 @@ export function ProductCard({ product }: ProductCardProps) {
             <div className="relative w-full aspect-video">
               <Image
                 src={imageUrl}
-                alt={product.name}
+                alt={product.name || 'Product image'}
                 fill
                 className="object-cover"
                 data-ai-hint="product image"
