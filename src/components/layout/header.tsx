@@ -49,12 +49,12 @@ export function Header() {
         </nav>
 
         <div className="flex flex-1 items-center justify-end space-x-2">
-          <div className="relative w-full max-w-xs">
+          <div className="relative w-56">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
               placeholder="Search for items..."
-              className="pl-9"
+              className="pl-9 w-full"
             />
           </div>
 
