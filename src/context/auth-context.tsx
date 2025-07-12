@@ -3,7 +3,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { ref, onValue, off } from 'firebase/database';
+import { ref, onValue, off, DatabaseReference } from 'firebase/database';
 import { auth, db } from '@/lib/firebase';
 import type { User as AppUser } from '@/lib/types';
 
@@ -29,49 +29,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const unsubscribeAuth = onAuthStateChanged(auth, (fbUser) => {
-      setLoading(true); // Start loading whenever auth state might change
       setFirebaseUser(fbUser);
       if (!fbUser) {
-        // User is logged out
+        // User logged out
         setUser(null);
         setLoading(false);
       }
-      // If user is logged in, the other useEffect will handle profile fetching.
+      // If user is logged in, the profile fetching will be handled below.
     });
 
     return () => unsubscribeAuth();
   }, []);
 
   useEffect(() => {
+    let userRef: DatabaseReference | null = null;
+    let onProfileValue: ((snapshot: any) => void) | null = null;
+
     if (firebaseUser) {
       // User is authenticated, now fetch their profile from the database
-      const userRef = ref(db!, `users/${firebaseUser.uid}`);
+      setLoading(true);
+      userRef = ref(db!, `users/${firebaseUser.uid}`);
       
-      const onProfileValue = (snapshot: any) => {
+      onProfileValue = (snapshot: any) => {
         if (snapshot.exists()) {
           setUser(snapshot.val() as AppUser);
         } else {
           console.warn(`User profile for UID ${firebaseUser.uid} not found in database.`);
-          setUser(null); // Explicitly set user to null if profile doesn't exist
+          setUser(null);
         }
-        setLoading(false); // Stop loading once profile is fetched (or not found)
+        setLoading(false);
       };
 
-      // Listen for profile data
       onValue(userRef, onProfileValue);
-
-      // Cleanup function to detach the listener when the user logs out
-      return () => {
-        off(userRef, 'value', onProfileValue);
-      };
-
     } else {
       // No firebase user, so no profile to fetch.
-      // The onAuthStateChanged handles this case already, but this is a safeguard.
-      if (loading) {
-        setLoading(false);
-      }
+      setUser(null);
+      setLoading(false);
     }
+
+    // Cleanup function to detach the listener
+    return () => {
+      if (userRef && onProfileValue) {
+        off(userRef, 'value', onProfileValue);
+      }
+    };
   }, [firebaseUser]);
 
 
