@@ -22,11 +22,12 @@ export async function registerUser(values: z.infer<typeof registerSchema>) {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
     const user = userCredential.user;
+    const profileImageUrl = `https://placehold.co/100x100?text=${values.name.charAt(0)}`;
 
     // Update Firebase Auth profile
     await updateProfile(user, {
       displayName: values.name,
-      photoURL: `https://placehold.co/100x100?text=${values.name.charAt(0)}`
+      photoURL: profileImageUrl
     });
     
     // Create user profile in Realtime Database
@@ -39,7 +40,7 @@ export async function registerUser(values: z.infer<typeof registerSchema>) {
       gender: values.gender,
       createdAt: new Date().toISOString(),
       role: 'user', // Default role
-      profileImageUrl: `https://placehold.co/100x100?text=${values.name.charAt(0)}` // Default avatar
+      profileImageUrl: profileImageUrl
     });
 
     return { success: true, userId: user.uid };

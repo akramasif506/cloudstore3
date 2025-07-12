@@ -19,11 +19,11 @@ import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/context/auth-context';
 import { Loader2 } from 'lucide-react';
+import React from 'react';
 
 const profileSchema = z.object({
   name: z.string().min(3, 'Username must be at least 3 characters.'),
   email: z.string().email('Please enter a valid email address.'),
-  profileImage: z.any(),
 });
 
 export function ProfileForm() {
@@ -67,25 +67,15 @@ export function ProfileForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="profileImage"
-          render={({ field }) => (
-            <FormItem>
-                <FormLabel>Profile Picture</FormLabel>
-                <div className="flex items-center gap-4">
-                    <Avatar className="h-20 w-20">
-                        <AvatarImage src={user.profileImageUrl} alt={user.name} data-ai-hint="user avatar" />
-                        <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <FormControl>
-                        <Input type="file" className="max-w-xs" />
-                    </FormControl>
-                </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <FormItem>
+            <FormLabel>Profile Picture</FormLabel>
+            <div className="flex items-center gap-4">
+                <Avatar className="h-20 w-20">
+                    <AvatarImage src={user.profileImageUrl} alt={user.name} data-ai-hint="user avatar" />
+                    <AvatarFallback>{user.name?.charAt(0) || 'U'}</AvatarFallback>
+                </Avatar>
+            </div>
+        </FormItem>
         
         <FormField
           control={form.control}
