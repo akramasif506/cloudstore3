@@ -1,18 +1,20 @@
 
 import { mockUser } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Package, MessageSquare, ShieldAlert, CheckCircle } from 'lucide-react';
+import { Users, Package, MessageSquare, ShieldAlert, CheckCircle, ShoppingCart } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { CategoryChart } from '@/components/dashboard/category-chart';
 import { RecentProducts } from '@/components/dashboard/recent-products';
 import { RecentMessages } from '@/components/dashboard/recent-messages';
 import { db } from '@/lib/firebase';
 import { ref, get, query, limitToLast } from 'firebase/database';
-import type { ContactMessage, Product } from '@/lib/types';
+import type { ContactMessage, Product, Order } from '@/lib/types';
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { RecentOrders } from '@/components/dashboard/recent-orders';
+
 
 async function getRecentMessages(): Promise<ContactMessage[]> {
   if (!db) {
@@ -40,7 +42,7 @@ async function getRecentMessages(): Promise<ContactMessage[]> {
 
 async function getDashboardStats() {
     if (!db) {
-        return { totalProducts: 0, pendingProducts: 0, totalUsers: 0, totalReviews: 0, chartData: [] };
+        return { totalProducts: 0, pendingProducts: 0, totalUsers: 0, totalOrders: 0, chartData: [] };
     }
     try {
         const productsRef = ref(db, 'products');
@@ -52,11 +54,20 @@ async function getDashboardStats() {
             products = Object.keys(productsData).map(key => ({...productsData[key], id: key}));
         }
 
+        const ordersRef = ref(db, 'orders');
+        const ordersSnapshot = await get(ordersRef);
+        let orders: Order[] = [];
+        if(ordersSnapshot.exists()){
+            const ordersData = ordersSnapshot.val();
+            orders = Object.keys(ordersData).map(key => ({...ordersData[key], id: key}));
+        }
+
+
         const totalProducts = products.length;
         const pendingProducts = products.filter(p => p.status === 'pending_review').length;
         // In a real app, users would be in the database
         const totalUsers = 1; 
-        const totalReviews = products.reduce((acc, p) => acc + (p.reviews?.length || 0), 0);
+        const totalOrders = orders.length;
 
         const productsByCategory = products.reduce((acc, product) => {
             if (product.status === 'active') {
@@ -67,11 +78,11 @@ async function getDashboardStats() {
 
         const chartData = Object.entries(productsByCategory).map(([name, products]) => ({ name, products }));
 
-        return { totalProducts, pendingProducts, totalUsers, totalReviews, chartData };
+        return { totalProducts, pendingProducts, totalUsers, totalOrders, chartData };
 
     } catch (error) {
         console.error("Error fetching dashboard stats from Firebase:", error);
-        return { totalProducts: 0, pendingProducts: 0, totalUsers: 0, totalReviews: 0, chartData: [] };
+        return { totalProducts: 0, pendingProducts: 0, totalUsers: 0, totalOrders: 0, chartData: [] };
     }
 }
 
@@ -92,7 +103,7 @@ export default async function DashboardPage() {
     )
   }
 
-  const { totalProducts, pendingProducts, totalUsers, totalReviews, chartData } = await getDashboardStats();
+  const { totalProducts, pendingProducts, totalUsers, totalOrders, chartData } = await getDashboardStats();
   
 
   return (
@@ -129,9 +140,9 @@ export default async function DashboardPage() {
           icon={Users} 
         />
         <StatsCard 
-          title="Total Reviews" 
-          value={totalReviews} 
-          icon={MessageSquare} 
+          title="Total Orders" 
+          value={totalOrders} 
+          icon={ShoppingCart} 
         />
       </div>
 
@@ -158,11 +169,11 @@ export default async function DashboardPage() {
       
       <Card>
         <CardHeader>
-          <CardTitle>Recent Messages</CardTitle>
+          <CardTitle>Recent Orders</CardTitle>
         </CardHeader>
         <CardContent>
            <Suspense fallback={<Skeleton className="h-24 w-full" />}>
-            <RecentMessages messages={recentMessages} />
+            <RecentOrders />
            </Suspense>
         </CardContent>
       </Card>

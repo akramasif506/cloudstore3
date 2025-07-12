@@ -8,18 +8,24 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Trash2, Frown, Home, Phone } from 'lucide-react';
+import { Trash2, Frown, Home, Phone, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { useState, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { placeOrder } from './actions';
+import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 export function CartContents() {
   const { items, removeFromCart, updateQuantity, subtotal, clearCart } = useCart();
   const { user } = useAuth();
-  
+  const { toast } = useToast();
+  const router = useRouter();
+
   const [address, setAddress] = useState('');
   const [contactNumber, setContactNumber] = useState('');
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -28,7 +34,44 @@ export function CartContents() {
     }
   }, [user]);
 
-  const isOrderReady = address.trim() !== '' && contactNumber.trim() !== '';
+  const isOrderReady = address.trim() !== '' && contactNumber.trim() !== '' && user;
+
+  const handlePlaceOrder = async () => {
+    if (!isOrderReady) {
+        toast({
+            variant: "destructive",
+            title: "Cannot place order",
+            description: "Please log in and fill in all shipping information.",
+        });
+        return;
+    }
+
+    setIsPlacingOrder(true);
+    const result = await placeOrder({
+        userId: user.id,
+        items,
+        total: subtotal,
+        shippingAddress: address,
+        contactNumber,
+    });
+    setIsPlacingOrder(false);
+
+    if (result.success && result.orderId) {
+        toast({
+            title: "Order Placed Successfully!",
+            description: "Your order is now being processed.",
+        });
+        clearCart();
+        router.push(`/my-orders/${result.orderId}`);
+    } else {
+        toast({
+            variant: "destructive",
+            title: "Failed to Place Order",
+            description: result.message || "An unexpected error occurred. Please try again.",
+        });
+    }
+  };
+
 
   if (items.length === 0) {
     return (
@@ -150,7 +193,10 @@ export function CartContents() {
             </div>
           </CardContent>
           <CardFooter>
-            <Button size="lg" className="w-full" disabled={!isOrderReady}>Place Order</Button>
+            <Button size="lg" className="w-full" disabled={!isOrderReady || isPlacingOrder} onClick={handlePlaceOrder}>
+              {isPlacingOrder && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Place Order
+            </Button>
           </CardFooter>
         </Card>
       </div>

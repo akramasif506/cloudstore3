@@ -47,3 +47,22 @@ export interface ContactMessage {
   message: string;
   timestamp: string;
 }
+
+export interface OrderItem {
+    id: string;
+    name: string;
+    price: number;
+    quantity: number;
+    imageUrl: string;
+}
+
+export interface Order {
+    id: string;
+    userId: string;
+    items: OrderItem[];
+    total: number;
+    shippingAddress: string;
+    contactNumber: string;
+    status: 'Pending' | 'Shipped' | 'Delivered' | 'Cancelled';
+    createdAt: string;
+}
