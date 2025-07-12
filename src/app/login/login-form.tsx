@@ -48,47 +48,28 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     setIsLoading(true);
     const result = await loginUser(values);
 
-    if (result.success && auth?.currentUser) {
-      try {
-        const idToken = await auth.currentUser.getIdToken();
-        await fetch('/api/auth', {
-            method: 'POST',
-            headers: {
-            'Authorization': `Bearer ${idToken}`,
-            },
-        });
+    if (result.success) {
+      toast({
+        title: "Login Successful!",
+        description: "Welcome back! Redirecting...",
+      });
 
-        toast({
-          title: "Login Successful!",
-          description: "Welcome back! Redirecting...",
-        });
-
-        if (onSuccess) {
-          onSuccess();
-        } else {
-          // A full page refresh is more reliable here to ensure server components re-render
-          // with the new session cookie.
-          const redirectUrl = searchParams.get('redirect') || '/';
-          window.location.href = redirectUrl;
-        }
-      } catch (e) {
-        console.error("Session creation failed", e);
-        toast({
-            variant: "destructive",
-            title: "Login Failed",
-            description: "Could not create a session. Please try again.",
-        });
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        const redirectUrl = searchParams.get('redirect') || '/';
+        // A full page refresh is more reliable here to ensure server components re-render
+        // with the new session cookie created by the AuthProvider.
+        window.location.href = redirectUrl;
       }
-
     } else {
       toast({
         variant: "destructive",
         title: "Login Failed",
         description: result.error || "Please check your credentials and try again.",
       });
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   }
 
   return (
