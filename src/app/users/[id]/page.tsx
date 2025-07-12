@@ -1,13 +1,28 @@
 
 import { notFound } from 'next/navigation';
-import { mockUsers } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ProductGrid } from '@/components/products/product-grid';
 import { Separator } from '@/components/ui/separator';
 import { db } from '@/lib/firebase';
-import type { Product } from '@/lib/types';
-import { get, ref } from 'firebase/database';
+import type { Product, User } from '@/lib/types';
+import { get, ref, child } from 'firebase/database';
+
+async function getUser(userId: string): Promise<User | null> {
+  if (!db) return null;
+  try {
+    const userRef = child(ref(db), `users/${userId}`);
+    const snapshot = await get(userRef);
+    if (snapshot.exists()) {
+      return snapshot.val() as User;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error fetching user from Firebase:", error);
+    return null;
+  }
+}
+
 
 async function getUserProducts(userId: string): Promise<Product[]> {
   if (!db) {
@@ -35,8 +50,7 @@ async function getUserProducts(userId: string): Promise<Product[]> {
 }
 
 export default async function UserProfilePage({ params }: { params: { id: string } }) {
-  // Note: This still uses mockUsers. In a real app, you'd fetch user data from Firebase too.
-  const user = mockUsers.find((u) => u.id === params.id);
+  const user = await getUser(params.id);
   const userProducts = await getUserProducts(params.id);
 
   if (!user) {
@@ -49,12 +63,12 @@ export default async function UserProfilePage({ params }: { params: { id: string
         <CardHeader>
           <div className="flex items-center gap-6">
             <Avatar className="h-24 w-24 border-4 border-primary">
-              <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint="user avatar" />
-              <AvatarFallback className="text-3xl">{user.name.charAt(0)}</AvatarFallback>
+              <AvatarImage src={user.profileImageUrl} alt={user.name || 'User avatar'} data-ai-hint="user avatar" />
+              <AvatarFallback className="text-3xl">{user.name ? user.name.charAt(0) : 'U'}</AvatarFallback>
             </Avatar>
             <div>
               <CardTitle className="text-4xl font-headline">{user.name}</CardTitle>
-              <p className="text-muted-foreground">Member since 2022</p>
+              <p className="text-muted-foreground">Member since {new Date(user.createdAt).getFullYear()}</p>
             </div>
           </div>
         </CardHeader>
