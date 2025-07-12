@@ -5,7 +5,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 function initializeAdmin() {
   if (admin.apps.length) {
-    return { adminAuth: admin.auth() };
+    return admin.app();
   }
   const adminApp = admin.initializeApp({
     credential: admin.credential.cert({
@@ -14,12 +14,13 @@ function initializeAdmin() {
       privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
     }),
   });
-  return { adminAuth: adminApp.auth() };
+  return adminApp;
 }
 
 
 export async function POST(request: NextRequest) {
-  const { adminAuth } = initializeAdmin();
+  const adminApp = initializeAdmin();
+  const adminAuth = adminApp.auth();
   const authorization = headers().get('Authorization');
   if (authorization?.startsWith('Bearer ')) {
     const idToken = authorization.split('Bearer ')[1];
@@ -48,18 +49,23 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const { adminAuth } = initializeAdmin();
+  const adminApp = initializeAdmin();
+  const adminAuth = adminApp.auth();
   const session = cookies().get('session')?.value || '';
 
   if (!session) {
     return NextResponse.json({ isLogged: false }, { status: 401 });
   }
 
-  const decodedClaims = await adminAuth?.verifySessionCookie(session, true);
+  try {
+      const decodedClaims = await adminAuth?.verifySessionCookie(session, true);
 
-  if (!decodedClaims) {
-    return NextResponse.json({ isLogged: false }, { status: 401 });
+      if (!decodedClaims) {
+        return NextResponse.json({ isLogged: false }, { status: 401 });
+      }
+
+      return NextResponse.json({ isLogged: true }, { status: 200 });
+  } catch (error) {
+       return NextResponse.json({ isLogged: false }, { status: 401 });
   }
-
-  return NextResponse.json({ isLogged: true }, { status: 200 });
 }

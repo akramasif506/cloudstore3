@@ -2,118 +2,44 @@
 'use server';
 
 import { z } from 'zod';
-import { v4 as uuidv4 } from 'uuid';
 import { listingSchema } from '@/lib/schemas';
 import { redirect } from 'next/navigation';
-import type { User } from '@/lib/types';
-import { initializeAdmin } from '@/lib/firebase-admin';
-import admin from 'firebase-admin';
+import { cookies } from 'next/headers';
 
-// This action now requires a userId
-const listingActionSchema = listingSchema.extend({
-  userId: z.string().min(1, { message: 'User must be logged in.' }),
-});
 
 export async function createListing(formData: FormData) {
-  let adminDb, adminStorage;
-
-  try {
-    const adminApp = initializeAdmin();
-    adminDb = adminApp.db;
-    adminStorage = adminApp.storage;
-  } catch (error) {
-    console.error('Firebase Admin Initialization Error:', error);
-    if (error instanceof Error) {
-        return { success: false, message: `Server configuration error: ${error.message}` };
-    }
-    return { success: false, message: 'Server configuration error. Please check your environment variables.' };
-  }
-
-  const rawFormData = Object.fromEntries(formData.entries());
-
-  const validatedFields = listingActionSchema.safeParse({
-    ...rawFormData,
-    price: parseFloat(rawFormData.price as string),
-  });
-
-  if (!validatedFields.success) {
-    console.log(validatedFields.error.flatten().fieldErrors);
+  // We no longer need validation or Firebase logic here.
+  // We just pass the form data to the API route.
+  
+  const session = cookies().get('session')?.value;
+  if (!session) {
     return {
       success: false,
-      message: 'Invalid form data. Please check your inputs.',
-      errors: validatedFields.error.flatten().fieldErrors,
-    };
-  }
-
-  const { userId, productName, productDescription, price, category, subcategory } = validatedFields.data;
-
-  let seller = {
-      id: 'anonymous',
-      name: 'Anonymous Seller',
-  };
-
-  // Fetch the user data to use as the seller using the admin SDK to bypass security rules
-  const userRef = adminDb.ref(`users/${userId}`);
-  const userSnapshot = await userRef.once('value');
-
-  if (userSnapshot.exists()) {
-    const sellerData: User = userSnapshot.val();
-    seller = {
-        id: sellerData.id,
-        name: sellerData.name || 'User',
+      message: 'You must be logged in to create a listing.'
     }
-  } else {
-    // This is a critical error, the user must exist in the DB to create a listing.
-    return { success: false, message: 'Could not find user profile. Please try logging in again.' };
-  }
-  
-  const imageFile = formData.get('productImage') as File;
-  if (!imageFile || imageFile.size === 0) {
-    return { 
-        success: false, 
-        message: 'Product image is required.',
-        errors: { productImage: ['Product image is required.'] } 
-    };
   }
 
   try {
-    const imageBuffer = Buffer.from(await imageFile.arrayBuffer());
-    const imageFileName = `${uuidv4()}.${imageFile.name.split('.').pop()}`;
-    const bucket = adminStorage.bucket();
-    const file = bucket.file(`product-images/${imageFileName}`);
-    
-    await file.save(imageBuffer, {
-        metadata: {
-            contentType: imageFile.type,
-        }
-    });
-
-    const [imageUrl] = await file.getSignedUrl({
-        action: 'read',
-        expires: '03-09-2491' // A very long-lived URL
+    const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/listings`, {
+      method: 'POST',
+      headers: {
+        'Cookie': `session=${session}`
+      },
+      body: formData,
     });
     
-    const productId = uuidv4();
-    
-    const newProductData = {
-      id: productId,
-      name: productName,
-      description: productDescription,
-      price,
-      category,
-      subcategory,
-      imageUrl: imageUrl,
-      reviews: [], 
-      seller: seller,
-      createdAt: new Date().toISOString(),
-      status: 'pending_review',
-    };
-    
-    const productRef = adminDb.ref(`products/${productId}`);
-    await productRef.set(newProductData);
+    const result = await response.json();
 
+    if (!response.ok) {
+      return {
+        success: false,
+        message: result.message || 'An error occurred.',
+        errors: result.errors,
+      };
+    }
+    
   } catch (error) {
-    console.error('Error creating listing:', error);
+    console.error('Error calling create listing API:', error);
     if (error instanceof Error) {
         return { success: false, message: `Failed to create listing: ${error.message}` };
     }
