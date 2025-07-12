@@ -38,12 +38,13 @@ export function Header() {
               <p className="text-xs text-muted-foreground -mt-1">A Akram Product</p>
           </div>
         </Link>
+        
         <nav className="flex items-center space-x-6 text-sm font-medium">
-          <Link href="/" className="transition-colors hover:text-foreground/80 text-foreground/60">
+          <Link href="/" className="transition-colors hover:text-foreground/80 text-foreground">
             Home
           </Link>
           {user && (
-            <Link href="/listings/new" className="transition-colors hover:text-foreground/80 text-foreground/60">
+             <Link href="/listings/new" className="transition-colors hover:text-foreground/80 text-foreground">
               Sell
             </Link>
           )}
