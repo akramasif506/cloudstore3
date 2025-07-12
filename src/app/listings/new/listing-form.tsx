@@ -34,13 +34,8 @@ import { useRouter } from 'next/navigation';
 
 const isBrowser = typeof window !== 'undefined';
 
-// Client schema does not need the user fields, as they are not direct inputs.
-// It also handles the FileList for the image.
-const clientListingSchema = listingSchema.omit({ 
-  userId: true, 
-  userName: true, 
-  userAvatarUrl: true 
-}).extend({
+// Client schema handles the FileList for the image.
+const clientListingSchema = listingSchema.extend({
   productImage: isBrowser
     ? z.instanceof(FileList).refine((files) => files?.length === 1, 'Product image is required.')
     : z.any(),
@@ -64,8 +59,7 @@ export function ListingForm() {
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { user, userLoaded } = useAuth();
-  const router = useRouter();
+  const { user } = useAuth();
   
   const form = useForm<ClientListingSchema>({
     resolver: zodResolver(clientListingSchema),
@@ -76,11 +70,13 @@ export function ListingForm() {
       category: '',
       subcategory: '',
       productImage: undefined,
+      userId: '',
+      userName: '',
+      userAvatarUrl: '',
     },
   });
 
   const isLoading = isSuggesting || isSubmitting;
-  const isFormDisabled = isLoading || !userLoaded;
 
 
   const fileToBase64 = (file: File): Promise<string> => {
@@ -139,16 +135,6 @@ export function ListingForm() {
   };
 
   async function onSubmit(values: ClientListingSchema) {
-    if (!user?.id) {
-      toast({
-        variant: 'destructive',
-        title: 'Not Logged In',
-        description: 'You must be logged in to create a listing.',
-      });
-      router.push('/login');
-      return;
-    }
-
     setIsSubmitting(true);
 
     const formData = new FormData();
@@ -165,10 +151,11 @@ export function ListingForm() {
       }
     }
     
-    // Add user details directly to the FormData object
-    formData.append('userId', user.id);
-    formData.append('userName', user.name || 'Anonymous User'); 
-    formData.append('userAvatarUrl', user.profileImageUrl || '');
+    if (user) {
+        formData.append('userId', user.id);
+        formData.append('userName', user.name || 'Anonymous User'); 
+        formData.append('userAvatarUrl', user.profileImageUrl || '');
+    }
 
     const result = await createListing(formData);
 
@@ -207,7 +194,7 @@ export function ListingForm() {
             <FormItem>
               <FormLabel>Product Image</FormLabel>
               <FormControl>
-                <Input type="file" accept="image/*" {...productImageRef} disabled={isFormDisabled} />
+                <Input type="file" accept="image/*" {...productImageRef} disabled={isLoading} />
               </FormControl>
               <FormDescription>Upload a clear photo of your item.</FormDescription>
               <FormMessage />
@@ -228,7 +215,7 @@ export function ListingForm() {
                     form.setValue('subcategory', '');
                   }}
                   defaultValue={field.value}
-                  disabled={isFormDisabled}
+                  disabled={isLoading}
                 >
                   <FormControl>
                     <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
@@ -249,7 +236,7 @@ export function ListingForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Subcategory</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory || isFormDisabled}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory || isLoading}>
                   <FormControl>
                     <SelectTrigger><SelectValue placeholder="Select a subcategory" /></SelectTrigger>
                   </FormControl>
@@ -270,7 +257,7 @@ export function ListingForm() {
             type="button"
             variant="outline"
             onClick={handleSuggestDetails}
-            disabled={isFormDisabled}
+            disabled={isLoading}
             className="w-full md:w-auto"
           >
             {isSuggesting ? (
@@ -290,7 +277,7 @@ export function ListingForm() {
             <FormItem>
               <FormLabel>Listing Title</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Vintage Leather Armchair" {...field} disabled={isFormDisabled} />
+                <Input placeholder="e.g. Vintage Leather Armchair" {...field} disabled={isLoading} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -303,7 +290,7 @@ export function ListingForm() {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea placeholder="Describe your item in detail..." rows={6} {...field} disabled={isFormDisabled} />
+                <Textarea placeholder="Describe your item in detail..." rows={6} {...field} disabled={isLoading} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -325,7 +312,7 @@ export function ListingForm() {
                     placeholder="0.00"
                     className="pl-7"
                     step="0.01"
-                    disabled={isFormDisabled}
+                    disabled={isLoading}
                     {...field}
                     onChange={(e) => {
                       const value = e.target.value;
@@ -339,9 +326,9 @@ export function ListingForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" size="lg" className="w-full md:w-auto" disabled={isFormDisabled}>
+        <Button type="submit" size="lg" className="w-full md:w-auto" disabled={isLoading}>
           {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          {isSubmitting ? 'Creating Listing...' : (userLoaded ? 'Create Listing' : 'Loading User...')}
+          {isSubmitting ? 'Creating Listing...' : 'Create Listing'}
         </Button>
       </form>
     </Form>

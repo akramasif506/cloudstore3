@@ -15,15 +15,6 @@ export async function createListing(formData: FormData) {
   }
   
   const rawFormData = Object.fromEntries(formData.entries());
-  
-  // The userId must be present in the form data to proceed.
-  const userId = rawFormData.userId as string;
-  if (!userId) {
-    return {
-      success: false,
-      message: 'You must be logged in to create a listing.',
-    };
-  }
 
   const validatedFields = listingSchema.safeParse({
     ...rawFormData,
@@ -53,10 +44,10 @@ export async function createListing(formData: FormData) {
     const imageStorageRef = storageRef(storage, `product-images/${imageFileName}`);
     
     await uploadBytes(imageStorageRef, imageBuffer);
-    const imageUrl = await getDownloadURL(imageStorageRef);
+    const imageUrl = await getDownloadURL(imageStorageageRef);
     
     const productId = uuidv4();
-    const { productName, productDescription, price, category, subcategory, userName, userAvatarUrl } = validatedFields.data;
+    const { productName, productDescription, price, category, subcategory, userId, userName, userAvatarUrl } = validatedFields.data;
 
     const newProductData = {
       id: productId,
@@ -67,8 +58,8 @@ export async function createListing(formData: FormData) {
       subcategory,
       imageUrl: imageUrl,
       seller: {
-        id: validatedFields.data.userId, // Use the validated user ID
-        name: userName,
+        id: userId || 'anonymous',
+        name: userName || 'Anonymous Seller',
         avatarUrl: userAvatarUrl || `https://placehold.co/100x100.png`,
       },
       reviews: [], 
