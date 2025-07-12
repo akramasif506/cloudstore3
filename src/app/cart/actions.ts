@@ -3,7 +3,6 @@
 
 import { z } from 'zod';
 import { initializeAdmin } from '@/lib/firebase-admin';
-import { ref, set } from 'firebase/database';
 import { v4 as uuidv4 } from 'uuid';
 import type { CartItem } from '@/context/cart-context';
 
@@ -58,8 +57,8 @@ export async function placeOrder(values: {
   };
 
   try {
-    const ordersRef = ref(adminDb, `orders/${orderId}`);
-    await set(ordersRef, orderData);
+    const ordersRef = adminDb.ref(`orders/${orderId}`);
+    await ordersRef.set(orderData);
     console.log(`Order ${orderId} saved to Firebase.`);
     return { success: true, orderId };
   } catch (error) {
