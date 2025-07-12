@@ -25,7 +25,11 @@ const loginSchema = z.object({
   password: z.string().min(1, 'Password is required.'),
 });
 
-export function LoginForm() {
+interface LoginFormProps {
+  onSuccess?: () => void;
+}
+
+export function LoginForm({ onSuccess }: LoginFormProps) {
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -49,8 +53,13 @@ export function LoginForm() {
         title: "Login Successful!",
         description: "Welcome back!",
       });
-      const redirectUrl = searchParams.get('redirect') || '/';
-      router.replace(redirectUrl);
+
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        const redirectUrl = searchParams.get('redirect') || '/';
+        router.replace(redirectUrl);
+      }
     } else {
       toast({
         variant: "destructive",

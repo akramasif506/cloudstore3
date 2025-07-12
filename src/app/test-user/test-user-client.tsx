@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Beaker, ShieldAlert, UserCheck } from 'lucide-react';
 import type { User as FirebaseUser } from 'firebase/auth';
 import { LoginForm } from '@/app/login/login-form';
+import { useRouter } from 'next/navigation';
 
 interface TestUserClientProps {
     user: FirebaseUser | null;
@@ -16,6 +17,13 @@ interface TestUserClientProps {
 }
 
 export function TestUserClient({ user, profileResult }: TestUserClientProps) {
+    const router = useRouter();
+
+    const handleLoginSuccess = () => {
+        // Refresh the page to re-run server components and get new data
+        router.refresh();
+    };
+
     return (
         <div className="max-w-2xl mx-auto">
             <Card>
@@ -47,7 +55,7 @@ export function TestUserClient({ user, profileResult }: TestUserClientProps) {
                                 <p className="font-semibold mb-2 flex items-center gap-2"><ShieldAlert className="h-5 w-5" /> Status: No user is currently logged in.</p>
                                 <p className="text-sm font-semibold mb-2">Use the form below to log in.</p>
                                 <div className="p-4 mt-4 bg-white rounded-md border">
-                                     <LoginForm />
+                                     <LoginForm onSuccess={handleLoginSuccess} />
                                 </div>
                             </div>
                         )}
