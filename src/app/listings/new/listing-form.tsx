@@ -58,7 +58,7 @@ export function ListingForm() {
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, userLoaded } = useAuth();
   const router = useRouter();
   
   const form = useForm<ClientListingSchema>({
@@ -74,6 +74,9 @@ export function ListingForm() {
   });
 
   const isLoading = isSuggesting || isSubmitting;
+  // The form should be disabled if we are loading OR if the user profile hasn't loaded yet.
+  const isFormDisabled = isLoading || !userLoaded;
+
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -144,7 +147,6 @@ export function ListingForm() {
     setIsSubmitting(true);
 
     const formData = new FormData();
-    // Append all form values to formData
     for (const key in values) {
       if (key === 'productImage') {
         if (values.productImage && values.productImage.length > 0) {
@@ -158,12 +160,11 @@ export function ListingForm() {
       }
     }
     
-    // Pass user details directly in the form data
     formData.append('userId', user.id);
-    formData.append('userName', user.name);
-    formData.append('userAvatarUrl', user.profileImageUrl);
+    // Use optional chaining just in case, though the userLoaded check should prevent this.
+    formData.append('userName', user.name || 'User'); 
+    formData.append('userAvatarUrl', user.profileImageUrl || '');
 
-    // Call the server action with formData
     const result = await createListing(formData);
 
     if (result?.success === false) {
@@ -185,7 +186,6 @@ export function ListingForm() {
       }
     }
     
-    // Note: The page will redirect on success, so we only need to handle the loading state on failure.
     setIsSubmitting(false);
   };
   
@@ -202,7 +202,7 @@ export function ListingForm() {
             <FormItem>
               <FormLabel>Product Image</FormLabel>
               <FormControl>
-                <Input type="file" accept="image/*" {...productImageRef} disabled={isLoading} />
+                <Input type="file" accept="image/*" {...productImageRef} disabled={isFormDisabled} />
               </FormControl>
               <FormDescription>Upload a clear photo of your item.</FormDescription>
               <FormMessage />
@@ -223,7 +223,7 @@ export function ListingForm() {
                     form.setValue('subcategory', '');
                   }}
                   defaultValue={field.value}
-                  disabled={isLoading}
+                  disabled={isFormDisabled}
                 >
                   <FormControl>
                     <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
@@ -244,7 +244,7 @@ export function ListingForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Subcategory</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory || isLoading}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory || isFormDisabled}>
                   <FormControl>
                     <SelectTrigger><SelectValue placeholder="Select a subcategory" /></SelectTrigger>
                   </FormControl>
@@ -265,7 +265,7 @@ export function ListingForm() {
             type="button"
             variant="outline"
             onClick={handleSuggestDetails}
-            disabled={isLoading}
+            disabled={isFormDisabled}
             className="w-full md:w-auto"
           >
             {isSuggesting ? (
@@ -285,7 +285,7 @@ export function ListingForm() {
             <FormItem>
               <FormLabel>Listing Title</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Vintage Leather Armchair" {...field} disabled={isLoading} />
+                <Input placeholder="e.g. Vintage Leather Armchair" {...field} disabled={isFormDisabled} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -298,7 +298,7 @@ export function ListingForm() {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea placeholder="Describe your item in detail..." rows={6} {...field} disabled={isLoading} />
+                <Textarea placeholder="Describe your item in detail..." rows={6} {...field} disabled={isFormDisabled} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -320,7 +320,7 @@ export function ListingForm() {
                     placeholder="0.00"
                     className="pl-7"
                     step="0.01"
-                    disabled={isLoading}
+                    disabled={isFormDisabled}
                     {...field}
                     onChange={(e) => {
                       const value = e.target.value;
@@ -334,9 +334,9 @@ export function ListingForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" size="lg" className="w-full md:w-auto" disabled={isLoading}>
+        <Button type="submit" size="lg" className="w-full md:w-auto" disabled={isFormDisabled}>
           {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          {isSubmitting ? 'Creating Listing...' : 'Create Listing'}
+          {isSubmitting ? 'Creating Listing...' : (userLoaded ? 'Create Listing' : 'Loading User...')}
         </Button>
       </form>
     </Form>
