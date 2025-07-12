@@ -3,37 +3,48 @@
 
 import { z } from 'zod';
 import { db, storage } from '@/lib/firebase';
-import { ref as dbRef, set } from 'firebase/database';
+import { ref as dbRef, set, get } from 'firebase/database';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
 import { listingSchema } from '@/lib/schemas';
 import { redirect } from 'next/navigation';
-import { auth } from '@/lib/firebase'; // Make sure auth is imported
+import type { User } from '@/lib/types';
+
+const listingActionSchema = listingSchema.extend({
+  userId: z.string().min(1, 'User ID is required.'),
+});
+
 
 export async function createListing(formData: FormData) {
-  if (!db || !storage || !auth) {
+  if (!db || !storage) {
     return { success: false, message: 'Firebase is not configured.' };
-  }
-
-  const currentUser = auth.currentUser;
-  if (!currentUser) {
-    return { success: false, message: 'You must be logged in to create a listing.' };
   }
   
   const rawFormData = Object.fromEntries(formData.entries());
 
-  const validatedFields = listingSchema.safeParse({
+  const validatedFields = listingActionSchema.safeParse({
     ...rawFormData,
     price: parseFloat(rawFormData.price as string),
   });
 
   if (!validatedFields.success) {
+    console.log(validatedFields.error.flatten().fieldErrors);
     return {
       success: false,
       message: 'Invalid form data. Please check your inputs.',
       errors: validatedFields.error.flatten().fieldErrors,
     };
   }
+
+  const { userId, productName, productDescription, price, category, subcategory } = validatedFields.data;
+
+  // Verify user exists in the database
+  const userRef = dbRef(db, `users/${userId}`);
+  const userSnapshot = await get(userRef);
+  if (!userSnapshot.exists()) {
+    return { success: false, message: 'Invalid user. You must be logged in.' };
+  }
+  const sellerData: User = userSnapshot.val();
   
   const imageFile = formData.get('productImage') as File;
   if (!imageFile || imageFile.size === 0) {
@@ -53,8 +64,7 @@ export async function createListing(formData: FormData) {
     const imageUrl = await getDownloadURL(imageStorageRef);
     
     const productId = uuidv4();
-    const { productName, productDescription, price, category, subcategory } = validatedFields.data;
-
+    
     const newProductData = {
       id: productId,
       name: productName,
@@ -65,8 +75,8 @@ export async function createListing(formData: FormData) {
       imageUrl: imageUrl,
       reviews: [], 
       seller: {
-        id: currentUser.uid,
-        name: currentUser.displayName || 'Anonymous User',
+        id: sellerData.id,
+        name: sellerData.name || 'Anonymous User',
       },
       createdAt: new Date().toISOString(),
       status: 'pending_review',

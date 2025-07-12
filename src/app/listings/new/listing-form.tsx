@@ -148,6 +148,9 @@ export function ListingForm() {
     setIsSubmitting(true);
 
     const formData = new FormData();
+    // Append user ID to form data
+    formData.append('userId', user.id);
+
     for (const key in values) {
       if (key === 'productImage') {
         if (values.productImage && values.productImage.length > 0) {
@@ -330,8 +333,8 @@ export function ListingForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" size="lg" className="w-full md:w-auto" disabled={isFormProcessing}>
-          {isFormProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+        <Button type="submit" size="lg" className="w-full md:w-auto" disabled={isFormProcessing || authLoading}>
+          {(isFormProcessing || authLoading) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           {isSubmitting ? 'Submitting for Review...' : 'Submit for Review'}
         </Button>
       </form>
