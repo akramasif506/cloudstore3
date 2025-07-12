@@ -1,29 +1,43 @@
 
 import { ProductGrid } from '@/components/products/product-grid';
-import { mockUser } from '@/lib/data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package } from 'lucide-react';
+import { Package, Clock } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import type { Product } from '@/lib/types';
 import { get, ref } from 'firebase/database';
+import { useAuth } from '@/context/auth-context';
+import { MyListingsClient } from './my-listings-client';
 
-async function getUserProducts(userId: string): Promise<Product[]> {
+
+async function getUnderReviewProducts(userId: string): Promise<Product[]> {
   if (!db) {
     console.warn("Firebase is not configured. Returning empty products.");
     return [];
   }
+  if (!userId) {
+    return [];
+  }
   try {
-    const productsRef = ref(db, 'products');
-    const snapshot = await get(productsRef);
+    const underReviewRef = ref(db, 'CloudStore/products/under_review');
+    const snapshot = await get(underReviewRef);
     if (snapshot.exists()) {
-      const productsData = snapshot.val();
-      const allProducts: Product[] = Object.keys(productsData).map(key => ({
-        ...productsData[key],
-        id: key,
-        price: Number(productsData[key].price) || 0,
-      }));
-      // Filter products by seller ID in the code
-      return allProducts.filter(product => product.seller && product.seller.id === userId);
+      const data = snapshot.val();
+      const allProducts: Product[] = [];
+      // Data is structured as {date: {category: {productId: product}}}
+      Object.values(data).forEach((dateEntries: any) => {
+        Object.values(dateEntries).forEach((categoryEntries: any) => {
+          Object.values(categoryEntries).forEach((product: any) => {
+            // Ensure product has a seller and the ID matches
+            if (product.seller && product.seller.id === userId) {
+              allProducts.push({
+                ...product,
+                price: Number(product.price) || 0,
+              });
+            }
+          });
+        });
+      });
+      return allProducts;
     }
     return [];
   } catch (error) {
@@ -32,33 +46,13 @@ async function getUserProducts(userId: string): Promise<Product[]> {
   }
 }
 
-export default async function MyListingsPage() {
-  const userProducts = await getUserProducts(mockUser.id);
 
+export default async function MyListingsPage() {
+  
   return (
     <div>
-      <div className="mb-8">
-        <div className="flex items-center gap-4">
-            <div className="flex-shrink-0 bg-primary/10 text-primary rounded-lg p-3">
-              <Package className="h-6 w-6" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold font-headline">My Listings</h1>
-              <p className="text-muted-foreground">Manage your items for sale.</p>
-            </div>
-          </div>
-      </div>
-
-      {userProducts.length > 0 ? (
-        <ProductGrid products={userProducts} />
-      ) : (
-        <Card className="flex flex-col items-center justify-center text-center py-20">
-            <CardHeader>
-                <CardTitle>No Listings Yet</CardTitle>
-                <CardDescription>You haven't listed any items for sale.</CardDescription>
-            </CardHeader>
-        </Card>
-      )}
+        <MyListingsClient />
     </div>
   );
 }
+
