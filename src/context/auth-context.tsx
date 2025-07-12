@@ -3,7 +3,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { ref, onValue, off, DatabaseReference } from 'firebase/database';
+import { ref, onValue, off, DatabaseReference, Unsubscribe } from 'firebase/database';
 import { auth, db } from '@/lib/firebase';
 import type { User as AppUser } from '@/lib/types';
 
@@ -22,37 +22,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let userProfileListener: DatabaseReference | null = null;
-    let onProfileValue: ((snapshot: any) => void) | null = null;
-    
+    let unsubscribeDb: Unsubscribe | undefined;
+
     const unsubscribeAuth = onAuthStateChanged(auth, (fbUser) => {
-      // First, always clean up the previous listener if it exists
-      if (userProfileListener && onProfileValue) {
-        off(userProfileListener, 'value', onProfileValue);
+      // Always unsubscribe from any previous database listener first
+      if (unsubscribeDb) {
+        unsubscribeDb();
       }
-      
+
       setFirebaseUser(fbUser);
 
       if (fbUser) {
         // User is logged in, set up a new listener for their profile
         setLoading(true);
-        userProfileListener = ref(db!, `users/${fbUser.uid}`);
+        const userProfileRef = ref(db!, `users/${fbUser.uid}`);
         
-        onProfileValue = (snapshot: any) => {
+        unsubscribeDb = onValue(userProfileRef, (snapshot) => {
           if (snapshot.exists()) {
             setUser(snapshot.val() as AppUser);
           } else {
-            // This can happen if the db entry isn't created yet or was deleted
+            // User exists in auth but not in DB, treat as not fully logged in
             setUser(null);
           }
           setLoading(false);
-        };
-        onValue(userProfileListener, onProfileValue, (error) => {
+        }, (error) => {
             console.error("Error fetching user profile:", error);
             setUser(null);
             setLoading(false);
         });
-
       } else {
         // User is logged out
         setUser(null);
@@ -60,20 +57,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // Cleanup the auth subscription on component unmount
+    // Cleanup the auth subscription and any lingering db subscription on component unmount
     return () => {
         unsubscribeAuth();
-        if (userProfileListener && onProfileValue) {
-            off(userProfile_listener, 'value', onProfileValue);
+        if (unsubscribeDb) {
+            unsubscribeDb();
         }
     };
   }, []);
 
-
   const logout = async () => {
     if (auth) {
       await auth.signOut();
-      // onAuthStateChanged will handle clearing user state
+      // onAuthStateChanged will handle clearing user state and db listeners
     }
   };
   
