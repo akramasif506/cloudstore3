@@ -3,7 +3,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { ref, onValue, off, Unsubscribe } from 'firebase/database';
+import { ref, onValue, off, type Unsubscribe } from 'firebase/database';
 import { auth, db } from '@/lib/firebase';
 import type { User as AppUser } from '@/lib/types';
 
@@ -24,45 +24,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let databaseSubscription: Unsubscribe | undefined;
 
-    const authStateUnsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-      // First, clean up any existing database listener from a previous user
+    const authStateUnsubscribe = onAuthStateChanged(auth, (fbUser) => {
       if (databaseSubscription) {
         databaseSubscription();
         databaseSubscription = undefined;
       }
-      
+
       setFirebaseUser(fbUser);
       
       if (fbUser) {
-        // User is signed in.
-        const idToken = await fbUser.getIdToken();
-        // Post the token to the server to create a session cookie
-        await fetch('/api/auth', {
-            method: 'POST',
-            headers: {
-            'Authorization': `Bearer ${idToken}`,
-            },
-        });
-        
-        // Listen for user profile data from Realtime Database
+        // User is signed in, listen for their profile data.
         const userProfileRef = ref(db!, `users/${fbUser.uid}`);
         databaseSubscription = onValue(userProfileRef, (snapshot) => {
           if (snapshot.exists()) {
-            setUser(snapshot.val() as AppUser);
+            setUser(snapshot.val());
           } else {
-            // User might be in Auth but not yet in DB (e.g., during registration process)
             setUser(null);
           }
           setLoading(false);
         }, (error) => {
-            console.error("Error fetching user profile:", error);
-            setUser(null);
-            setLoading(false);
+          console.error("Error fetching user profile:", error);
+          setUser(null);
+          setLoading(false);
         });
 
       } else {
         // User is signed out.
-        await fetch('/api/auth/logout', { method: 'POST' });
         setUser(null);
         setFirebaseUser(null);
         setLoading(false);
@@ -79,6 +66,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = async () => {
+    // API call to clear the server-side session cookie
+    await fetch('/api/auth/logout', { method: 'POST' });
     if (auth) {
       await auth.signOut();
     }

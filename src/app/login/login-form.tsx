@@ -19,6 +19,7 @@ import { loginUser } from './actions';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { auth } from '@/lib/firebase';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address.'),
@@ -46,20 +47,39 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   async function onSubmit(values: z.infer<typeof loginSchema>) {
     setIsLoading(true);
     const result = await loginUser(values);
-    setIsLoading(false);
 
-    if (result.success) {
-      toast({
-        title: "Login Successful!",
-        description: "Welcome back!",
-      });
+    if (result.success && auth?.currentUser) {
+      try {
+        const idToken = await auth.currentUser.getIdToken();
+        await fetch('/api/auth', {
+            method: 'POST',
+            headers: {
+            'Authorization': `Bearer ${idToken}`,
+            },
+        });
 
-      if (onSuccess) {
-        onSuccess();
-      } else {
-        const redirectUrl = searchParams.get('redirect') || '/';
-        router.replace(redirectUrl);
+        toast({
+          title: "Login Successful!",
+          description: "Welcome back! Redirecting...",
+        });
+
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          // A full page refresh is more reliable here to ensure server components re-render
+          // with the new session cookie.
+          const redirectUrl = searchParams.get('redirect') || '/';
+          window.location.href = redirectUrl;
+        }
+      } catch (e) {
+        console.error("Session creation failed", e);
+        toast({
+            variant: "destructive",
+            title: "Login Failed",
+            description: "Could not create a session. Please try again.",
+        });
       }
+
     } else {
       toast({
         variant: "destructive",
@@ -67,6 +87,8 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         description: result.error || "Please check your credentials and try again.",
       });
     }
+
+    setIsLoading(false);
   }
 
   return (
