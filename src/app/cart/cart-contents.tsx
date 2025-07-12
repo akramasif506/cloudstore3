@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/context/cart-context';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Trash2, Frown } from 'lucide-react';
@@ -106,7 +106,7 @@ export function CartContents() {
             </div>
           </CardContent>
           <CardFooter>
-            <Button size="lg" className="w-full">Proceed to Checkout</Button>
+            <Button size="lg" className="w-full">Place Order</Button>
           </CardFooter>
         </Card>
       </div>
