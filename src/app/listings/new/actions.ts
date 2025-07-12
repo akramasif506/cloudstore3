@@ -15,7 +15,20 @@ const listingActionSchema = listingSchema.extend({
 });
 
 export async function createListing(formData: FormData) {
-  const { adminDb, adminStorage } = initializeAdmin();
+  let adminDb, adminStorage;
+
+  try {
+    const adminApp = initializeAdmin();
+    adminDb = adminApp.db;
+    adminStorage = adminApp.storage;
+  } catch (error) {
+    console.error('Firebase Admin Initialization Error:', error);
+    if (error instanceof Error) {
+        return { success: false, message: `Server configuration error: ${error.message}` };
+    }
+    return { success: false, message: 'Server configuration error. Please check your environment variables.' };
+  }
+
   const rawFormData = Object.fromEntries(formData.entries());
 
   const validatedFields = listingActionSchema.safeParse({
