@@ -19,45 +19,70 @@ import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/context/auth-context';
 import { Loader2, Frown } from 'lucide-react';
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
-
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
+import { updateUserProfile } from '@/app/profile/actions';
 
 const profileSchema = z.object({
-  name: z.string().min(3, 'Username must be at least 3 characters.'),
+  name: z.string().min(3, 'Name must be at least 3 characters.'),
   email: z.string().email('Please enter a valid email address.'),
+  mobileNumber: z.string().regex(/^\d{10}$/, 'Please enter a valid 10-digit mobile number.'),
+  gender: z.enum(['male', 'female', 'other']),
 });
 
 export function ProfileForm() {
   const { toast } = useToast();
   const { user } = useAuth();
   const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: '',
       email: '',
+      mobileNumber: '',
+      gender: undefined,
     },
   });
 
-  // Re-initialize form when user loads
   React.useEffect(() => {
     if (user) {
       form.reset({
         name: user.name || '',
         email: user.email || '',
+        mobileNumber: user.mobileNumber || '',
+        gender: user.gender,
       });
     }
   }, [user, form]);
 
-  function onSubmit(values: z.infer<typeof profileSchema>) {
-    console.log(values);
-    toast({
-      title: "Profile Updated!",
-      description: "Your information has been saved successfully.",
+  async function onSubmit(values: z.infer<typeof profileSchema>) {
+    if (!user) return;
+    setIsSubmitting(true);
+
+    const result = await updateUserProfile({
+        userId: user.id,
+        name: values.name,
+        mobileNumber: values.mobileNumber,
     });
+    
+    setIsSubmitting(false);
+
+    if (result.success) {
+        toast({
+            title: "Profile Updated!",
+            description: "Your information has been saved successfully.",
+        });
+    } else {
+        toast({
+            variant: "destructive",
+            title: "Update Failed",
+            description: result.message || "Could not save your profile. Please try again.",
+        });
+    }
   }
   
   if (!user) {
@@ -102,7 +127,7 @@ export function ProfileForm() {
             <FormItem>
               <FormLabel>Full Name</FormLabel>
               <FormControl>
-                <Input placeholder="Your full name" {...field} />
+                <Input placeholder="Your full name" {...field} disabled={isSubmitting}/>
               </FormControl>
               <FormDescription>This is your public display name.</FormDescription>
               <FormMessage />
@@ -125,7 +150,63 @@ export function ProfileForm() {
           )}
         />
         
-        <Button type="submit">Save Changes</Button>
+        <FormField
+          control={form.control}
+          name="mobileNumber"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Mobile Number</FormLabel>
+              <FormControl>
+                <Input type="tel" placeholder="9876543210" {...field} disabled={isSubmitting}/>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="gender"
+          render={({ field }) => (
+            <FormItem className="space-y-3">
+              <FormLabel>Gender</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  className="flex items-center space-x-6"
+                  disabled
+                >
+                  <FormItem className="flex items-center space-x-2 space-y-0">
+                    <FormControl>
+                      <RadioGroupItem value="male" />
+                    </FormControl>
+                    <FormLabel className="font-normal">Male</FormLabel>
+                  </FormItem>
+                  <FormItem className="flex items-center space-x-2 space-y-0">
+                    <FormControl>
+                      <RadioGroupItem value="female" />
+                    </FormControl>
+                    <FormLabel className="font-normal">Female</FormLabel>
+                  </FormItem>
+                  <FormItem className="flex items-center space-x-2 space-y-0">
+                    <FormControl>
+                      <RadioGroupItem value="other" />
+                    </FormControl>
+                    <FormLabel className="font-normal">Other</FormLabel>
+                  </FormItem>
+                </RadioGroup>
+              </FormControl>
+               <FormDescription>Your gender cannot be changed.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save Changes
+        </Button>
       </form>
     </Form>
   );
