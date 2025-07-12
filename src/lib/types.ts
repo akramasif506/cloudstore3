@@ -1,15 +1,23 @@
-import type { StaticImageData } from "next/image";
 
 export interface User {
   id: string;
   name: string;
-  avatarUrl: string;
+  email: string;
+  mobileNumber?: string;
+  gender?: 'male' | 'female' | 'other';
+  profileImageUrl: string;
+  address?: string;
+  location?: {
+    lat: number;
+    lng: number;
+  };
   role?: 'admin' | 'user';
+  createdAt: string;
 }
 
 export interface Review {
   id: string;
-  user: User;
+  user: Pick<User, 'id' | 'name' | 'profileImageUrl'>;
   rating: number;
   comment: string;
   date: string;
@@ -23,7 +31,7 @@ export interface Product {
   category: string;
   subcategory: string;
   imageUrl: string;
-  seller: User;
+  seller: Pick<User, 'id' | 'name' | 'profileImageUrl'>;
   reviews: Review[];
   distance: number; // in km
 }
