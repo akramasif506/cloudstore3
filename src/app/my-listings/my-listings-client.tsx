@@ -4,35 +4,77 @@
 import { useEffect, useState } from 'react';
 import { ProductGrid } from '@/components/products/product-grid';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package, Clock, Loader2 } from 'lucide-react';
+import { Package, Clock, Loader2, Frown } from 'lucide-react';
 import type { Product } from '@/lib/types';
 import { useAuth } from '@/context/auth-context';
 import { getMyListings } from './actions';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export function MyListingsClient() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    async function fetchProducts() {
-      if (user?.id) {
-        setLoading(true);
-        const userProducts = await getMyListings(user.id);
-        setProducts(userProducts);
-        setLoading(false);
-      } else if (user === null) {
-        // If user is explicitly null (not just loading), stop loading.
-        setLoading(false);
-        setProducts([]);
-      }
+    // This effect runs when the authentication state changes.
+    if (authLoading) {
+      // If auth is still loading, do nothing yet.
+      return;
     }
 
-    fetchProducts();
-  }, [user]);
+    if (user?.id) {
+      // If there is a user, fetch their products.
+      setLoading(true);
+      getMyListings(user.id)
+        .then(userProducts => {
+          setProducts(userProducts);
+        })
+        .catch(error => {
+          console.error("Failed to fetch listings:", error);
+          setProducts([]);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } else {
+      // If there is no user, clear products and stop loading.
+      setProducts([]);
+      setLoading(false);
+    }
+  }, [user, authLoading]);
 
+  // Combined loading state
+  const isLoading = authLoading || loading;
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center p-20">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  if (!user) {
+    // This is the state when auth has loaded, but there's no user.
+     return (
+        <Card className="flex flex-col items-center justify-center text-center py-20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Frown /> You're Not Logged In</CardTitle>
+            <CardDescription>You must be logged in to view your listings.</CardDescription>
+          </CardHeader>
+          <CardContent>
+             <Button onClick={() => router.push('/login')}>
+                Go to Login
+             </Button>
+          </CardContent>
+        </Card>
+      );
+  }
+
+  // This is the state when the user is logged in.
   return (
     <div>
       <div className="mb-8">
@@ -47,11 +89,7 @@ export function MyListingsClient() {
         </div>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center items-center p-20">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        </div>
-      ) : products.length > 0 ? (
+      {products.length > 0 ? (
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2 text-amber-600">
