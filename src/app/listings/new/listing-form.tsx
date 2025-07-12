@@ -45,7 +45,7 @@ type ClientListingSchema = z.infer<typeof clientListingSchema>;
 const categories = {
   'Furniture': ['Chairs', 'Tables', 'Shelving', 'Beds'],
   'Home Decor': ['Vases', 'Lamps', 'Rugs', 'Wall Art'],
-  'Apparel': ['Jackets', 'Dresses', 'Shoes', 'Accessories'],
+  'Cloths': ['Jackets', 'Dresses', 'Shoes', 'Accessories'],
   'Electronics': ['Cameras', 'Audio', 'Computers', 'Phones'],
   'Outdoor & Sports': ['Bikes', 'Camping Gear', 'Fitness'],
 };

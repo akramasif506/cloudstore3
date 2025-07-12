@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -17,7 +18,7 @@ import { SlidersHorizontal } from "lucide-react";
 const categories = {
   'Furniture': ['Chairs', 'Tables', 'Shelving', 'Beds'],
   'Home Decor': ['Vases', 'Lamps', 'Rugs', 'Wall Art'],
-  'Apparel': ['Jackets', 'Dresses', 'Shoes', 'Accessories'],
+  'Cloths': ['Jackets', 'Dresses', 'Shoes', 'Accessories'],
   'Electronics': ['Cameras', 'Audio', 'Computers', 'Phones'],
   'Outdoor & Sports': ['Bikes', 'Camping Gear', 'Fitness'],
 };
