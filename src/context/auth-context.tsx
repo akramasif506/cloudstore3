@@ -25,21 +25,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let databaseSubscription: Unsubscribe | undefined;
 
     const authSubscription = onAuthStateChanged(auth, (fbUser) => {
-      setFirebaseUser(fbUser);
+      // First, clean up any existing database listener
       if (databaseSubscription) {
-        databaseSubscription();
+        off(ref(db!, `users/${firebaseUser?.uid}`), 'value', databaseSubscription);
         databaseSubscription = undefined;
       }
+
+      setFirebaseUser(fbUser);
 
       if (fbUser) {
         setLoading(true);
         const userProfileRef = ref(db!, `users/${fbUser.uid}`);
         
+        // Set up the new database listener
         databaseSubscription = onValue(userProfileRef, (snapshot) => {
           if (snapshot.exists()) {
             setUser(snapshot.val() as AppUser);
           } else {
-            setUser(null);
+            // User exists in Auth, but not in DB.
+            // This can happen, handle as logged out from app perspective.
+            setUser(null); 
           }
           setLoading(false);
         }, (error) => {
@@ -48,18 +53,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setLoading(false);
         });
       } else {
+        // User is logged out
         setUser(null);
         setLoading(false);
       }
     });
 
+    // Cleanup function for when the AuthProvider unmounts
     return () => {
         authSubscription();
-        if (databaseSubscription) {
-            databaseSubscription();
+        if (databaseSubscription && firebaseUser) {
+            off(ref(db!, `users/${firebaseUser.uid}`), 'value', databaseSubscription);
         }
     };
-  }, []);
+  }, [firebaseUser]); // Rerun effect if firebaseUser changes to handle listener cleanup correctly
 
   const logout = async () => {
     if (auth) {
