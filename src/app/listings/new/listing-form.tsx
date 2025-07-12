@@ -188,25 +188,6 @@ export function ListingForm() {
   const selectedCategory = form.watch('category');
   const productImageRef = form.register("productImage");
 
-  if (!user) {
-    return (
-      <Card className="flex flex-col items-center justify-center text-center py-20">
-        <CardHeader>
-          <div className="mx-auto bg-muted rounded-full p-4 w-fit mb-4">
-            <Frown className="h-12 w-12 text-muted-foreground" />
-          </div>
-          <CardTitle>You're Not Logged In</CardTitle>
-          <CardDescription>You must be logged in to create a new listing.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button onClick={() => router.push('/login?redirect=/listings/new')}>
-            Go to Login Page
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
-
 
   return (
     <Form {...form}>
