@@ -24,10 +24,12 @@ async function getCurrentUser(userId: string): Promise<User | null> {
   }
 }
 
-export async function createListing(formData: FormData, userId: string) {
+export async function createListing(formData: FormData) {
   if (!db || !storage) {
     return { success: false, message: 'Firebase is not configured.' };
   }
+
+  const userId = formData.get('userId') as string;
 
   if (!userId) {
     return { success: false, message: 'You must be logged in to create a listing.' };
