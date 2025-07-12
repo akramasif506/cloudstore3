@@ -17,7 +17,6 @@ export async function createListing(formData: FormData) {
 
   const rawFormData = Object.fromEntries(formData.entries());
 
-  // First, validate the text and number inputs
   const validatedFields = listingSchema.safeParse({
     ...rawFormData,
     price: parseFloat(rawFormData.price as string),
@@ -31,7 +30,6 @@ export async function createListing(formData: FormData) {
     };
   }
   
-  // Now, handle the image file separately
   const imageFile = formData.get('productImage') as File;
   if (!imageFile || imageFile.size === 0) {
     return { 
@@ -42,47 +40,52 @@ export async function createListing(formData: FormData) {
   }
 
   try {
-    // 1. Upload image to Firebase Storage with the new path structure
+    const { category } = validatedFields.data;
+
+    // 1. Upload image to Firebase Storage
     const imageBuffer = Buffer.from(await imageFile.arrayBuffer());
     const fileExtension = imageFile.name.split('.').pop();
     const imageFileName = `${uuidv4()}.${fileExtension}`;
-    
-    const uploadDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
-    const category = validatedFields.data.category;
+    const uploadDate = new Date().toISOString().split('T')[0];
     
     const imageStoragePath = `CloudStor/upload/under_review/${uploadDate}/product/${category}/${imageFileName}`;
     const imageStorageRef = storageRef(storage, imageStoragePath);
     
     await uploadBytes(imageStorageRef, imageBuffer);
-
-    // 2. Get the public URL of the uploaded image
     const imageUrl = await getDownloadURL(imageStorageRef);
 
-    // 3. Save product data to Realtime Database
-    const productsRef = dbRef(db, 'products');
-    const newProductRef = push(productsRef);
+    // 2. Save product data to Realtime Database under the new path
+    // The path will now be /products/{category}/{productId}
+    const productsCategoryRef = dbRef(db, `products/${category}`);
+    const newProductRef = push(productsCategoryRef); // Generate a unique key within the category
+    const productId = newProductRef.key;
+
+    if (!productId) {
+        throw new Error("Failed to generate a new product ID.");
+    }
 
     const newProduct = {
       ...validatedFields.data,
-      id: newProductRef.key,
+      id: productId,
       imageUrl: imageUrl,
       seller: {
         id: mockUser.id,
         name: mockUser.name,
         avatarUrl: mockUser.avatarUrl,
       },
-      reviews: [], // Start with no reviews
-      distance: Math.floor(Math.random() * 50) + 1, // mock distance
+      reviews: [], 
+      distance: Math.floor(Math.random() * 50) + 1,
       createdAt: new Date().toISOString(),
     };
-
-    await set(newProductRef, newProduct);
+    
+    // Set the data at the specific path: /products/{category}/{productId}
+    const productDbRef = dbRef(db, `products/${category}/${productId}`);
+    await set(productDbRef, newProduct);
 
   } catch (error) {
     console.error('Error creating listing:', error);
     return { success: false, message: 'Failed to create listing.' };
   }
 
-  // This needs to be outside the try/catch, as redirect throws an error.
   redirect('/my-listings');
 }
