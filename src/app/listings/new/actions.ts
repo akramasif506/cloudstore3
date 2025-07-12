@@ -3,11 +3,12 @@
 
 import { z } from 'zod';
 import { db, storage } from '@/lib/firebase';
-import { ref as dbRef, push, set } from 'firebase/database';
+import { ref as dbRef, set } from 'firebase/database';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
 import { listingSchema } from '@/lib/schemas';
 import { redirect } from 'next/navigation';
+import { format } from 'date-fns';
 
 export async function createListing(formData: FormData) {
   if (!db || !storage) {
@@ -54,15 +55,12 @@ export async function createListing(formData: FormData) {
     
     await uploadBytes(imageStorageRef, imageBuffer);
     const imageUrl = await getDownloadURL(imageStorageRef);
-
-    // 2. Prepare product data
-    const newProductRef = push(dbRef(db, 'products'));
-    const productId = newProductRef.key;
-
-     if (!productId) {
-        throw new Error("Failed to generate a new product ID.");
-    }
     
+    // 2. Prepare product data
+    const productId = uuidv4();
+    const currentDate = format(new Date(), 'yyyy-MM-dd');
+    const category = validatedFields.data.category;
+
     const newProductData = {
       ...validatedFields.data,
       id: productId,
@@ -78,8 +76,9 @@ export async function createListing(formData: FormData) {
       status: 'under_review', // All new products are under review
     };
     
-    // 3. Save to the general 'products' path for easy querying
-    await set(dbRef(db, `products/${productId}`), newProductData);
+    // 3. Save to the new database path
+    const productPath = `/CloudStore/products/under_review/${currentDate}/${category}/${productId}`;
+    await set(dbRef(db, productPath), newProductData);
 
   } catch (error) {
     console.error('Error creating listing:', error);
