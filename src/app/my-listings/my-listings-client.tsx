@@ -7,7 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Package, Clock, Loader2 } from 'lucide-react';
 import type { Product } from '@/lib/types';
 import { useAuth } from '@/context/auth-context';
-import { getUnderReviewProducts } from './actions';
+import { getMyListings } from './actions';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export function MyListingsClient() {
   const { user } = useAuth();
@@ -18,10 +20,11 @@ export function MyListingsClient() {
     async function fetchProducts() {
       if (user?.id) {
         setLoading(true);
-        const userProducts = await getUnderReviewProducts(user.id);
+        const userProducts = await getMyListings(user.id);
         setProducts(userProducts);
         setLoading(false);
-      } else {
+      } else if (!user) {
+        // If user is explicitly null (not just loading), stop loading.
         setLoading(false);
         setProducts([]);
       }
@@ -69,6 +72,11 @@ export function MyListingsClient() {
             <CardTitle>No Listings Yet</CardTitle>
             <CardDescription>You haven't listed any items for sale.</CardDescription>
           </CardHeader>
+          <CardContent>
+             <Button asChild>
+                <Link href="/listings/new">Create a Listing</Link>
+             </Button>
+          </CardContent>
         </Card>
       )}
     </div>
