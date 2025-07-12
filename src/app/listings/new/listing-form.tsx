@@ -182,7 +182,7 @@ export function ListingForm() {
                   form.setValue('subcategory', '');
                 }} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger><SelectValue placeholder="Select a category" /></SelectValue>
+                    <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     {Object.keys(categories).map(cat => (
