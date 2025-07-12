@@ -6,6 +6,7 @@ import { get, ref, update } from 'firebase/database';
 import { db } from '@/lib/firebase';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { updateProductSchema } from '@/lib/schemas/product';
 
 export async function getPendingProducts(): Promise<Product[]> {
   if (!db) {
@@ -58,15 +59,6 @@ export async function approveProduct(productId: string): Promise<{ success: bool
         return { success: false, message: 'Failed to approve product.' };
     }
 }
-
-export const updateProductSchema = z.object({
-  id: z.string(),
-  name: z.string().min(3, 'Title must be at least 3 characters long.'),
-  description: z.string().min(10, 'Description must be at least 10 characters long.'),
-  price: z.coerce.number().positive('Price must be a positive number.'),
-  category: z.string().nonempty('Please select a category.'),
-  subcategory: z.string().nonempty('Please select a subcategory.'),
-});
 
 export async function updateAndApproveProduct(
     values: z.infer<typeof updateProductSchema>

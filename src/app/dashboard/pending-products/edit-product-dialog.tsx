@@ -34,7 +34,8 @@ import {
 } from "@/components/ui/select";
 import { Loader2, Edit } from 'lucide-react';
 import type { Product } from '@/lib/types';
-import { updateAndApproveProduct, updateProductSchema } from './actions';
+import { updateAndApproveProduct } from './actions';
+import { updateProductSchema } from '@/lib/schemas/product';
 
 interface EditProductDialogProps {
   product: Product;
