@@ -3,7 +3,7 @@ import { ProductFilters } from '@/components/products/product-filters';
 import { ProductGrid } from '@/components/products/product-grid';
 import { db } from '@/lib/firebase';
 import type { Product } from '@/lib/types';
-import { get, ref, query, orderByChild, equalTo } from 'firebase/database';
+import { get, ref } from 'firebase/database';
 
 async function getProducts(): Promise<Product[]> {
   if (!db) {
@@ -12,17 +12,17 @@ async function getProducts(): Promise<Product[]> {
   }
   try {
     const productsRef = ref(db, 'products');
-    // Query for products with 'active' status
-    const activeProductsQuery = query(productsRef, orderByChild('status'), equalTo('active'));
-    const snapshot = await get(activeProductsQuery);
+    const snapshot = await get(productsRef);
     if (snapshot.exists()) {
       const productsData = snapshot.val();
-      return Object.keys(productsData).map(key => ({
+      const allProducts: Product[] = Object.keys(productsData).map(key => ({
         ...productsData[key],
         id: key,
         price: Number(productsData[key].price) || 0,
         imageUrl: productsData[key].imageUrl || 'https://placehold.co/400x300.png',
       }));
+      // Filter for active products on the server
+      return allProducts.filter(product => product.status === 'active');
     }
     return [];
   } catch (error) {

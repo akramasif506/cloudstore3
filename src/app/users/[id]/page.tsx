@@ -11,7 +11,6 @@ import { get, ref, child, query, orderByChild, equalTo } from 'firebase/database
 async function getUser(userId: string): Promise<User | null> {
   if (!db) return null;
   try {
-    // Corrected path to fetch user
     const userRef = child(ref(db), `users/${userId}`);
     const snapshot = await get(userRef);
     if (snapshot.exists()) {
