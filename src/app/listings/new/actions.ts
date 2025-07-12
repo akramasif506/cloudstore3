@@ -6,14 +6,7 @@ import { ref as dbRef, push, set } from 'firebase/database';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { mockUser } from '@/lib/data'; // Using mock user as the seller for now
 import { v4 as uuidv4 } from 'uuid';
-
-export const listingSchema = z.object({
-  productName: z.string().min(3, 'Title must be at least 3 characters long.'),
-  productDescription: z.string().min(10, 'Description must be at least 10 characters long.'),
-  price: z.coerce.number().positive('Price must be a positive number.'),
-  category: z.string().nonempty('Please select a category.'),
-  subcategory: z.string().nonempty('Please select a subcategory.'),
-});
+import { listingSchema } from '@/lib/schemas';
 
 export async function createListing(prevState: any, formData: FormData) {
   if (!db || !storage) {

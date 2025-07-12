@@ -27,10 +27,11 @@ import {
 import { Loader2, Sparkles } from 'lucide-react';
 import { suggestListingDetails } from '@/ai/flows/suggest-listing-details';
 import { useToast } from "@/hooks/use-toast";
-import { createListing, listingSchema as serverListingSchema } from './actions';
+import { createListing } from './actions';
 import { useRouter } from 'next/navigation';
+import { listingSchema } from '@/lib/schemas';
 
-const clientListingSchema = serverListingSchema.extend({
+const clientListingSchema = listingSchema.extend({
   productImage: z.any()
     .refine((files) => files?.length === 1, 'Product image is required.')
 });
