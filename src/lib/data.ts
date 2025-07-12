@@ -4,12 +4,13 @@ export const mockUser: User = {
   id: 'user-1',
   name: 'Alex Doe',
   avatarUrl: 'https://placehold.co/100x100',
+  role: 'admin',
 };
 
 export const mockUsers: User[] = [
   mockUser,
-  { id: 'user-2', name: 'Jane Smith', avatarUrl: 'https://placehold.co/100x100' },
-  { id: 'user-3', name: 'Sam Wilson', avatarUrl: 'https://placehold.co/100x100' },
+  { id: 'user-2', name: 'Jane Smith', avatarUrl: 'https://placehold.co/100x100', role: 'user' },
+  { id: 'user-3', name: 'Sam Wilson', avatarUrl: 'https://placehold.co/100x100', role: 'user' },
 ];
 
 export const mockProducts: Product[] = [

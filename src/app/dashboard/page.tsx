@@ -1,11 +1,21 @@
-import { mockProducts, mockUsers } from '@/lib/data';
+import { mockProducts, mockUsers, mockUser } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Package, MessageSquare } from 'lucide-react';
+import { Users, Package, MessageSquare, ShieldAlert } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { CategoryChart } from '@/components/dashboard/category-chart';
 import { RecentProducts } from '@/components/dashboard/recent-products';
 
 export default function DashboardPage() {
+  if (mockUser.role !== 'admin') {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center">
+        <ShieldAlert className="w-16 h-16 text-destructive mb-4" />
+        <h1 className="text-3xl font-bold font-headline">Access Denied</h1>
+        <p className="text-muted-foreground">You do not have permission to view this page.</p>
+      </div>
+    )
+  }
+
   const totalProducts = mockProducts.length;
   const totalUsers = mockUsers.length;
   const totalReviews = mockProducts.reduce((acc, p) => acc + p.reviews.length, 0);

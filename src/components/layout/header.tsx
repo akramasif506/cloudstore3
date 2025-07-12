@@ -65,9 +65,11 @@ export function Header() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" />Dashboard</Link>
-              </DropdownMenuItem>
+              {mockUser.role === 'admin' && (
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" />Dashboard</Link>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem asChild>
                 <Link href="/profile"><User className="mr-2 h-4 w-4" />Profile</Link>
               </DropdownMenuItem>
