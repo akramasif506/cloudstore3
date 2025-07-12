@@ -23,7 +23,7 @@ export function RecentProducts({ products }: RecentProductsProps) {
             </div>
             <div className="flex-1">
               <p className="font-semibold truncate">{product.name}</p>
-              <p className="text-sm text-muted-foreground">${product.price.toFixed(2)}</p>
+              <p className="text-sm text-muted-foreground">₹{product.price.toFixed(2)}</p>
             </div>
           </div>
         </Link>
