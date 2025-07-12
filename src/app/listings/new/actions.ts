@@ -34,8 +34,12 @@ export async function createListing(formData: FormData, userId: string) {
   }
 
   const userProfile = await getCurrentUser(userId);
-  if (!userProfile || !userProfile.mobileNumber) {
-    return { success: false, message: 'User mobile number not found. Please update your profile.' };
+  if (!userProfile) {
+    return { success: false, message: 'Could not find your user profile. Please try again.' };
+  }
+
+  if (!userProfile.mobileNumber) {
+    return { success: false, message: 'User mobile number not found. Please update your profile before listing an item.' };
   }
 
   const rawFormData = Object.fromEntries(formData.entries());
@@ -72,16 +76,16 @@ export async function createListing(formData: FormData, userId: string) {
     const fileExtension = imageFile.name.split('.').pop();
     const imageFileName = `${uuidv4()}.${fileExtension}`;
     
-    // The storage path can remain generic as it's for internal organization
+    // The storage path is organized by date and category
     const imageStoragePath = `uploads/${uploadDate}/${category}/${imageFileName}`;
     const imageStorageRef = storageRef(storage, imageStoragePath);
     
     await uploadBytes(imageStorageRef, imageBuffer);
     const imageUrl = await getDownloadURL(imageStorageRef);
 
-    // 2. Prepare database path and get a unique product ID
-    const productDbPath = `${userMobile}/${uploadDate}/${category}`;
-    const newProductRef = push(dbRef(db, productDbPath));
+    // 2. Get a unique product ID for all database paths
+    const productsRef = dbRef(db, 'products');
+    const newProductRef = push(productsRef); // Get a unique key from the main products node
     const productId = newProductRef.key;
 
     if (!productId) {
@@ -89,7 +93,7 @@ export async function createListing(formData: FormData, userId: string) {
     }
 
     // 3. Prepare product data to be saved to Realtime Database
-    const newProduct = {
+    const newProductData = {
       ...validatedFields.data,
       id: productId,
       imageUrl: imageUrl,
@@ -104,8 +108,13 @@ export async function createListing(formData: FormData, userId: string) {
       status: 'under_review',
     };
     
-    // 4. Save product data to the new structured path in Realtime Database
-    await set(newProductRef, newProduct);
+    // 4. Save product data to the main products list (for homepage, etc.)
+    await set(dbRef(db, `products/${productId}`), newProductData);
+
+    // 5. Also save product data to the user-specific, organized path
+    const userProductDbPath = `${userMobile}/${uploadDate}/${category}/${productId}`;
+    await set(dbRef(db, userProductDbPath), newProductData);
+
 
   } catch (error) {
     console.error('Error creating listing:', error);
