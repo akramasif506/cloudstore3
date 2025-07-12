@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Leaf, Search, User, LogOut, LayoutDashboard, DollarSign, Package,LogIn } from 'lucide-react';
+import { Leaf, Search, User, LogOut, LayoutDashboard, DollarSign, Package,LogIn, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
