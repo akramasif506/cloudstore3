@@ -359,7 +359,7 @@ export function ListingForm() {
           )}
         />
         <Button type="submit" size="lg" className="w-full md:w-auto" disabled={isFormProcessing || authLoading}>
-          {(isFormProcessing || authLoading) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          {(isSubmitting || authLoading) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           {isSubmitting ? 'Submitting for Review...' : 'Submit for Review'}
         </Button>
       </form>
