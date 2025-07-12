@@ -19,6 +19,12 @@ import { useAuth } from '@/context/auth-context';
 export function Header() {
   const { user, logout } = useAuth();
 
+  const getFirstName = (fullName: string | undefined) => {
+    if (!fullName) return '';
+    return fullName.split(' ')[0];
+  };
+
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
@@ -62,7 +68,7 @@ export function Header() {
               <DropdownMenuContent className="w-56" align="end">
                 <DropdownMenuLabel>
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.name}</p>
+                    <p className="text-sm font-medium leading-none">Hello, {getFirstName(user.name)}!</p>
                     <p className="text-xs leading-none text-muted-foreground">
                       {user.email}
                     </p>
