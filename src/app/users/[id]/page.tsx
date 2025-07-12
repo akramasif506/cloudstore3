@@ -22,6 +22,7 @@ async function getUserProducts(userId: string): Promise<Product[]> {
       return Object.keys(productsData).map(key => ({
         ...productsData[key],
         id: key,
+        price: Number(productsData[key].price) || 0,
       }));
     }
     return [];

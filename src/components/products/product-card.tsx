@@ -28,15 +28,17 @@ export function ProductCard({ product }: ProductCardProps) {
             <p className="text-2xl font-bold text-primary">₹{product.price.toFixed(2)}</p>
           </CardContent>
         </Link>
-        <CardFooter className="p-4 bg-secondary/30">
-          <Link href={`/users/${product.seller.id}`} className="flex items-center space-x-2 hover:underline">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={product.seller.avatarUrl} alt={product.seller.name} data-ai-hint="profile avatar" />
-              <AvatarFallback>{product.seller.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <span className="text-sm text-muted-foreground">{product.seller.name}</span>
-          </Link>
-        </CardFooter>
+        {product.seller && (
+          <CardFooter className="p-4 bg-secondary/30">
+            <Link href={`/users/${product.seller.id}`} className="flex items-center space-x-2 hover:underline">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={product.seller.avatarUrl} alt={product.seller.name} data-ai-hint="profile avatar" />
+                <AvatarFallback>{product.seller.name.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <span className="text-sm text-muted-foreground">{product.seller.name}</span>
+            </Link>
+          </CardFooter>
+        )}
       </Card>
   );
 }
