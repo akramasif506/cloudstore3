@@ -30,51 +30,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     const unsubscribeAuth = onAuthStateChanged(auth, (fbUser) => {
       setFirebaseUser(fbUser);
+      // If the user signs out, fbUser will be null.
       if (!fbUser) {
-        // User is signed out
         setUser(null);
         setLoading(false);
       }
-      // If user is signed in, the next effect will handle profile fetching.
+      // If the user signs in, the effect below will handle profile fetching and loading state.
     });
 
     return () => unsubscribeAuth();
   }, []);
 
   useEffect(() => {
-    if (!firebaseUser || !db) {
-        // No user logged in, or DB not configured.
-        if (!firebaseUser) setLoading(false);
-        return;
+    // This effect runs when `firebaseUser` changes.
+    if (firebaseUser) {
+        // Don't set loading to false yet. We need the profile.
+        const userRef = ref(db, `users/${firebaseUser.uid}`);
+        
+        const unsubscribeDb = onValue(userRef, (snapshot) => {
+            if (snapshot.exists()) {
+                setUser(snapshot.val() as AppUser);
+            } else {
+                console.warn(`User profile for UID ${firebaseUser.uid} not found in database.`);
+                setUser(null); 
+            }
+            // Now that we have the profile (or know it doesn't exist), loading is complete.
+            setLoading(false);
+        }, (error) => {
+            console.error("Error fetching user profile:", error);
+            setUser(null);
+            setLoading(false);
+        });
+
+        // Cleanup the database listener
+        return () => off(userRef, 'value', unsubscribeDb);
+    } else {
+        // When there is no firebaseUser (initially or after logout),
+        // the onAuthStateChanged listener handles setting loading to false.
     }
-
-    setLoading(true);
-    const userRef = ref(db, `users/${firebaseUser.uid}`);
-    
-    const unsubscribeDb = onValue(userRef, (snapshot) => {
-      if (snapshot.exists()) {
-        setUser(snapshot.val() as AppUser);
-      } else {
-        console.warn(`User profile for UID ${firebaseUser.uid} not found in database.`);
-        setUser(null); 
-      }
-      setLoading(false);
-    }, (error) => {
-      console.error("Error fetching user profile:", error);
-      setUser(null);
-      setLoading(false);
-    });
-
-    // Cleanup the database listener when the user changes or component unmounts
-    return () => off(userRef, 'value', unsubscribeDb);
-
   }, [firebaseUser]);
 
 
   const logout = async () => {
     if (auth) {
+      // Set user to null immediately for a faster UI response
+      setUser(null); 
       await auth.signOut();
-      // State updates will be triggered by onAuthStateChanged
+      // onAuthStateChanged will also fire to confirm, but this improves UX.
     }
   };
   
