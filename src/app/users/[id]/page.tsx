@@ -1,3 +1,4 @@
+
 import { notFound } from 'next/navigation';
 import { mockUsers } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,7 +7,7 @@ import { ProductGrid } from '@/components/products/product-grid';
 import { Separator } from '@/components/ui/separator';
 import { db } from '@/lib/firebase';
 import type { Product } from '@/lib/types';
-import { get, ref, query, orderByChild, equalTo } from 'firebase/database';
+import { get, ref } from 'firebase/database';
 
 async function getUserProducts(userId: string): Promise<Product[]> {
   if (!db) {
@@ -15,15 +16,16 @@ async function getUserProducts(userId: string): Promise<Product[]> {
   }
   try {
     const productsRef = ref(db, 'products');
-    const userProductsQuery = query(productsRef, orderByChild('seller/id'), equalTo(userId));
-    const snapshot = await get(userProductsQuery);
+    const snapshot = await get(productsRef);
     if (snapshot.exists()) {
       const productsData = snapshot.val();
-      return Object.keys(productsData).map(key => ({
+      const allProducts: Product[] = Object.keys(productsData).map(key => ({
         ...productsData[key],
         id: key,
         price: Number(productsData[key].price) || 0,
       }));
+      // Filter products by seller ID in the code
+      return allProducts.filter(product => product.seller && product.seller.id === userId);
     }
     return [];
   } catch (error) {
