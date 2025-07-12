@@ -2,7 +2,7 @@
 'use server';
 
 import { z } from 'zod';
-import { auth, db, storage } from '@/lib/firebase';
+import { db, storage } from '@/lib/firebase';
 import { ref as dbRef, push, set, get, child } from 'firebase/database';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
@@ -24,17 +24,16 @@ async function getCurrentUser(userId: string): Promise<User | null> {
   }
 }
 
-export async function createListing(formData: FormData) {
-  if (!db || !storage || !auth) {
+export async function createListing(formData: FormData, userId: string) {
+  if (!db || !storage) {
     return { success: false, message: 'Firebase is not configured.' };
   }
 
-  const currentUser = auth.currentUser;
-  if (!currentUser) {
+  if (!userId) {
     return { success: false, message: 'You must be logged in to create a listing.' };
   }
 
-  const userProfile = await getCurrentUser(currentUser.uid);
+  const userProfile = await getCurrentUser(userId);
   if (!userProfile || !userProfile.mobileNumber) {
     return { success: false, message: 'User mobile number not found. Please update your profile.' };
   }

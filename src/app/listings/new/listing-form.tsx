@@ -29,6 +29,8 @@ import { suggestListingDetails } from '@/ai/flows/suggest-listing-details';
 import { useToast } from "@/hooks/use-toast";
 import { createListing } from './actions';
 import { listingSchema } from '@/lib/schemas';
+import { useAuth } from '@/context/auth-context';
+import { useRouter } from 'next/navigation';
 
 const isBrowser = typeof window !== 'undefined';
 
@@ -56,6 +58,8 @@ export function ListingForm() {
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const router = useRouter();
   
   const form = useForm<ClientListingSchema>({
     resolver: zodResolver(clientListingSchema),
@@ -128,6 +132,16 @@ export function ListingForm() {
   };
 
   const onSubmit = async (values: ClientListingSchema) => {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Not Logged In",
+        description: "You must be logged in to create a listing.",
+      });
+      router.push('/login');
+      return;
+    }
+
     const formData = new FormData();
     
     formData.append('productName', values.productName);
@@ -140,7 +154,7 @@ export function ListingForm() {
     }
 
     startTransition(async () => {
-      const result = await createListing(formData);
+      const result = await createListing(formData, user.id);
 
       if (result?.success === false) {
         toast({
