@@ -3,6 +3,7 @@
 
 import { z } from 'zod';
 import { db, storage } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase-admin';
 import { ref as dbRef, set, get } from 'firebase/database';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
@@ -17,7 +18,7 @@ const listingActionSchema = listingSchema.extend({
 
 
 export async function createListing(formData: FormData) {
-  if (!db || !storage) {
+  if (!db || !storage || !adminDb) {
     return { success: false, message: 'Firebase is not configured.' };
   }
   
@@ -44,9 +45,10 @@ export async function createListing(formData: FormData) {
       name: 'Anonymous Seller',
   };
 
-  // Fetch the user data to use as the seller
-  const userRef = dbRef(db, `users/${userId}`);
-  const userSnapshot = await get(userRef);
+  // Fetch the user data to use as the seller using the admin SDK to bypass security rules
+  const userRef = adminDb.ref(`users/${userId}`);
+  const userSnapshot = await userRef.once('value');
+
   if (userSnapshot.exists()) {
     const sellerData: User = userSnapshot.val();
     seller = {
