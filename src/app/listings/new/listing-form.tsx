@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, type FieldPath } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -38,6 +38,8 @@ const clientListingSchema = listingSchema.extend({
     .refine((files) => files?.length === 1, 'Product image is required.')
 });
 
+type ClientListingSchema = z.infer<typeof clientListingSchema>;
+
 
 const categories = {
   'Furniture': ['Chairs', 'Tables', 'Shelving', 'Beds'],
@@ -65,14 +67,15 @@ export function ListingForm() {
   const [state, formAction] = useActionState(createListing, {
     success: false,
     message: '',
+    errors: undefined,
   });
 
-  const form = useForm<z.infer<typeof clientListingSchema>>({
+  const form = useForm<ClientListingSchema>({
     resolver: zodResolver(clientListingSchema),
     defaultValues: {
       productName: '',
       productDescription: '',
-      price: 0,
+      price: undefined,
       category: '',
       subcategory: '',
       productImage: undefined,
@@ -80,23 +83,35 @@ export function ListingForm() {
   });
 
   useEffect(() => {
-    if(state?.message) {
-        if(state.success) {
-            toast({
-                title: "Listing Created!",
-                description: state.message,
-            });
-            // We redirect in the action now
-            // router.push('/my-listings');
-        } else {
-             toast({
-                variant: "destructive",
-                title: "Oh no! Something went wrong.",
-                description: state.message,
-            });
+    if (state.message) {
+      if (state.success) {
+        toast({
+          title: "Listing Created!",
+          description: "Your item has been listed for sale.",
+        });
+        form.reset();
+      } else if (state.errors) {
+        // Set form errors from server action
+        for (const [field, messages] of Object.entries(state.errors)) {
+          form.setError(field as FieldPath<ClientListingSchema>, {
+            type: 'server',
+            message: messages?.[0]
+          });
         }
+        toast({
+          variant: "destructive",
+          title: "Invalid Form Data",
+          description: state.message,
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Oh no! Something went wrong.",
+          description: state.message,
+        });
+      }
     }
-  }, [state, toast, router]);
+  }, [state, toast, router, form]);
   
   const selectedCategory = form.watch('category');
   const imageRef = form.register("productImage");
@@ -281,9 +296,9 @@ export function ListingForm() {
                           {...field}
                           onChange={(e) => {
                             const value = e.target.value;
-                            field.onChange(value === '' ? '' : e.target.valueAsNumber);
+                            field.onChange(value === '' ? undefined : e.target.valueAsNumber);
                           }}
-                          value={field.value || ''}
+                          value={field.value ?? ''}
                         />
                     </FormControl>
                 </div>

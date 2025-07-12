@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -24,7 +25,6 @@ export async function createListing(prevState: any, formData: FormData) {
 
 
   if (!validatedFields.success) {
-    console.log(validatedFields.error.flatten().fieldErrors);
     return {
       success: false,
       message: 'Invalid form data. Please check your inputs.',
@@ -34,7 +34,11 @@ export async function createListing(prevState: any, formData: FormData) {
 
   const imageFile = formData.get('productImage') as File;
   if (!imageFile || imageFile.size === 0) {
-    return { success: false, message: 'Product image is required.' };
+    return { 
+        success: false, 
+        message: 'Product image is required.',
+        errors: { productImage: ['Product image is required.'] } 
+    };
   }
 
   try {
