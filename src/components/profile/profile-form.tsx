@@ -42,8 +42,8 @@ export function ProfileForm() {
   React.useEffect(() => {
     if (user) {
       form.reset({
-        name: user.name,
-        email: user.email,
+        name: user.name || '',
+        email: user.email || '',
       });
     }
   }, [user, form]);
@@ -71,10 +71,13 @@ export function ProfileForm() {
             <FormLabel>Profile Picture</FormLabel>
             <div className="flex items-center gap-4">
                 <Avatar className="h-20 w-20">
-                    <AvatarImage src={user.profileImageUrl} alt={user.name} data-ai-hint="user avatar" />
+                    <AvatarImage src={user.profileImageUrl} alt={user.name || 'User Avatar'} data-ai-hint="user avatar" />
                     <AvatarFallback>{user.name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
                 </Avatar>
             </div>
+            <FormDescription>
+                Profile pictures are automatically assigned.
+            </FormDescription>
         </FormItem>
         
         <FormField
