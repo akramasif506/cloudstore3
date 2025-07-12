@@ -41,12 +41,12 @@ export async function createListing(formData: FormData) {
 
   try {
     const { category } = validatedFields.data;
+    const uploadDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
     // 1. Upload image to Firebase Storage
     const imageBuffer = Buffer.from(await imageFile.arrayBuffer());
     const fileExtension = imageFile.name.split('.').pop();
     const imageFileName = `${uuidv4()}.${fileExtension}`;
-    const uploadDate = new Date().toISOString().split('T')[0];
     
     const imageStoragePath = `CloudStor/upload/under_review/${uploadDate}/product/${category}/${imageFileName}`;
     const imageStorageRef = storageRef(storage, imageStoragePath);
@@ -54,19 +54,18 @@ export async function createListing(formData: FormData) {
     await uploadBytes(imageStorageRef, imageBuffer);
     const imageUrl = await getDownloadURL(imageStorageRef);
 
-    // 2. Save product data to Realtime Database under the new path
-    // The path will now be /products/{category}/{productId}
-    const productsCategoryRef = dbRef(db, `products/${category}`);
-    const newProductRef = push(productsCategoryRef); // Generate a unique key within the category
+    // 2. Generate a unique product ID
+    const newProductRef = push(dbRef(db, `CloudStore/products/under_review/${uploadDate}/${category}`));
     const productId = newProductRef.key;
 
     if (!productId) {
         throw new Error("Failed to generate a new product ID.");
     }
 
+    // 3. Prepare product data to be saved to Realtime Database
     const newProduct = {
       ...validatedFields.data,
-      id: productId,
+      id: productId, // Save the ID within the object as well
       imageUrl: imageUrl,
       seller: {
         id: mockUser.id,
@@ -76,10 +75,11 @@ export async function createListing(formData: FormData) {
       reviews: [], 
       distance: Math.floor(Math.random() * 50) + 1,
       createdAt: new Date().toISOString(),
+      status: 'under_review', // Add a status field
     };
     
-    // Set the data at the specific path: /products/{category}/{productId}
-    const productDbRef = dbRef(db, `products/${category}/${productId}`);
+    // 4. Save product data to the new structured path in Realtime Database
+    const productDbRef = dbRef(db, `CloudStore/products/under_review/${uploadDate}/${category}/${productId}`);
     await set(productDbRef, newProduct);
 
   } catch (error) {
