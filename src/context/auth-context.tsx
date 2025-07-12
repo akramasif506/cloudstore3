@@ -3,7 +3,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { ref, onValue } from 'firebase/database';
+import { ref, onValue, off } from 'firebase/database';
 import { auth, db } from '@/lib/firebase';
 import type { User as AppUser } from '@/lib/types';
 
@@ -22,39 +22,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!auth || !db) {
-      console.warn("Firebase not configured. Auth services disabled.");
+    if (!auth) {
+      console.warn("Firebase Auth not configured. Auth services disabled.");
       setLoading(false);
       return;
     }
     
-    const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (fbUser) => {
       setFirebaseUser(fbUser);
-      if (fbUser) {
-        const userRef = ref(db, `users/${fbUser.uid}`);
-        onValue(userRef, (snapshot) => {
-          if (snapshot.exists()) {
-            setUser(snapshot.val() as AppUser);
-          } else {
-            console.warn(`User profile for UID ${fbUser.uid} not found in database.`);
-            setUser(null); 
-          }
-          setLoading(false);
-        }, (error) => {
-          console.error("Error fetching user profile:", error);
-          setUser(null);
-          setLoading(false);
-        });
-
-      } else {
+      if (!fbUser) {
+        // User is signed out
         setUser(null);
-        setFirebaseUser(null);
         setLoading(false);
       }
+      // If user is signed in, the next effect will handle profile fetching.
     });
 
-    return () => unsubscribe();
+    return () => unsubscribeAuth();
   }, []);
+
+  useEffect(() => {
+    if (!firebaseUser || !db) {
+        // No user logged in, or DB not configured.
+        if (!firebaseUser) setLoading(false);
+        return;
+    }
+
+    setLoading(true);
+    const userRef = ref(db, `users/${firebaseUser.uid}`);
+    
+    const unsubscribeDb = onValue(userRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setUser(snapshot.val() as AppUser);
+      } else {
+        console.warn(`User profile for UID ${firebaseUser.uid} not found in database.`);
+        setUser(null); 
+      }
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching user profile:", error);
+      setUser(null);
+      setLoading(false);
+    });
+
+    // Cleanup the database listener when the user changes or component unmounts
+    return () => off(userRef, 'value', unsubscribeDb);
+
+  }, [firebaseUser]);
+
 
   const logout = async () => {
     if (auth) {
