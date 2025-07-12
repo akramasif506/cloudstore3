@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Leaf, Search, User, LogOut, LayoutDashboard, DollarSign } from 'lucide-react';
+import { Leaf, Search, User, LogOut, LayoutDashboard, DollarSign, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -73,8 +73,12 @@ export function Header() {
               <DropdownMenuItem asChild>
                 <Link href="/profile"><User className="mr-2 h-4 w-4" />Profile</Link>
               </DropdownMenuItem>
-              <DropdownMenuItem><LayoutDashboard className="mr-2 h-4 w-4" />My Listings</DropdownMenuItem>
-              <DropdownMenuItem><DollarSign className="mr-2 h-4 w-4" />My Orders</DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                  <Link href="/my-listings"><Package className="mr-2 h-4 w-4" />My Listings</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/my-orders"><DollarSign className="mr-2 h-4 w-4" />My Orders</Link>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
                 <LogOut className="mr-2 h-4 w-4" />
