@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from 'react-hook-form';
@@ -16,24 +17,36 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { mockUser } from '@/lib/data';
+import { useAuth } from '@/context/auth-context';
+import { Loader2 } from 'lucide-react';
 
 const profileSchema = z.object({
-  username: z.string().min(3, 'Username must be at least 3 characters.'),
+  name: z.string().min(3, 'Username must be at least 3 characters.'),
   email: z.string().email('Please enter a valid email address.'),
   profileImage: z.any(),
 });
 
 export function ProfileForm() {
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      username: mockUser.name,
-      email: 'user@email.com', // mock email
+      name: user?.name || '',
+      email: user?.email || '',
     },
   });
+
+  // Re-initialize form when user loads
+  React.useEffect(() => {
+    if (user) {
+      form.reset({
+        name: user.name,
+        email: user.email,
+      });
+    }
+  }, [user, form]);
 
   function onSubmit(values: z.infer<typeof profileSchema>) {
     console.log(values);
@@ -41,6 +54,14 @@ export function ProfileForm() {
       title: "Profile Updated!",
       description: "Your information has been saved successfully.",
     });
+  }
+  
+  if (!user) {
+    return (
+        <div className="flex justify-center items-center p-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+    )
   }
 
   return (
@@ -54,8 +75,8 @@ export function ProfileForm() {
                 <FormLabel>Profile Picture</FormLabel>
                 <div className="flex items-center gap-4">
                     <Avatar className="h-20 w-20">
-                        <AvatarImage src={mockUser.avatarUrl} alt={mockUser.name} data-ai-hint="user avatar" />
-                        <AvatarFallback>{mockUser.name.charAt(0)}</AvatarFallback>
+                        <AvatarImage src={user.profileImageUrl} alt={user.name} data-ai-hint="user avatar" />
+                        <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <FormControl>
                         <Input type="file" className="max-w-xs" />
@@ -68,12 +89,12 @@ export function ProfileForm() {
         
         <FormField
           control={form.control}
-          name="username"
+          name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel>Full Name</FormLabel>
               <FormControl>
-                <Input placeholder="Your username" {...field} />
+                <Input placeholder="Your full name" {...field} />
               </FormControl>
               <FormDescription>This is your public display name.</FormDescription>
               <FormMessage />
@@ -88,9 +109,9 @@ export function ProfileForm() {
             <FormItem>
               <FormLabel>Email Address</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="your@email.com" {...field} />
+                <Input type="email" placeholder="your@email.com" {...field} readOnly disabled />
               </FormControl>
-               <FormDescription>This email is used for notifications and login.</FormDescription>
+               <FormDescription>Your email address cannot be changed.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
