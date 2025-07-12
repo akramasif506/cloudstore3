@@ -44,7 +44,7 @@ export async function createListing(formData: FormData) {
     const imageStorageRef = storageRef(storage, `product-images/${imageFileName}`);
     
     await uploadBytes(imageStorageRef, imageBuffer);
-    const imageUrl = await getDownloadURL(imageStorageageRef);
+    const imageUrl = await getDownloadURL(imageStorageRef);
     
     const productId = uuidv4();
     const { productName, productDescription, price, category, subcategory, userId, userName, userAvatarUrl } = validatedFields.data;
