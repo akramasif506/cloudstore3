@@ -91,7 +91,7 @@ export function ListingForm() {
         </CardHeader>
         <CardContent>
           <Button asChild>
-            <Link href="/login">Go to Login</Link>
+            <Link href="/login?redirect=/listings/new">Go to Login</Link>
           </Button>
         </CardContent>
       </Card>
