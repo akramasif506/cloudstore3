@@ -60,7 +60,7 @@ export function ListingForm() {
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   
   const form = useForm<ClientListingSchema>({
@@ -187,14 +187,6 @@ export function ListingForm() {
   
   const selectedCategory = form.watch('category');
   const productImageRef = form.register("productImage");
-
-  if (authLoading) {
-    return (
-      <div className="flex justify-center items-center p-20">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   if (!user) {
     return (
@@ -358,8 +350,8 @@ export function ListingForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" size="lg" className="w-full md:w-auto" disabled={isFormProcessing || authLoading}>
-          {(isSubmitting || authLoading) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+        <Button type="submit" size="lg" className="w-full md:w-auto" disabled={isFormProcessing}>
+          {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           {isSubmitting ? 'Submitting for Review...' : 'Submit for Review'}
         </Button>
       </form>

@@ -20,19 +20,17 @@ import { CartProvider } from '@/context/cart-context';
 function AppContent({ children }: { children: React.ReactNode }) {
   const { loading } = useAuth();
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen w-full">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
     <>
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {children}
+        {loading ? (
+           <div className="flex justify-center items-center h-[calc(100vh-16rem)] w-full">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          </div>
+        ) : (
+          children
+        )}
       </main>
       <Footer />
     </>

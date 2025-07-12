@@ -1,9 +1,14 @@
 
+"use client";
+
 import { ProfileForm } from '@/components/profile/profile-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { UserCog } from 'lucide-react';
+import { useAuth } from '@/context/auth-context';
 
 export default function ProfilePage() {
+  const { user } = useAuth();
+  
   return (
     <div className="max-w-2xl mx-auto">
       <Card>

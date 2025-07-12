@@ -14,16 +14,12 @@ import { useRouter } from 'next/navigation';
 import { Separator } from '@/components/ui/separator';
 
 export function MyListingsClient() {
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    if (authLoading) {
-      return;
-    }
-
     if (user?.id) {
       setLoading(true);
       getMyListings(user.id)
@@ -41,11 +37,10 @@ export function MyListingsClient() {
       setProducts([]);
       setLoading(false);
     }
-  }, [user, authLoading]);
+  }, [user]);
 
-  const isLoading = authLoading || loading;
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex justify-center items-center p-20">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />

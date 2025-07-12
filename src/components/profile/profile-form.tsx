@@ -18,8 +18,11 @@ import { Input } from '@/components/ui/input';
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/context/auth-context';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Frown } from 'lucide-react';
 import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useRouter } from 'next/navigation';
+
 
 const profileSchema = z.object({
   name: z.string().min(3, 'Username must be at least 3 characters.'),
@@ -29,6 +32,7 @@ const profileSchema = z.object({
 export function ProfileForm() {
   const { toast } = useToast();
   const { user } = useAuth();
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
@@ -58,9 +62,20 @@ export function ProfileForm() {
   
   if (!user) {
     return (
-        <div className="flex justify-center items-center p-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
+       <Card className="flex flex-col items-center justify-center text-center py-20 border-none shadow-none">
+        <CardHeader>
+          <div className="mx-auto bg-muted rounded-full p-4 w-fit mb-4">
+            <Frown className="h-12 w-12 text-muted-foreground" />
+          </div>
+          <CardTitle>You're Not Logged In</CardTitle>
+          <CardDescription>You must be logged in to view your profile.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={() => router.push('/login?redirect=/profile')}>
+            Go to Login Page
+          </Button>
+        </CardContent>
+      </Card>
     )
   }
 
