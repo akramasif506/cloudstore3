@@ -28,7 +28,7 @@ export async function registerUser(values: z.infer<typeof registerSchema>) {
       displayName: values.name,
     });
     
-    // Create user profile in Realtime Database at the new, simplified path
+    // Create user profile in Realtime Database at the correct path
     const userRef = ref(db, `users/${user.uid}`);
     await set(userRef, {
       id: user.uid,
