@@ -1,10 +1,9 @@
 
 // src/lib/auth.ts
-import { auth } from '@/lib/firebase';
+import admin from 'firebase-admin';
 import type { User as ClientUser } from 'firebase/auth';
 import type { DecodedIdToken } from 'firebase-admin/auth';
 import { cookies } from 'next/headers';
-import { adminAuth } from './firebase-admin';
 
 // This is a type trick to make the server-side user object
 // mostly compatible with the client-side one.
@@ -17,12 +16,27 @@ type ServerUser = Omit<ClientUser, 'delete' | 'getIdToken' | 'getIdTokenResult' 
     toJSON: undefined;
 };
 
+function initializeAdmin() {
+  if (admin.apps.length) {
+    return { adminAuth: admin.auth() };
+  }
+  const adminApp = admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    }),
+  });
+  return { adminAuth: adminApp.auth() };
+}
+
 /**
  * Gets the current user from the session cookie.
  * This is a server-side utility.
  * Returns a user object that is shaped like the client-side Firebase User object.
  */
 export async function getCurrentUser(): Promise<ServerUser | null> {
+  const { adminAuth } = initializeAdmin();
   const session = cookies().get('session')?.value;
   if (!session) {
     return null;
