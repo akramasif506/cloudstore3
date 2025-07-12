@@ -1,6 +1,6 @@
 // Import the functions you need from the SDKs you need
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getDatabase } from "firebase/database";
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
+import { getDatabase, type Database } from "firebase/database";
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -15,7 +15,15 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const db = getDatabase(app);
+let app: FirebaseApp;
+let db: Database | null = null;
 
-export { app, db };
+if (firebaseConfig.apiKey && firebaseConfig.databaseURL) {
+    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+    db = getDatabase(app);
+} else {
+    console.warn("Firebase config is incomplete. Firebase services will be disabled.");
+}
+
+
+export { db };
