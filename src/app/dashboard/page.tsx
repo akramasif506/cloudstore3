@@ -1,7 +1,7 @@
 
 import { mockUser } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Package, MessageSquare, ShieldAlert } from 'lucide-react';
+import { Users, Package, MessageSquare, ShieldAlert, CheckCircle } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { CategoryChart } from '@/components/dashboard/category-chart';
 import { RecentProducts } from '@/components/dashboard/recent-products';
@@ -11,6 +11,8 @@ import { ref, get, query, limitToLast } from 'firebase/database';
 import type { ContactMessage, Product } from '@/lib/types';
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 async function getRecentMessages(): Promise<ContactMessage[]> {
   if (!db) {
@@ -38,7 +40,7 @@ async function getRecentMessages(): Promise<ContactMessage[]> {
 
 async function getDashboardStats() {
     if (!db) {
-        return { totalProducts: 0, totalUsers: 0, totalReviews: 0, chartData: [] };
+        return { totalProducts: 0, pendingProducts: 0, totalUsers: 0, totalReviews: 0, chartData: [] };
     }
     try {
         const productsRef = ref(db, 'products');
@@ -51,22 +53,25 @@ async function getDashboardStats() {
         }
 
         const totalProducts = products.length;
+        const pendingProducts = products.filter(p => p.status === 'pending_review').length;
         // In a real app, users would be in the database
         const totalUsers = 1; 
         const totalReviews = products.reduce((acc, p) => acc + (p.reviews?.length || 0), 0);
 
         const productsByCategory = products.reduce((acc, product) => {
-            acc[product.category] = (acc[product.category] || 0) + 1;
+            if (product.status === 'active') {
+                acc[product.category] = (acc[product.category] || 0) + 1;
+            }
             return acc;
         }, {} as Record<string, number>);
 
         const chartData = Object.entries(productsByCategory).map(([name, products]) => ({ name, products }));
 
-        return { totalProducts, totalUsers, totalReviews, chartData };
+        return { totalProducts, pendingProducts, totalUsers, totalReviews, chartData };
 
     } catch (error) {
         console.error("Error fetching dashboard stats from Firebase:", error);
-        return { totalProducts: 0, totalUsers: 0, totalReviews: 0, chartData: [] };
+        return { totalProducts: 0, pendingProducts: 0, totalUsers: 0, totalReviews: 0, chartData: [] };
     }
 }
 
@@ -82,21 +87,36 @@ export default async function DashboardPage() {
     )
   }
 
-  const { totalProducts, totalUsers, totalReviews, chartData } = await getDashboardStats();
+  const { totalProducts, pendingProducts, totalUsers, totalReviews, chartData } = await getDashboardStats();
   const recentMessages = await getRecentMessages();
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold font-headline">Dashboard</h1>
-        <p className="text-muted-foreground">An overview of your store's activity.</p>
+        <div className="flex justify-between items-start">
+            <div>
+                <h1 className="text-3xl font-bold font-headline">Dashboard</h1>
+                <p className="text-muted-foreground">An overview of your store's activity.</p>
+            </div>
+            <Button asChild>
+                <Link href="/dashboard/pending-products">
+                    <CheckCircle className="mr-2" />
+                    Approve Products
+                </Link>
+            </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard 
           title="Total Products" 
           value={totalProducts} 
           icon={Package} 
+        />
+        <StatsCard 
+          title="Pending Approval" 
+          value={pendingProducts} 
+          icon={CheckCircle}
+          className={pendingProducts > 0 ? "border-amber-500 text-amber-600" : ""}
         />
         <StatsCard 
           title="Total Users" 
@@ -116,7 +136,7 @@ export default async function DashboardPage() {
             <CardTitle>Products by Category</CardTitle>
           </CardHeader>
           <CardContent>
-             {chartData.length > 0 ? <CategoryChart data={chartData} /> : <p className="text-muted-foreground text-center py-10">No product data available for chart.</p>}
+             {chartData.length > 0 ? <CategoryChart data={chartData} /> : <p className="text-muted-foreground text-center py-10">No active product data available for chart.</p>}
           </CardContent>
         </Card>
         <Card className="lg:col-span-2">
