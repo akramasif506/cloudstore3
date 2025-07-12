@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useEffect, useState, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -60,7 +60,7 @@ export function ListingForm() {
   const { toast } = useToast();
   const router = useRouter();
 
-  const [state, formAction] = useFormState(createListing, {
+  const [state, formAction] = useActionState(createListing, {
     success: false,
     message: '',
   });
