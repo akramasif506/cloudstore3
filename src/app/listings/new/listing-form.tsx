@@ -24,15 +24,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Sparkles, Frown } from 'lucide-react';
+import { Loader2, Sparkles } from 'lucide-react';
 import { suggestListingDetails } from '@/ai/flows/suggest-listing-details';
 import { useToast } from "@/hooks/use-toast";
 import { createListing } from './actions';
 import { listingSchema } from '@/lib/schemas';
 import { useAuth } from '@/context/auth-context';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import Link from 'next/link';
 
 const isBrowser = typeof window !== 'undefined';
 
@@ -61,7 +58,6 @@ export function ListingForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
-  const router = useRouter();
   
   const form = useForm<ClientListingSchema>({
     resolver: zodResolver(clientListingSchema),
@@ -133,20 +129,13 @@ export function ListingForm() {
   };
 
   async function onSubmit(values: ClientListingSchema) {
-    if (!user) {
-      toast({
-        variant: 'destructive',
-        title: 'Please log in',
-        description: 'You must be logged in to create a listing.',
-      });
-      router.push('/login?redirect=/listings/new');
-      return;
-    }
-
     setIsSubmitting(true);
 
     const formData = new FormData();
-    formData.append('userId', user.id);
+    // Only add userId if the user is logged in
+    if (user?.id) {
+        formData.append('userId', user.id);
+    }
 
     for (const key in values) {
       if (key === 'productImage') {
@@ -180,6 +169,11 @@ export function ListingForm() {
           }
         }
       }
+    } else {
+         toast({
+            title: "Listing Submitted!",
+            description: "Your item is now under review by our team.",
+         });
     }
     
     setIsSubmitting(false);
