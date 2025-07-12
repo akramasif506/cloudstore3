@@ -84,7 +84,7 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
         <div className="sticky top-24 space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-3xl font-bold text-primary">₹{product.price.toFixed(2)}</CardTitle>
+                    <CardTitle className="text-3xl font-bold text-primary">Rs {product.price.toFixed(2)}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <Button size="lg" className="w-full text-lg">Buy Now</Button>

@@ -304,13 +304,13 @@ export function ListingForm() {
               <FormLabel>Price</FormLabel>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                  <span className="text-gray-500 sm:text-sm">₹</span>
+                  <span className="text-gray-500 sm:text-sm">Rs</span>
                 </div>
                 <FormControl>
                   <Input
                     type="number"
                     placeholder="0.00"
-                    className="pl-7"
+                    className="pl-8"
                     step="0.01"
                     disabled={isLoading}
                     {...field}

@@ -26,7 +26,7 @@ export function ProductCard({ product }: ProductCardProps) {
           </CardHeader>
           <CardContent className="p-4 flex-grow">
             <CardTitle className="text-lg font-headline mb-2 truncate">{product.name}</CardTitle>
-            <p className="text-2xl font-bold text-primary">₹{product.price.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-primary">Rs {product.price.toFixed(2)}</p>
           </CardContent>
         </Link>
         {product.seller && (

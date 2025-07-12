@@ -87,7 +87,7 @@ export function PendingProductList({ initialProducts }: PendingProductListProps)
                   </Link>
                 </TableCell>
                 <TableCell>{product.seller.name}</TableCell>
-                <TableCell>₹{product.price.toFixed(2)}</TableCell>
+                <TableCell>Rs {product.price.toFixed(2)}</TableCell>
                 <TableCell>{new Date(product.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell className="text-right">
                   <EditProductDialog
