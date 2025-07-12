@@ -1,14 +1,13 @@
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { mockProducts } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { MapPin, Star, Tag } from 'lucide-react';
 import { CustomerFeedback } from '@/components/products/customer-feedback';
-import { Badge } from '@/components/ui/badge';
 import type { Product } from '@/lib/types';
 import { db } from '@/lib/firebase';
 import { ref, get, child } from 'firebase/database';
