@@ -1,0 +1,80 @@
+'use server';
+
+import { z } from 'zod';
+import { db, storage } from '@/lib/firebase';
+import { ref as dbRef, push, set } from 'firebase/database';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { mockUser } from '@/lib/data'; // Using mock user as the seller for now
+import { v4 as uuidv4 } from 'uuid';
+
+export const listingSchema = z.object({
+  productName: z.string().min(3, 'Title must be at least 3 characters long.'),
+  productDescription: z.string().min(10, 'Description must be at least 10 characters long.'),
+  price: z.coerce.number().positive('Price must be a positive number.'),
+  category: z.string().nonempty('Please select a category.'),
+  subcategory: z.string().nonempty('Please select a subcategory.'),
+});
+
+export async function createListing(prevState: any, formData: FormData) {
+  if (!db || !storage) {
+    return { success: false, message: 'Firebase is not configured.' };
+  }
+
+  const validatedFields = listingSchema.safeParse({
+    productName: formData.get('productName'),
+    productDescription: formData.get('productDescription'),
+    price: formData.get('price'),
+    category: formData.get('category'),
+    subcategory: formData.get('subcategory'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      success: false,
+      message: 'Invalid form data.',
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+
+  const imageFile = formData.get('productImage') as File;
+  if (!imageFile || imageFile.size === 0) {
+    return { success: false, message: 'Product image is required.' };
+  }
+
+  try {
+    // 1. Upload image to Firebase Storage
+    const imageBuffer = Buffer.from(await imageFile.arrayBuffer());
+    const fileExtension = imageFile.name.split('.').pop();
+    const imageFileName = `${uuidv4()}.${fileExtension}`;
+    const imageStorageRef = storageRef(storage, `product-images/${imageFileName}`);
+    await uploadBytes(imageStorageRef, imageBuffer);
+
+    // 2. Get the public URL of the uploaded image
+    const imageUrl = await getDownloadURL(imageStorageRef);
+
+    // 3. Save product data to Realtime Database
+    const productsRef = dbRef(db, 'products');
+    const newProductRef = push(productsRef);
+
+    const newProduct = {
+      ...validatedFields.data,
+      id: newProductRef.key,
+      imageUrl: imageUrl,
+      seller: {
+        id: mockUser.id,
+        name: mockUser.name,
+        avatarUrl: mockUser.avatarUrl,
+      },
+      reviews: [], // Start with no reviews
+      distance: Math.floor(Math.random() * 50) + 1, // mock distance
+      createdAt: new Date().toISOString(),
+    };
+
+    await set(newProductRef, newProduct);
+
+    return { success: true, message: 'Listing created successfully!' };
+  } catch (error) {
+    console.error('Error creating listing:', error);
+    return { success: false, message: 'Failed to create listing.' };
+  }
+}

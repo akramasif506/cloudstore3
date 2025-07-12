@@ -1,10 +1,36 @@
 import { ProductGrid } from '@/components/products/product-grid';
-import { mockProducts, mockUser } from '@/lib/data';
+import { mockUser } from '@/lib/data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package } from 'lucide-react';
+import { db } from '@/lib/firebase';
+import type { Product } from '@/lib/types';
+import { get, ref, query, orderByChild, equalTo } from 'firebase/database';
 
-export default function MyListingsPage() {
-  const userProducts = mockProducts.filter(p => p.seller.id === mockUser.id);
+async function getUserProducts(): Promise<Product[]> {
+  if (!db) {
+    console.warn("Firebase is not configured. Returning empty products.");
+    return [];
+  }
+  try {
+    const productsRef = ref(db, 'products');
+    const userProductsQuery = query(productsRef, orderByChild('seller/id'), equalTo(mockUser.id));
+    const snapshot = await get(userProductsQuery);
+    if (snapshot.exists()) {
+      const productsData = snapshot.val();
+      return Object.keys(productsData).map(key => ({
+        ...productsData[key],
+        id: key,
+      }));
+    }
+    return [];
+  } catch (error) {
+    console.error("Error fetching user products from Firebase:", error);
+    return [];
+  }
+}
+
+export default async function MyListingsPage() {
+  const userProducts = await getUserProducts();
 
   return (
     <div>

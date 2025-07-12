@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useFormState, useFormStatus } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -26,16 +27,14 @@ import {
 import { Loader2, Sparkles } from 'lucide-react';
 import { suggestListingDetails } from '@/ai/flows/suggest-listing-details';
 import { useToast } from "@/hooks/use-toast";
+import { createListing, listingSchema as serverListingSchema } from './actions';
+import { useRouter } from 'next/navigation';
 
-const listingSchema = z.object({
-  productName: z.string().min(3, 'Title must be at least 3 characters long.'),
-  productDescription: z.string().min(10, 'Description must be at least 10 characters long.'),
-  price: z.coerce.number().positive('Price must be a positive number.'),
-  category: z.string().nonempty('Please select a category.'),
-  subcategory: z.string().nonempty('Please select a subcategory.'),
+const clientListingSchema = serverListingSchema.extend({
   productImage: z.any()
     .refine((files) => files?.length === 1, 'Product image is required.')
 });
+
 
 const categories = {
   'Furniture': ['Chairs', 'Tables', 'Shelving', 'Beds'],
@@ -45,12 +44,28 @@ const categories = {
   'Outdoor & Sports': ['Bikes', 'Camping Gear', 'Fitness'],
 };
 
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" size="lg" className="w-full md:w-auto" disabled={pending}>
+      {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+      {pending ? 'Creating Listing...' : 'Create Listing'}
+    </Button>
+  );
+}
+
 export function ListingForm() {
   const [isSuggesting, setIsSuggesting] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
 
-  const form = useForm<z.infer<typeof listingSchema>>({
-    resolver: zodResolver(listingSchema),
+  const [state, formAction] = useFormState(createListing, {
+    success: false,
+    message: '',
+  });
+
+  const form = useForm<z.infer<typeof clientListingSchema>>({
+    resolver: zodResolver(clientListingSchema),
     defaultValues: {
       productName: '',
       productDescription: '',
@@ -59,8 +74,28 @@ export function ListingForm() {
       subcategory: '',
     },
   });
+
+  useEffect(() => {
+    if(state.message) {
+        if(state.success) {
+            toast({
+                title: "Listing Created!",
+                description: state.message,
+            });
+            router.push('/my-listings');
+        } else {
+             toast({
+                variant: "destructive",
+                title: "Oh no! Something went wrong.",
+                description: state.message,
+            });
+        }
+    }
+  }, [state, toast, router]);
   
   const selectedCategory = form.watch('category');
+  const imageRef = form.register("productImage");
+
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -117,17 +152,9 @@ export function ListingForm() {
     }
   };
 
-  function onSubmit(values: z.infer<typeof listingSchema>) {
-    console.log(values);
-    toast({
-      title: "Listing Created!",
-      description: "Your item is now available for others to see.",
-    });
-  }
-
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+    <form action={formAction} className="space-y-8">
+      <Form {...form}>
         <FormField
           control={form.control}
           name="productImage"
@@ -135,7 +162,7 @@ export function ListingForm() {
             <FormItem>
               <FormLabel>Product Image</FormLabel>
               <FormControl>
-                <Input type="file" accept="image/*" {...form.register("productImage")} />
+                <Input type="file" accept="image/*" {...imageRef} />
               </FormControl>
               <FormDescription>Upload a clear photo of your item.</FormDescription>
               <FormMessage />
@@ -249,8 +276,8 @@ export function ListingForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" size="lg" className="w-full md:w-auto">Create Listing</Button>
-      </form>
-    </Form>
+        <SubmitButton />
+      </Form>
+    </form>
   );
 }

@@ -1,9 +1,8 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getDatabase, type Database } from "firebase/database";
+import { getStorage, type FirebaseStorage } from "firebase/storage";
 
 // Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -17,13 +16,14 @@ const firebaseConfig = {
 // Initialize Firebase
 let app: FirebaseApp;
 let db: Database | null = null;
+let storage: FirebaseStorage | null = null;
 
-if (firebaseConfig.apiKey && firebaseConfig.databaseURL) {
+if (firebaseConfig.apiKey && firebaseConfig.databaseURL && firebaseConfig.storageBucket) {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     db = getDatabase(app);
+    storage = getStorage(app);
 } else {
     console.warn("Firebase config is incomplete. Firebase services will be disabled.");
 }
 
-
-export { db };
+export { db, storage };

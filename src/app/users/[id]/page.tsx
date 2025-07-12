@@ -1,13 +1,40 @@
 import { notFound } from 'next/navigation';
-import { mockUsers, mockProducts } from '@/lib/data';
+import { mockUsers } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ProductGrid } from '@/components/products/product-grid';
 import { Separator } from '@/components/ui/separator';
+import { db } from '@/lib/firebase';
+import type { Product } from '@/lib/types';
+import { get, ref, query, orderByChild, equalTo } from 'firebase/database';
 
-export default function UserProfilePage({ params }: { params: { id: string } }) {
+async function getUserProducts(userId: string): Promise<Product[]> {
+  if (!db) {
+    console.warn("Firebase is not configured. Returning empty products.");
+    return [];
+  }
+  try {
+    const productsRef = ref(db, 'products');
+    const userProductsQuery = query(productsRef, orderByChild('seller/id'), equalTo(userId));
+    const snapshot = await get(userProductsQuery);
+    if (snapshot.exists()) {
+      const productsData = snapshot.val();
+      return Object.keys(productsData).map(key => ({
+        ...productsData[key],
+        id: key,
+      }));
+    }
+    return [];
+  } catch (error) {
+    console.error("Error fetching user products from Firebase:", error);
+    return [];
+  }
+}
+
+export default async function UserProfilePage({ params }: { params: { id: string } }) {
+  // Note: This still uses mockUsers. In a real app, you'd fetch user data from Firebase too.
   const user = mockUsers.find((u) => u.id === params.id);
-  const userProducts = mockProducts.filter((p) => p.seller.id === params.id);
+  const userProducts = await getUserProducts(params.id);
 
   if (!user) {
     notFound();
