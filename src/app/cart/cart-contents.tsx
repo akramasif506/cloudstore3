@@ -8,10 +8,27 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Trash2, Frown } from 'lucide-react';
+import { Trash2, Frown, Home, Phone } from 'lucide-react';
+import { useAuth } from '@/context/auth-context';
+import { useState, useEffect } from 'react';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 export function CartContents() {
   const { items, removeFromCart, updateQuantity, subtotal, clearCart } = useCart();
+  const { user } = useAuth();
+  
+  const [address, setAddress] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
+
+  useEffect(() => {
+    if (user) {
+      setAddress(user.address || '');
+      setContactNumber(user.mobileNumber || '');
+    }
+  }, [user]);
+
+  const isOrderReady = address.trim() !== '' && contactNumber.trim() !== '';
 
   if (items.length === 0) {
     return (
@@ -34,7 +51,7 @@ export function CartContents() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-      <div className="lg:col-span-2">
+      <div className="lg:col-span-2 space-y-8">
         <Card>
           <CardHeader>
             <CardTitle>Cart Items ({items.reduce((sum, item) => sum + item.quantity, 0)})</CardTitle>
@@ -85,7 +102,34 @@ export function CartContents() {
         </Card>
       </div>
 
-      <div className="lg:col-span-1 sticky top-24">
+      <div className="lg:col-span-1 sticky top-24 space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Home className="w-5 h-5" /> Shipping Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="shipping-address">Shipping Address</Label>
+              <Textarea 
+                id="shipping-address"
+                placeholder="Enter your full shipping address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                rows={4}
+              />
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="contact-number">Contact Number</Label>
+              <Input 
+                id="contact-number"
+                placeholder="Enter your contact number"
+                value={contactNumber}
+                onChange={(e) => setContactNumber(e.target.value)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+        
         <Card>
           <CardHeader>
             <CardTitle>Order Summary</CardTitle>
@@ -106,7 +150,7 @@ export function CartContents() {
             </div>
           </CardContent>
           <CardFooter>
-            <Button size="lg" className="w-full">Place Order</Button>
+            <Button size="lg" className="w-full" disabled={!isOrderReady}>Place Order</Button>
           </CardFooter>
         </Card>
       </div>
