@@ -10,17 +10,16 @@ import { v4 as uuidv4 } from 'uuid';
 import { listingSchema } from '@/lib/schemas';
 import { redirect } from 'next/navigation';
 
-export async function createListing(prevState: any, formData: FormData) {
+export async function createListing(formData: FormData) {
   if (!db || !storage) {
     return { success: false, message: 'Firebase is not configured.' };
   }
 
+  const rawFormData = Object.fromEntries(formData.entries());
+
   const validatedFields = listingSchema.safeParse({
-    productName: formData.get('productName'),
-    productDescription: formData.get('productDescription'),
-    price: formData.get('price'),
-    category: formData.get('category'),
-    subcategory: formData.get('subcategory'),
+    ...rawFormData,
+    price: parseFloat(rawFormData.price as string),
   });
 
 

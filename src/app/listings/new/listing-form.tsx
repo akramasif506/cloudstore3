@@ -1,9 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useState } from 'react';
 import { useForm, type FieldPath } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -30,11 +28,10 @@ import { Loader2, Sparkles } from 'lucide-react';
 import { suggestListingDetails } from '@/ai/flows/suggest-listing-details';
 import { useToast } from "@/hooks/use-toast";
 import { createListing } from './actions';
-import { useRouter } from 'next/navigation';
 import { listingSchema } from '@/lib/schemas';
 
 const clientListingSchema = listingSchema.extend({
-  productImage: z.any()
+  productImage: z.instanceof(FileList)
     .refine((files) => files?.length === 1, 'Product image is required.')
 });
 
@@ -49,27 +46,10 @@ const categories = {
   'Outdoor & Sports': ['Bikes', 'Camping Gear', 'Fitness'],
 };
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" size="lg" className="w-full md:w-auto" disabled={pending}>
-      {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-      {pending ? 'Creating Listing...' : 'Create Listing'}
-    </Button>
-  );
-}
-
 export function ListingForm() {
   const [isSuggesting, setIsSuggesting] = useState(false);
   const { toast } = useToast();
-  const router = useRouter();
-
-  const [state, formAction] = useActionState(createListing, {
-    success: false,
-    message: '',
-    errors: undefined,
-  });
-
+  
   const form = useForm<ClientListingSchema>({
     resolver: zodResolver(clientListingSchema),
     defaultValues: {
@@ -82,40 +62,7 @@ export function ListingForm() {
     },
   });
 
-  useEffect(() => {
-    if (state.message) {
-      if (state.success) {
-        toast({
-          title: "Listing Created!",
-          description: "Your item has been listed for sale.",
-        });
-        form.reset();
-      } else if (state.errors) {
-        // Set form errors from server action
-        for (const [field, messages] of Object.entries(state.errors)) {
-          form.setError(field as FieldPath<ClientListingSchema>, {
-            type: 'server',
-            message: messages?.[0]
-          });
-        }
-        toast({
-          variant: "destructive",
-          title: "Invalid Form Data",
-          description: state.message,
-        });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Oh no! Something went wrong.",
-          description: state.message,
-        });
-      }
-    }
-  }, [state, toast, router, form]);
-  
-  const selectedCategory = form.watch('category');
-  const imageRef = form.register("productImage");
-
+  const { isSubmitting } = form.formState;
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -172,9 +119,42 @@ export function ListingForm() {
     }
   };
 
+  const onSubmit = async (values: ClientListingSchema) => {
+    const formData = new FormData();
+    Object.entries(values).forEach(([key, value]) => {
+      if (key === 'productImage') {
+        formData.append(key, (value as FileList)[0]);
+      } else if (value !== undefined && value !== null) {
+        formData.append(key, String(value));
+      }
+    });
+
+    const result = await createListing(formData);
+
+    if (result?.success === false) {
+      toast({
+        variant: "destructive",
+        title: "Oh no! Something went wrong.",
+        description: result.message,
+      });
+
+      if (result.errors) {
+        for (const [field, messages] of Object.entries(result.errors)) {
+          form.setError(field as FieldPath<ClientListingSchema>, {
+            type: 'server',
+            message: messages?.[0]
+          });
+        }
+      }
+    }
+  };
+  
+  const selectedCategory = form.watch('category');
+  const productImageRef = form.register("productImage");
+
   return (
-    <form action={formAction} className="space-y-8">
-      <Form {...form}>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <FormField
           control={form.control}
           name="productImage"
@@ -182,7 +162,7 @@ export function ListingForm() {
             <FormItem>
               <FormLabel>Product Image</FormLabel>
               <FormControl>
-                <Input type="file" accept="image/*" {...imageRef} />
+                <Input type="file" accept="image/*" {...productImageRef} />
               </FormControl>
               <FormDescription>Upload a clear photo of your item.</FormDescription>
               <FormMessage />
@@ -197,9 +177,12 @@ export function ListingForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Category</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={(value) => {
+                  field.onChange(value)
+                  form.setValue('subcategory', '');
+                }} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Select a category" /></SelectValue>
                   </FormControl>
                   <SelectContent>
                     {Object.keys(categories).map(cat => (
@@ -217,9 +200,9 @@ export function ListingForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Subcategory</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!selectedCategory}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory}>
                   <FormControl>
-                    <SelectTrigger><SelectValue placeholder="Select a subcategory" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Select a subcategory" /></SelectValue>
                   </FormControl>
                   <SelectContent>
                     {selectedCategory && categories[selectedCategory as keyof typeof categories]?.map(subcat => (
@@ -238,7 +221,7 @@ export function ListingForm() {
             type="button"
             variant="outline"
             onClick={handleSuggestDetails}
-            disabled={isSuggesting}
+            disabled={isSuggesting || isSubmitting}
             className="w-full md:w-auto"
             >
             {isSuggesting ? (
@@ -296,7 +279,7 @@ export function ListingForm() {
                           {...field}
                           onChange={(e) => {
                             const value = e.target.value;
-                            field.onChange(value === '' ? undefined : e.target.valueAsNumber);
+                            field.onChange(value === '' ? undefined : Number(value));
                           }}
                           value={field.value ?? ''}
                         />
@@ -306,8 +289,11 @@ export function ListingForm() {
             </FormItem>
           )}
         />
-        <SubmitButton />
-      </Form>
-    </form>
+        <Button type="submit" size="lg" className="w-full md:w-auto" disabled={isSubmitting}>
+            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {isSubmitting ? 'Creating Listing...' : 'Create Listing'}
+        </Button>
+      </form>
+    </Form>
   );
 }
