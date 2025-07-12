@@ -13,10 +13,10 @@ import {
 } from "@/components/ui/table";
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { approveProduct } from './actions';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, CheckCircle, Info } from 'lucide-react';
+import { Loader2, CheckCircle, Info, Edit } from 'lucide-react';
 import Link from 'next/link';
+import { EditProductDialog } from './edit-product-dialog';
 
 interface PendingProductListProps {
   initialProducts: Product[];
@@ -24,29 +24,26 @@ interface PendingProductListProps {
 
 export function PendingProductList({ initialProducts }: PendingProductListProps) {
   const [products, setProducts] = useState(initialProducts);
-  const [approvingId, setApprovingId] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const handleApprove = async (productId: string) => {
-    setApprovingId(productId);
-    const result = await approveProduct(productId);
-    if (result.success) {
-      // Remove the approved product from the list
-      setProducts(currentProducts => currentProducts.filter(p => p.id !== productId));
-      toast({
-        title: "Product Approved",
-        description: "The listing is now active and visible to all users.",
-        variant: 'default',
-      });
-    } else {
-      toast({
-        title: "Approval Failed",
-        description: result.message || "Could not approve the product. Please try again.",
+  const handleProductUpdate = (productId: string) => {
+    // Remove the approved product from the list
+    setProducts(currentProducts => currentProducts.filter(p => p.id !== productId));
+    toast({
+      title: "Product Approved",
+      description: "The listing is now active and visible to all users.",
+      variant: 'default',
+    });
+  }
+
+  const handleUpdateError = (message: string) => {
+     toast({
+        title: "Update Failed",
+        description: message || "Could not update the product. Please try again.",
         variant: 'destructive',
       });
-    }
-    setApprovingId(null);
-  };
+  }
+
 
   if (products.length === 0) {
     return (
@@ -93,18 +90,11 @@ export function PendingProductList({ initialProducts }: PendingProductListProps)
                 <TableCell>₹{product.price.toFixed(2)}</TableCell>
                 <TableCell>{new Date(product.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell className="text-right">
-                <Button
-                    onClick={() => handleApprove(product.id)}
-                    disabled={approvingId === product.id}
-                    size="sm"
-                >
-                    {approvingId === product.id ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                    <CheckCircle className="mr-2 h-4 w-4" />
-                    )}
-                    Approve
-                </Button>
+                  <EditProductDialog
+                    product={product}
+                    onSuccess={handleProductUpdate}
+                    onError={handleUpdateError}
+                  />
                 </TableCell>
             </TableRow>
             ))}
