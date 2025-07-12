@@ -130,12 +130,12 @@ export function ListingForm() {
     }
   };
 
-  const onSubmit = async (values: ClientListingSchema) => {
+  async function onSubmit(values: ClientListingSchema) {
     if (!user) {
       toast({
-        variant: "destructive",
-        title: "Not Logged In",
-        description: "You must be logged in to create a listing.",
+        variant: 'destructive',
+        title: 'Not Logged In',
+        description: 'You must be logged in to create a listing.',
       });
       router.push('/login');
       return;
@@ -144,38 +144,42 @@ export function ListingForm() {
     setIsSubmitting(true);
 
     const formData = new FormData();
-    
-    formData.append('productName', values.productName);
-    formData.append('productDescription', values.productDescription);
-    formData.append('price', String(values.price));
-    formData.append('category', values.category);
-    formData.append('subcategory', values.subcategory);
-    if (values.productImage && values.productImage.length > 0) {
-      formData.append('productImage', values.productImage[0]);
+    for (const key in values) {
+      if (key === 'productImage') {
+        if (values.productImage && values.productImage.length > 0) {
+            formData.append(key, values.productImage[0]);
+        }
+      } else {
+        formData.append(key, (values as any)[key]);
+      }
     }
-    formData.append('userId', user.id);
     
+    // Append user details for the server action
+    formData.append('userId', user.id);
+    formData.append('userName', user.name);
+    formData.append('userAvatar', user.profileImageUrl);
+
     const result = await createListing(formData);
 
     if (result?.success === false) {
       toast({
-        variant: "destructive",
-        title: "Oh no! Something went wrong.",
+        variant: 'destructive',
+        title: 'Oh no! Something went wrong.',
         description: result.message,
       });
 
       if (result.errors) {
         for (const [field, messages] of Object.entries(result.errors)) {
           if (messages) {
-              form.setError(field as FieldPath<ClientListingSchema>, {
-                  type: 'server',
-                  message: messages[0]
-              });
+            form.setError(field as FieldPath<ClientListingSchema>, {
+              type: 'server',
+              message: messages[0],
+            });
           }
         }
       }
     }
-    
+
     setIsSubmitting(false);
   };
   
