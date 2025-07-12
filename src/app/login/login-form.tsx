@@ -50,7 +50,8 @@ export function LoginForm() {
         description: "Welcome back!",
       });
       const redirectUrl = searchParams.get('redirect') || '/';
-      router.push(redirectUrl);
+      // Use router.replace for a cleaner history stack
+      router.replace(redirectUrl);
     } else {
       toast({
         variant: "destructive",

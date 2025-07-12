@@ -34,6 +34,9 @@ export function MyListingsClient() {
           setLoading(false);
         });
     } else {
+      // If there's no user, we might not need to set loading to false
+      // if the main layout is handling the auth loading state.
+      // However, for components with their own data fetching, it's safer.
       setProducts([]);
       setLoading(false);
     }
@@ -56,7 +59,7 @@ export function MyListingsClient() {
             <CardDescription>You must be logged in to view your listings.</CardDescription>
           </CardHeader>
           <CardContent>
-             <Button onClick={() => router.push('/login')}>
+             <Button onClick={() => router.push('/login?redirect=/my-listings')}>
                 Go to Login
              </Button>
           </CardContent>

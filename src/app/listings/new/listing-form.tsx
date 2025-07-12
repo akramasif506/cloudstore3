@@ -57,7 +57,7 @@ export function ListingForm() {
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   
   const form = useForm<ClientListingSchema>({
     resolver: zodResolver(clientListingSchema),
@@ -71,7 +71,7 @@ export function ListingForm() {
     },
   });
 
-  const isFormProcessing = isSuggesting || isSubmitting || authLoading;
+  const isFormProcessing = isSuggesting || isSubmitting;
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -188,13 +188,6 @@ export function ListingForm() {
   const selectedCategory = form.watch('category');
   const productImageRef = form.register("productImage");
 
-  if (authLoading) {
-    return (
-        <div className="flex justify-center items-center p-20">
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        </div>
-    );
-  }
 
   if (!user) {
     return (

@@ -1,3 +1,4 @@
+
 // src/app/my-orders/my-orders-client.tsx
 "use client";
 
@@ -88,7 +89,7 @@ export function MyOrdersClient() {
                     <CardDescription>You must be logged in to view your orders.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Button onClick={() => router.push('/login')}>
+                    <Button onClick={() => router.push('/login?redirect=/my-orders')}>
                         Go to Login
                     </Button>
                 </CardContent>

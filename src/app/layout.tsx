@@ -25,7 +25,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {loading ? (
-           <div className="flex justify-center items-center h-[calc(100vh-16rem)] w-full">
+           <div className="fixed inset-0 flex justify-center items-center bg-background/80 z-50">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
           </div>
         ) : (

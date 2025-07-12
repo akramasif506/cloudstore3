@@ -30,14 +30,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     const unsubscribeAuth = onAuthStateChanged(auth, (currentFirebaseUser) => {
       setFirebaseUser(currentFirebaseUser);
-      // The loading state will be managed by the database listener effect.
+      // If there's no user, we can stop loading immediately.
+      if (!currentFirebaseUser) {
+        setUser(null);
+        setLoading(false);
+      }
+      // If there IS a user, the loading state will be managed by the database listener effect below.
+      // We keep `loading` as true until the profile is fetched.
     });
 
     return () => unsubscribeAuth();
   }, []);
 
   useEffect(() => {
-    setLoading(true); // Start loading whenever the firebaseUser changes.
+    // This effect runs when `firebaseUser` is determined by the auth listener.
     if (firebaseUser) {
         if (!db) {
             console.warn("Firebase DB not configured. Cannot fetch user profile.");
@@ -45,6 +51,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setLoading(false);
             return;
         }
+        
+        // We are logged in with Firebase Auth, but we need the profile from the database.
+        // Keep loading until this is done.
+        setLoading(true); 
         const userRef = ref(db, `users/${firebaseUser.uid}`);
         
         const onValueChange = onValue(userRef, (snapshot) => {
@@ -54,16 +64,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 console.warn(`User profile for UID ${firebaseUser.uid} not found in database.`);
                 setUser(null); 
             }
-            setLoading(false); // Final step, loading is complete.
+            setLoading(false); // Profile loaded (or not found), stop loading.
         }, (error) => {
             console.error("Error fetching user profile:", error);
             setUser(null);
             setLoading(false); // Stop loading on error.
         });
 
+        // Cleanup the listener when the component unmounts or firebaseUser changes.
         return () => off(userRef, 'value', onValueChange);
     } else {
-      // No firebaseUser, so we are not logged in.
+      // This case handles the initial state and logout.
+      // The auth listener already sets user to null and loading to false.
+      // So no extra action is needed here unless there's a quick state change.
       setUser(null);
       setLoading(false);
     }
@@ -73,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     if (auth) {
       await auth.signOut();
-      // onAuthStateChanged will handle setting user to null.
+      // onAuthStateChanged will handle setting user to null and updating state.
     }
   };
   
