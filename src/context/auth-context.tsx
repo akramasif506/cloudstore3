@@ -31,26 +31,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setFirebaseUser(fbUser);
       if (fbUser) {
         // User is signed in, get their full profile from Realtime DB
-        // CORRECTED PATH: Look inside /users/
         const userRef = ref(db, `users/${fbUser.uid}`);
-        const listener = onValue(userRef, (snapshot) => {
-          if (snapshot.exists()) {
-            const userData = snapshot.val();
-            setUser(userData as AppUser);
-          } else {
-            // User exists in Auth, but not in DB yet. This can happen during
-            // registration lag. In this case, treat as logged out until DB record is created.
-            setUser(null);
-          }
-          setLoading(false);
-        }, (error) => {
-          console.error("Error fetching user profile:", error);
-          setUser(null);
-          setLoading(false);
-        });
         
-        // Cleanup function for the listener
-        return () => off(userRef, 'value', listener);
+        const fetchUserProfile = (retry = true) => {
+           onValue(userRef, (snapshot) => {
+            if (snapshot.exists()) {
+              const userData = snapshot.val();
+              setUser(userData as AppUser);
+              setLoading(false);
+            } else {
+               if (retry) {
+                // This handles a race condition during registration where the auth state
+                // might be known before the database write has completed.
+                // We'll wait a bit and try one more time.
+                setTimeout(() => fetchUserProfile(false), 1000);
+              } else {
+                // If it still doesn't exist, the user has an auth record but no
+                // profile in the DB, so we treat them as not fully logged in.
+                console.warn(`User with UID ${fbUser.uid} found in Auth, but not in Realtime Database.`);
+                setUser(null);
+                setLoading(false);
+              }
+            }
+          }, (error) => {
+            console.error("Error fetching user profile:", error);
+            setUser(null);
+            setLoading(false);
+          });
+        }
+        
+        fetchUserProfile();
+
+        // The onAuthStateChanged listener only needs to set up the onValue listener once.
+        // Returning the `off` function from onValue will handle cleanup when the component unmounts.
+        return () => off(userRef);
 
       } else {
         // User is signed out
