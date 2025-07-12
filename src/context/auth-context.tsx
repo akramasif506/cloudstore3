@@ -30,8 +30,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
       setFirebaseUser(fbUser);
       if (fbUser) {
-        // User is signed in, get their profile from Realtime DB
-        const userRef = ref(db, `users/${fbUser.uid}`);
+        // User is signed in, get their profile from Realtime DB at the new path
+        const userRef = ref(db, `CloudStore/users/premium/${fbUser.uid}`);
         const listener = onValue(userRef, (snapshot) => {
           if (snapshot.exists()) {
             const userData = snapshot.val();

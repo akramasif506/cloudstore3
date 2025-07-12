@@ -28,8 +28,8 @@ export async function registerUser(values: z.infer<typeof registerSchema>) {
       displayName: values.name,
     });
     
-    // Create user profile in Realtime Database
-    const userRef = ref(db, `users/${user.uid}`);
+    // Create user profile in Realtime Database at the new path
+    const userRef = ref(db, `CloudStore/users/premium/${user.uid}`);
     await set(userRef, {
       id: user.uid,
       name: values.name,

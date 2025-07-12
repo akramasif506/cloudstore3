@@ -6,12 +6,12 @@ import { ProductGrid } from '@/components/products/product-grid';
 import { Separator } from '@/components/ui/separator';
 import { db } from '@/lib/firebase';
 import type { Product, User } from '@/lib/types';
-import { get, ref, child } from 'firebase/database';
+import { get, ref, child, query, orderByChild, equalTo } from 'firebase/database';
 
 async function getUser(userId: string): Promise<User | null> {
   if (!db) return null;
   try {
-    const userRef = child(ref(db), `users/${userId}`);
+    const userRef = child(ref(db), `CloudStore/users/premium/${userId}`);
     const snapshot = await get(userRef);
     if (snapshot.exists()) {
       return snapshot.val() as User;
@@ -31,7 +31,9 @@ async function getUserProducts(userId: string): Promise<Product[]> {
   }
   try {
     const productsRef = ref(db, 'products');
-    const snapshot = await get(productsRef);
+    // Querying the general products node is more efficient than scanning the whole DB.
+    const userProductsQuery = query(productsRef, orderByChild('seller/id'), equalTo(userId));
+    const snapshot = await get(userProductsQuery);
     if (snapshot.exists()) {
       const productsData = snapshot.val();
       const allProducts: Product[] = Object.keys(productsData).map(key => ({
@@ -39,8 +41,7 @@ async function getUserProducts(userId: string): Promise<Product[]> {
         id: key,
         price: Number(productsData[key].price) || 0,
       }));
-      // Filter products by seller ID in the code
-      return allProducts.filter(product => product.seller && product.seller.id === userId);
+      return allProducts;
     }
     return [];
   } catch (error) {

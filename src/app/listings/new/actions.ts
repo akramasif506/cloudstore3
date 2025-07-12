@@ -13,7 +13,7 @@ import type { User } from '@/lib/types';
 async function getCurrentUser(userId: string): Promise<User | null> {
   if (!db) return null;
   try {
-    const userSnapshot = await get(child(dbRef(db), `users/${userId}`));
+    const userSnapshot = await get(child(dbRef(db), `CloudStore/users/premium/${userId}`));
     if (userSnapshot.exists()) {
       return userSnapshot.val() as User;
     }
@@ -79,7 +79,7 @@ export async function createListing(formData: FormData) {
     const imageFileName = `${uuidv4()}.${fileExtension}`;
     
     // The storage path is organized by date and category
-    const imageStoragePath = `uploads/${uploadDate}/${category}/${imageFileName}`;
+    const imageStoragePath = `CloudStor/upload/under_review/${uploadDate}/product/${category}/${imageFileName}`;
     const imageStorageRef = storageRef(storage, imageStoragePath);
     
     await uploadBytes(imageStorageRef, imageBuffer);
