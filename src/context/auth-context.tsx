@@ -24,10 +24,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let databaseSubscription: Unsubscribe | undefined;
 
-    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-      // First, clean up any existing database listener
+    const authStateUnsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      // First, clean up any existing database listener from a previous user
       if (databaseSubscription) {
-        off(ref(db!, `users/${firebaseUser?.uid}`), 'value', databaseSubscription);
+        databaseSubscription();
         databaseSubscription = undefined;
       }
       
@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (snapshot.exists()) {
             setUser(snapshot.val() as AppUser);
           } else {
-            // This can happen if the user is in Auth but not yet in the DB (e.g., during registration)
+            // User might be in Auth but not yet in DB (e.g., during registration process)
             setUser(null);
           }
           setLoading(false);
@@ -62,7 +62,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       } else {
         // User is signed out.
-        // Clear session cookie by calling the API
         await fetch('/api/auth/logout', { method: 'POST' });
         setUser(null);
         setFirebaseUser(null);
@@ -72,12 +71,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Cleanup subscription on component unmount
     return () => {
-        unsubscribe();
-        if (databaseSubscription && firebaseUser?.uid) {
-            off(ref(db!, `users/${firebaseUser.uid}`), 'value', databaseSubscription);
+        authStateUnsubscribe();
+        if (databaseSubscription) {
+            databaseSubscription();
         }
     };
-  }, [firebaseUser?.uid]);
+  }, []);
 
   const logout = async () => {
     if (auth) {
