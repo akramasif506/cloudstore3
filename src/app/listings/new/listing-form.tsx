@@ -152,9 +152,11 @@ export function ListingForm() {
     if (values.productImage && values.productImage.length > 0) {
       formData.append('productImage', values.productImage[0]);
     }
+    
+    const createListingWithUserId = createListing.bind(null, formData, user.id);
 
     startTransition(async () => {
-      const result = await createListing(formData, user.id);
+      const result = await createListingWithUserId();
 
       if (result?.success === false) {
         toast({
