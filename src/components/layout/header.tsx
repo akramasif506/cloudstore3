@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Leaf, Search, User, LogOut, LayoutDashboard, DollarSign, Package,LogIn, UserPlus } from 'lucide-react';
+import { Leaf, Search, User, LogOut, LayoutDashboard, DollarSign, Package, LogIn, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -19,7 +19,7 @@ import { useAuth } from '@/context/auth-context';
 export function Header() {
   const { user, logout } = useAuth();
 
-  const getFirstName = (fullName: string | undefined) => {
+  const getFirstName = (fullName: string | undefined | null) => {
     if (!fullName) return '';
     return fullName.split(' ')[0];
   };
@@ -60,8 +60,8 @@ export function Header() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                   <Avatar>
-                    <AvatarImage src={user.profileImageUrl} alt={user.name} data-ai-hint="profile picture" />
-                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                    <AvatarImage src={user.profileImageUrl} alt={user.name || 'User Avatar'} data-ai-hint="profile picture" />
+                    <AvatarFallback>{user.name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>

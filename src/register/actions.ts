@@ -22,15 +22,17 @@ export async function registerUser(values: z.infer<typeof registerSchema>) {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
     const user = userCredential.user;
-    const profileImageUrl = `https://placehold.co/100x100`;
+    
+    // Using a consistent placeholder. The text query param can cause issues with image hosts.
+    const profileImageUrl = `https://placehold.co/100x100.png`;
 
-    // Update Firebase Auth profile
+    // Update Firebase Auth profile displayName
     await updateProfile(user, {
       displayName: values.name,
-      photoURL: profileImageUrl
+      // We will rely on our database record for the photoURL to ensure consistency
     });
     
-    // Create user profile in Realtime Database
+    // Create user profile in Realtime Database, this is our source of truth
     const userRef = ref(db, `users/${user.uid}`);
     await set(userRef, {
       id: user.uid,

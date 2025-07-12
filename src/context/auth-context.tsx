@@ -33,26 +33,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // User is signed in, get their profile from Realtime DB
         const userRef = ref(db, `users/${fbUser.uid}`);
         const listener = onValue(userRef, (snapshot) => {
-          const userData = snapshot.val();
-          if (userData) {
-            setUser({
-              ...userData,
-              // Ensure we have the latest photoURL from auth, as it's the source of truth
-              profileImageUrl: fbUser.photoURL || userData.profileImageUrl,
-            } as AppUser);
+          if (snapshot.exists()) {
+            const userData = snapshot.val();
+            setUser(userData as AppUser);
           } else {
-            // This might happen if user record creation fails after auth creation
+            // This case might happen if the DB record hasn't been created yet.
+            // Create a temporary user object from auth data.
              setUser({
               id: fbUser.uid,
               name: fbUser.displayName || 'User',
               email: fbUser.email || '',
-              profileImageUrl: fbUser.photoURL || `https://placehold.co/100x100`,
+              profileImageUrl: `https://placehold.co/100x100.png`,
               createdAt: new Date().toISOString(),
+              role: 'user',
             });
           }
           setLoading(false);
         });
+        
+        // Cleanup function for the listener
         return () => off(userRef, 'value', listener);
+
       } else {
         // User is signed out
         setUser(null);
@@ -60,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
+    // Cleanup function for the auth state change listener
     return () => unsubscribe();
   }, []);
 

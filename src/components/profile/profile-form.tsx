@@ -33,8 +33,8 @@ export function ProfileForm() {
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: user?.name || '',
-      email: user?.email || '',
+      name: '',
+      email: '',
     },
   });
 
@@ -72,7 +72,7 @@ export function ProfileForm() {
             <div className="flex items-center gap-4">
                 <Avatar className="h-20 w-20">
                     <AvatarImage src={user.profileImageUrl} alt={user.name} data-ai-hint="user avatar" />
-                    <AvatarFallback>{user.name?.charAt(0) || 'U'}</AvatarFallback>
+                    <AvatarFallback>{user.name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
                 </Avatar>
             </div>
         </FormItem>
