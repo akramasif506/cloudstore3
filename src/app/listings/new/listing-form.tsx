@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useActionState } from 'react';
+import { useEffect, useState } from 'react';
+import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -73,17 +74,19 @@ export function ListingForm() {
       price: 0,
       category: '',
       subcategory: '',
+      productImage: undefined,
     },
   });
 
   useEffect(() => {
-    if(state.message) {
+    if(state?.message) {
         if(state.success) {
             toast({
                 title: "Listing Created!",
                 description: state.message,
             });
-            router.push('/my-listings');
+            // We redirect in the action now
+            // router.push('/my-listings');
         } else {
              toast({
                 variant: "destructive",
@@ -203,7 +206,7 @@ export function ListingForm() {
                     <SelectTrigger><SelectValue placeholder="Select a subcategory" /></SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {selectedCategory && categories[selectedCategory as keyof typeof categories].map(subcat => (
+                    {selectedCategory && categories[selectedCategory as keyof typeof categories]?.map(subcat => (
                       <SelectItem key={subcat} value={subcat}>{subcat}</SelectItem>
                     ))}
                   </SelectContent>
@@ -270,7 +273,9 @@ export function ListingForm() {
                         <span className="text-gray-500 sm:text-sm">₹</span>
                     </div>
                     <FormControl>
-                        <Input type="number" placeholder="0.00" className="pl-7" {...field} />
+                        <Input type="number" placeholder="0.00" className="pl-7" {...field} 
+                          onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                        />
                     </FormControl>
                 </div>
               <FormMessage />

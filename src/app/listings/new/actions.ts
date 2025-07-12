@@ -7,6 +7,7 @@ import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage
 import { mockUser } from '@/lib/data'; // Using mock user as the seller for now
 import { v4 as uuidv4 } from 'uuid';
 import { listingSchema } from '@/lib/schemas';
+import { redirect } from 'next/navigation';
 
 export async function createListing(prevState: any, formData: FormData) {
   if (!db || !storage) {
@@ -21,10 +22,12 @@ export async function createListing(prevState: any, formData: FormData) {
     subcategory: formData.get('subcategory'),
   });
 
+
   if (!validatedFields.success) {
+    console.log(validatedFields.error.flatten().fieldErrors);
     return {
       success: false,
-      message: 'Invalid form data.',
+      message: 'Invalid form data. Please check your inputs.',
       errors: validatedFields.error.flatten().fieldErrors,
     };
   }
@@ -65,9 +68,11 @@ export async function createListing(prevState: any, formData: FormData) {
 
     await set(newProductRef, newProduct);
 
-    return { success: true, message: 'Listing created successfully!' };
   } catch (error) {
     console.error('Error creating listing:', error);
     return { success: false, message: 'Failed to create listing.' };
   }
+
+  // This needs to be outside the try/catch, as redirect throws an error.
+  redirect('/my-listings');
 }
