@@ -21,6 +21,8 @@ const categories = {
   'Cloths': ['Jackets', 'Dresses', 'Shoes', 'Accessories'],
   'Electronics': ['Cameras', 'Audio', 'Computers', 'Phones'],
   'Outdoor & Sports': ['Bikes', 'Camping Gear', 'Fitness'],
+  'Grocery': ['Snacks', 'Beverages', 'Pantry Staples'],
+  'Other': ['Miscellaneous'],
 };
 
 export function ProductFilters() {
