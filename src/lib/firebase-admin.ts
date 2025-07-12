@@ -1,8 +1,14 @@
-import 'dotenv/config'; // Make sure environment variables are loaded
 import admin from 'firebase-admin';
+import 'dotenv/config';
 
-// Check if the app is already initialized
-if (!admin.apps.length) {
+export function initializeAdmin() {
+  if (admin.apps.length > 0) {
+    return { 
+      adminDb: admin.database(),
+      adminStorage: admin.storage()
+    };
+  }
+
   admin.initializeApp({
     credential: admin.credential.cert({
       projectId: process.env.FIREBASE_PROJECT_ID,
@@ -12,9 +18,9 @@ if (!admin.apps.length) {
     databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   });
+
+  return {
+    adminDb: admin.database(),
+    adminStorage: admin.storage(),
+  };
 }
-
-const adminDb = admin.database();
-const adminStorage = admin.storage();
-
-export { adminDb, adminStorage };

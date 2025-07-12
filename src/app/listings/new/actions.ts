@@ -6,7 +6,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { listingSchema } from '@/lib/schemas';
 import { redirect } from 'next/navigation';
 import type { User } from '@/lib/types';
-import { adminDb, adminStorage } from '@/lib/firebase-admin';
+import { initializeAdmin } from '@/lib/firebase-admin';
+import admin from 'firebase-admin';
 
 // This action now requires a userId
 const listingActionSchema = listingSchema.extend({
@@ -14,6 +15,7 @@ const listingActionSchema = listingSchema.extend({
 });
 
 export async function createListing(formData: FormData) {
+  const { adminDb, adminStorage } = initializeAdmin();
   const rawFormData = Object.fromEntries(formData.entries());
 
   const validatedFields = listingActionSchema.safeParse({
@@ -99,7 +101,10 @@ export async function createListing(formData: FormData) {
 
   } catch (error) {
     console.error('Error creating listing:', error);
-    return { success: false, message: 'Failed to create listing.' };
+    if (error instanceof Error) {
+        return { success: false, message: `Failed to create listing: ${error.message}` };
+    }
+    return { success: false, message: 'An unknown error occurred while creating the listing.' };
   }
 
   redirect('/my-listings');
