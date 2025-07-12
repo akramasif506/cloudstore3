@@ -48,8 +48,8 @@ export function Header() {
           </Link>
         </nav>
 
-        <div className="flex flex-1 items-center justify-end space-x-2">
-          <div className="relative w-56">
+        <div className="flex flex-1 items-center justify-end space-x-4">
+          <div className="relative w-56 hidden md:block">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
@@ -71,46 +71,52 @@ export function Header() {
           </Button>
 
           {user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  <Avatar>
-                    <AvatarImage src={user.profileImageUrl} alt={user.name || 'User Avatar'} data-ai-hint="profile picture" />
-                    <AvatarFallback>{user.name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end">
-                <DropdownMenuLabel>
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">Hello, {getFirstName(user.name)}!</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {user.role === 'admin' && (
-                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" />Dashboard</Link>
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem asChild>
-                  <Link href="/profile"><User className="mr-2 h-4 w-4" />Profile</Link>
-                </DropdownMenuItem>
-                 <DropdownMenuItem asChild>
-                  <Link href="/my-listings"><Package className="mr-2 h-4 w-4" />My Listings</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/my-orders"><DollarSign className="mr-2 h-4 w-4" />My Orders</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center gap-4">
+                <div className="text-right hidden sm:block">
+                  <p className="text-sm font-semibold">Hello, {getFirstName(user.name)}!</p>
+                  <p className="text-xs text-muted-foreground -mt-1">Welcome back</p>
+                </div>
+                <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                    <Avatar>
+                        <AvatarImage src={user.profileImageUrl} alt={user.name || 'User Avatar'} data-ai-hint="profile picture" />
+                        <AvatarFallback>{user.name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+                    </Avatar>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end">
+                    <DropdownMenuLabel>
+                    <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">Hello, {getFirstName(user.name)}!</p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                        </p>
+                    </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {user.role === 'admin' && (
+                    <DropdownMenuItem asChild>
+                        <Link href="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" />Dashboard</Link>
+                    </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem asChild>
+                    <Link href="/profile"><User className="mr-2 h-4 w-4" />Profile</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                    <Link href="/my-listings"><Package className="mr-2 h-4 w-4" />My Listings</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                    <Link href="/my-orders"><DollarSign className="mr-2 h-4 w-4" />My Orders</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={logout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
           ) : (
             <div className="flex items-center gap-2">
                 <Button asChild variant="ghost">
