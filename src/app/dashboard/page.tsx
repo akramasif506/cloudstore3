@@ -77,7 +77,12 @@ async function getDashboardStats() {
 
 
 export default async function DashboardPage() {
-  if (mockUser.role !== 'admin') {
+  const recentMessages = await getRecentMessages();
+  // For development, we'll check the mock user. 
+  // In a real app, you would get the current user's role from your auth context.
+  const isAdmin = mockUser.role === 'admin';
+
+  if (!isAdmin) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
         <ShieldAlert className="w-16 h-16 text-destructive mb-4" />
@@ -88,7 +93,7 @@ export default async function DashboardPage() {
   }
 
   const { totalProducts, pendingProducts, totalUsers, totalReviews, chartData } = await getDashboardStats();
-  const recentMessages = await getRecentMessages();
+  
 
   return (
     <div className="space-y-8">
