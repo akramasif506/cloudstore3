@@ -10,6 +10,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider, useAuth } from '@/context/auth-context';
 import { Loader2 } from 'lucide-react';
 import React from 'react';
+import { CartProvider } from '@/context/cart-context';
 
 // export const metadata: Metadata = {
 //   title: 'CloudStore - A Akram Product',
@@ -54,10 +55,12 @@ export default function RootLayout({
       </head>
       <body className={cn('font-body antialiased min-h-screen flex flex-col')}>
         <AuthProvider>
-          <AppContent>
-            {children}
-          </AppContent>
-          <Toaster />
+          <CartProvider>
+            <AppContent>
+              {children}
+            </AppContent>
+            <Toaster />
+          </CartProvider>
         </AuthProvider>
       </body>
     </html>

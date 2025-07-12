@@ -17,7 +17,11 @@ export interface User {
 
 export interface Review {
   id: string;
-  user: Pick<User, 'id' | 'name' | 'profileImageUrl'>;
+  user: {
+    id: string;
+    name: string;
+    avatarUrl: string;
+  };
   rating: number;
   comment: string;
   date: string;
@@ -32,7 +36,6 @@ export interface Product {
   subcategory: string;
   imageUrl: string;
   reviews: Review[];
-  distance: number; // in km
   status: 'active' | 'pending_review' | 'rejected' | 'sold';
   createdAt: string;
 }

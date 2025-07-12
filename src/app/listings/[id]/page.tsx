@@ -2,15 +2,15 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, Star, Tag } from 'lucide-react';
+import { Star, Tag } from 'lucide-react';
 import { CustomerFeedback } from '@/components/products/customer-feedback';
 import type { Product } from '@/lib/types';
 import { db } from '@/lib/firebase';
 import { ref, get, child } from 'firebase/database';
+import { AddToCartButtons } from './add-to-cart-buttons';
 
 
 async function getProduct(id: string): Promise<Product | null> {
@@ -21,7 +21,8 @@ async function getProduct(id: string): Promise<Product | null> {
     const dbRef = ref(db);
     const snapshot = await get(child(dbRef, `products/${id}`));
     if (snapshot.exists()) {
-      return snapshot.val() as Product;
+      const productData = snapshot.val();
+      return { ...productData, id }; // Ensure id is part of the returned object
     }
     return null;
   } catch (error) {
@@ -34,7 +35,7 @@ async function getProduct(id: string): Promise<Product | null> {
 export default async function ListingDetailPage({ params }: { params: { id: string } }) {
   const product = await getProduct(params.id);
 
-  if (!product) {
+  if (!product || product.status !== 'active') {
     notFound();
   }
   
@@ -87,8 +88,7 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
                     <CardTitle className="text-3xl font-bold text-primary">Rs {product.price.toFixed(2)}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <Button size="lg" className="w-full text-lg">Buy Now</Button>
-                    <Button variant="outline" size="lg" className="w-full mt-4">Make an Offer</Button>
+                    <AddToCartButtons product={product} />
                 </CardContent>
             </Card>
              <Card>
@@ -99,9 +99,9 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
                     <p className="text-sm text-muted-foreground">
                         All products on CloudStore are carefully curated and sold directly by us. We ensure quality and authenticity for every item.
                     </p>
-                     <Button variant="secondary" className="w-full" asChild>
-                        <Link href="/contact">Contact Us</Link>
-                     </Button>
+                     <Link href="/contact" className="w-full">
+                        <span className="inline-block w-full text-center py-2 px-4 border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md text-sm font-medium">Contact Us</span>
+                     </Link>
                 </CardContent>
             </Card>
         </div>
