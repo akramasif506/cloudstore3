@@ -31,8 +31,23 @@ async function getProducts(): Promise<Product[]> {
   }
 }
 
-export default async function Home() {
-  const products = await getProducts();
+export default async function Home({
+  searchParams
+}: {
+  searchParams?: {
+    category?: string;
+    subcategory?: string;
+    // Add other filter params here like distance, price etc.
+  };
+}) {
+  const allProducts = await getProducts();
+
+  const filteredProducts = allProducts.filter(product => {
+    const categoryMatch = searchParams?.category ? product.category === searchParams.category : true;
+    const subcategoryMatch = searchParams?.subcategory ? product.subcategory === searchParams.subcategory : true;
+    return categoryMatch && subcategoryMatch;
+  });
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
       <div className="lg:col-span-1">
@@ -41,7 +56,7 @@ export default async function Home() {
         </div>
       </div>
       <div className="lg:col-span-3">
-        <ProductGrid products={products} />
+        <ProductGrid products={filteredProducts} />
       </div>
     </div>
   );

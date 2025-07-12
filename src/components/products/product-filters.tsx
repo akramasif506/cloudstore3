@@ -1,7 +1,8 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import {
@@ -26,12 +27,47 @@ const categories = {
 };
 
 export function ProductFilters() {
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
+  const [selectedSubcategory, setSelectedSubcategory] = useState(searchParams.get('subcategory') || '');
   const [distance, setDistance] = useState([50]);
+
+  useEffect(() => {
+    // When category changes, reset subcategory if it's not valid for the new category
+    if (selectedCategory && !categories[selectedCategory as keyof typeof categories]?.includes(selectedSubcategory)) {
+      setSelectedSubcategory('');
+    }
+  }, [selectedCategory, selectedSubcategory]);
+
+  const handleApplyFilters = () => {
+    const params = new URLSearchParams(searchParams);
+    if (selectedCategory) {
+      params.set('category', selectedCategory);
+    } else {
+      params.delete('category');
+    }
+    if (selectedSubcategory) {
+      params.set('subcategory', selectedSubcategory);
+    } else {
+      params.delete('subcategory');
+    }
+    // TODO: Add distance filter logic
+    // params.set('distance', distance[0].toString());
+    
+    router.push(`/?${params.toString()}`);
+  };
 
   const handleCategoryChange = (value: string) => {
     setSelectedCategory(value);
+    // Reset subcategory when category changes
+    setSelectedSubcategory('');
   };
+
+  const handleSubcategoryChange = (value: string) => {
+    setSelectedSubcategory(value);
+  }
 
   return (
     <Card>
@@ -44,7 +80,7 @@ export function ProductFilters() {
       <CardContent className="space-y-6">
         <div className="space-y-2">
           <Label htmlFor="category">Category</Label>
-          <Select onValueChange={handleCategoryChange}>
+          <Select onValueChange={handleCategoryChange} value={selectedCategory}>
             <SelectTrigger id="category">
               <SelectValue placeholder="Select a category" />
             </SelectTrigger>
@@ -56,21 +92,23 @@ export function ProductFilters() {
           </Select>
         </div>
         
-        {selectedCategory && (
-          <div className="space-y-2">
-            <Label htmlFor="subcategory">Subcategory</Label>
-            <Select>
-              <SelectTrigger id="subcategory">
-                <SelectValue placeholder="Select a subcategory" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories[selectedCategory as keyof typeof categories].map(subcat => (
-                  <SelectItem key={subcat} value={subcat}>{subcat}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        <div className="space-y-2">
+          <Label htmlFor="subcategory">Subcategory</Label>
+          <Select 
+            onValueChange={handleSubcategoryChange} 
+            value={selectedSubcategory}
+            disabled={!selectedCategory}
+          >
+            <SelectTrigger id="subcategory">
+              <SelectValue placeholder="Select a subcategory" />
+            </SelectTrigger>
+            <SelectContent>
+              {selectedCategory && categories[selectedCategory as keyof typeof categories]?.map(subcat => (
+                <SelectItem key={subcat} value={subcat}>{subcat}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         <div className="space-y-2">
           <div className="flex justify-between">
@@ -83,9 +121,12 @@ export function ProductFilters() {
             step={1}
             value={distance}
             onValueChange={setDistance}
+            disabled // Disabled for now
           />
         </div>
-        <Button className="w-full bg-accent hover:bg-accent/90">Apply Filters</Button>
+        <Button className="w-full bg-accent hover:bg-accent/90" onClick={handleApplyFilters}>
+          Apply Filters
+        </Button>
       </CardContent>
     </Card>
   );
