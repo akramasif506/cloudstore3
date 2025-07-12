@@ -2,7 +2,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { onIdTokenChanged, User as FirebaseUser } from 'firebase/auth';
 import { ref, onValue, off, Unsubscribe } from 'firebase/database';
 import { auth, db } from '@/lib/firebase';
 import type { User as AppUser } from '@/lib/types';
@@ -24,28 +24,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let databaseSubscription: Unsubscribe | undefined;
 
-    const authSubscription = onAuthStateChanged(auth, (fbUser) => {
+    const unsubscribe = onIdTokenChanged(auth, async (fbUser) => {
       // First, clean up any existing database listener
       if (databaseSubscription) {
-        off(ref(db!, `users/${firebaseUser?.uid}`), 'value', databaseSubscription);
+        // Use a local variable to capture the current firebaseUser's uid for cleanup
+        const uidToUnsubscribe = firebaseUser?.uid;
+        if (uidToUnsubscribe) {
+            off(ref(db!, `users/${uidToUnsubscribe}`), 'value', databaseSubscription);
+        }
         databaseSubscription = undefined;
       }
-
+      
       setFirebaseUser(fbUser);
-
+      
       if (fbUser) {
-        // Keep loading true until we get the profile
-        if (!user) setLoading(true);
-        const userProfileRef = ref(db!, `users/${fbUser.uid}`);
+        // User is signed in.
+        const idToken = await fbUser.getIdToken();
+        // Post the token to the server to create a session cookie
+        await fetch('/api/auth', {
+            method: 'POST',
+            headers: {
+            'Authorization': `Bearer ${idToken}`,
+            },
+        });
         
-        // Set up the new database listener
+        // Listen for user profile data from Realtime Database
+        const userProfileRef = ref(db!, `users/${fbUser.uid}`);
         databaseSubscription = onValue(userProfileRef, (snapshot) => {
           if (snapshot.exists()) {
             setUser(snapshot.val() as AppUser);
           } else {
-            // User exists in Auth, but not in DB (could be mid-registration).
-            // Treat as not fully logged in from an app perspective.
-            setUser(null); 
+            // This can happen if the user is in Auth but not yet in the DB (e.g., during registration)
+            setUser(null);
           }
           setLoading(false);
         }, (error) => {
@@ -54,22 +64,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setLoading(false);
         });
       } else {
-        // User is logged out
+        // User is signed out.
+        // Clear session cookie by calling the API
+         await fetch('/api/auth/logout', { method: 'POST' });
         setUser(null);
         setFirebaseUser(null);
         setLoading(false);
       }
     });
 
-    // Cleanup function for when the AuthProvider unmounts
-    return () => {
-        authSubscription();
-        if (databaseSubscription && firebaseUser) {
-            off(ref(db!, `users/${firebaseUser.uid}`), 'value', databaseSubscription);
-        }
-    };
-    // The dependency array should be empty to run this effect only once on mount.
-  }, []);
+    return () => unsubscribe();
+  }, [firebaseUser?.uid]); // Add firebaseUser?.uid to dependencies to correctly manage subscription cleanup
 
   const logout = async () => {
     if (auth) {

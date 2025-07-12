@@ -15,6 +15,7 @@ export function Footer() {
             <Link href="/contact" className="hover:text-foreground">Contact Us</Link>
             <Link href="#" className="hover:text-foreground">Terms of Service</Link>
             <Link href="#" className="hover:text-foreground">Privacy Policy</Link>
+            <Link href="/test-user" className="hover:text-foreground font-mono text-xs">[Test Page]</Link>
           </nav>
         </div>
         <div className="mt-8 text-center text-sm text-muted-foreground">
