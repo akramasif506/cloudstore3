@@ -17,11 +17,11 @@ export async function createListing(formData: FormData) {
 
   const rawFormData = Object.fromEntries(formData.entries());
 
+  // First, validate the text and number inputs
   const validatedFields = listingSchema.safeParse({
     ...rawFormData,
     price: parseFloat(rawFormData.price as string),
   });
-
 
   if (!validatedFields.success) {
     return {
@@ -30,7 +30,8 @@ export async function createListing(formData: FormData) {
       errors: validatedFields.error.flatten().fieldErrors,
     };
   }
-
+  
+  // Now, handle the image file separately
   const imageFile = formData.get('productImage') as File;
   if (!imageFile || imageFile.size === 0) {
     return { 
