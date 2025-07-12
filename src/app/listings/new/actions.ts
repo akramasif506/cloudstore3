@@ -3,12 +3,11 @@
 
 import { z } from 'zod';
 import { db, storage } from '@/lib/firebase';
-import { ref as dbRef, push, set, get, child } from 'firebase/database';
+import { ref as dbRef, push, set } from 'firebase/database';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
 import { listingSchema } from '@/lib/schemas';
 import { redirect } from 'next/navigation';
-import type { User } from '@/lib/types';
 
 export async function createListing(formData: FormData) {
   if (!db || !storage) {
@@ -16,25 +15,12 @@ export async function createListing(formData: FormData) {
   }
   
   const userId = formData.get('userId') as string;
+  const userName = formData.get('userName') as string;
+  const userAvatarUrl = formData.get('userAvatarUrl') as string;
 
-  if (!userId) {
+  if (!userId || !userName || !userAvatarUrl) {
     return { success: false, message: 'You must be logged in to create a listing.' };
   }
-
-  // 1. Fetch user details from DB to ensure data is fresh and valid
-  let user: User | null = null;
-  try {
-    const userSnapshot = await get(child(dbRef(db), `CloudStore/users/premium/${userId}`));
-    if (userSnapshot.exists()) {
-      user = userSnapshot.val() as User;
-    } else {
-      throw new Error("User profile not found in database.");
-    }
-  } catch (error) {
-    console.error('Error fetching user for listing creation:', error);
-    return { success: false, message: 'Could not verify your user account. Please try logging in again.' };
-  }
-
 
   const rawFormData = Object.fromEntries(formData.entries());
   
@@ -61,7 +47,7 @@ export async function createListing(formData: FormData) {
   }
 
   try {
-    // 2. Upload image to Firebase Storage
+    // 1. Upload image to Firebase Storage
     const imageBuffer = Buffer.from(await imageFile.arrayBuffer());
     const imageFileName = `${uuidv4()}.${imageFile.name.split('.').pop()}`;
     const imageStorageRef = storageRef(storage, `product-images/${imageFileName}`);
@@ -69,7 +55,7 @@ export async function createListing(formData: FormData) {
     await uploadBytes(imageStorageRef, imageBuffer);
     const imageUrl = await getDownloadURL(imageStorageRef);
 
-    // 3. Prepare product data
+    // 2. Prepare product data
     const newProductRef = push(dbRef(db, 'products'));
     const productId = newProductRef.key;
 
@@ -82,9 +68,9 @@ export async function createListing(formData: FormData) {
       id: productId,
       imageUrl: imageUrl,
       seller: {
-        id: user.id,
-        name: user.name,
-        avatarUrl: user.profileImageUrl,
+        id: userId,
+        name: userName,
+        avatarUrl: userAvatarUrl,
       },
       reviews: [], 
       distance: Math.floor(Math.random() * 50) + 1, // Placeholder
@@ -92,7 +78,7 @@ export async function createListing(formData: FormData) {
       status: 'under_review', // All new products are under review
     };
     
-    // 4. Save to the general 'products' path for easy querying
+    // 3. Save to the general 'products' path for easy querying
     await set(dbRef(db, `products/${productId}`), newProductData);
 
   } catch (error) {
