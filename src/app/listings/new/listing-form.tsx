@@ -131,7 +131,7 @@ export function ListingForm() {
   };
 
   async function onSubmit(values: ClientListingSchema) {
-    if (!user) {
+    if (!user?.id) {
       toast({
         variant: 'destructive',
         title: 'Not Logged In',
@@ -144,22 +144,23 @@ export function ListingForm() {
     setIsSubmitting(true);
 
     const formData = new FormData();
+    // Append all form values to formData
     for (const key in values) {
       if (key === 'productImage') {
         if (values.productImage && values.productImage.length > 0) {
-            formData.append(key, values.productImage[0]);
+          formData.append(key, values.productImage[0]);
         }
       } else {
-        formData.append(key, (values as any)[key]);
+        // Ensure value is not undefined before appending
+        const value = (values as any)[key];
+        if (value !== undefined) {
+          formData.append(key, value);
+        }
       }
     }
     
-    // Append user details for the server action
-    formData.append('userId', user.id);
-    formData.append('userName', user.name);
-    formData.append('userAvatar', user.profileImageUrl);
-
-    const result = await createListing(formData);
+    // Call the server action with formData and the user's ID
+    const result = await createListing(formData, user.id);
 
     if (result?.success === false) {
       toast({
@@ -179,7 +180,8 @@ export function ListingForm() {
         }
       }
     }
-
+    
+    // Note: The page will redirect on success, so we only need to handle the loading state on failure.
     setIsSubmitting(false);
   };
   
