@@ -1,12 +1,10 @@
 
 import { MyListingsClient } from './my-listings-client';
 
-
-export default async function MyListingsPage() {
-  
+export default function MyListingsPage() {
   return (
     <div>
-        <MyListingsClient />
+      <MyListingsClient />
     </div>
   );
 }
