@@ -36,12 +36,20 @@ export function ContactForm() {
   });
 
   async function onSubmit(values: z.infer<typeof contactSchema>) {
-    await sendMessage(values);
-    toast({
-      title: "Message Sent!",
-      description: "Thanks for reaching out. We'll get back to you soon.",
-    });
-    form.reset();
+    const result = await sendMessage(values);
+    if (result.success) {
+      toast({
+        title: "Message Sent!",
+        description: "Thanks for reaching out. We'll get back to you soon.",
+      });
+      form.reset();
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Oh no! Something went wrong.",
+        description: result.error || "There was a problem with your request.",
+      });
+    }
   }
 
   return (

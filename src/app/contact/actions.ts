@@ -1,6 +1,8 @@
 'use server';
 
 import { z } from 'zod';
+import { db } from '@/lib/firebase';
+import { ref, push, set } from 'firebase/database';
 
 const contactSchema = z.object({
   name: z.string(),
@@ -9,15 +11,17 @@ const contactSchema = z.object({
 });
 
 export async function sendMessage(values: z.infer<typeof contactSchema>) {
-  // For demonstration purposes, we'll log the message to the server console.
-  // In a real application, you would save this to a database or send an email.
-  console.log('New contact message received:');
-  console.log('Name:', values.name);
-  console.log('Email:', values.email);
-  console.log('Message:', values.message);
-
-  // You can add database logic here.
-  // For example: await db.insert(messages).values(values);
-
-  return { success: true };
+  try {
+    const messagesRef = ref(db, 'messages');
+    const newMessageRef = push(messagesRef);
+    await set(newMessageRef, {
+      ...values,
+      timestamp: new Date().toISOString(),
+    });
+    console.log('Message saved to Firebase Realtime Database');
+    return { success: true };
+  } catch (error) {
+    console.error('Error saving message to Firebase:', error);
+    return { success: false, error: 'Failed to send message.' };
+  }
 }
