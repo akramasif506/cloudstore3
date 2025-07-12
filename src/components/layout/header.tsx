@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Leaf, Search, User, LogOut, LayoutDashboard, DollarSign, Package, LogIn, UserPlus, ShoppingCart } from 'lucide-react';
+import { Leaf, Search, User, LogOut, LayoutDashboard, DollarSign, Package, LogIn, UserPlus, ShoppingCart, FilePlus2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -31,26 +31,24 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
-        <div className="flex items-center">
-          <Link href="/" className="flex items-center space-x-2 mr-6">
-            <Leaf className="h-6 w-6 text-primary" />
-            <div>
-              <span className="font-bold font-headline text-lg">CloudStore</span>
-              <p className="text-xs text-muted-foreground -mt-1">A Akram Product</p>
-            </div>
+        <Link href="/" className="flex items-center space-x-2 mr-6">
+          <Leaf className="h-6 w-6 text-primary" />
+          <div>
+            <span className="font-bold font-headline text-lg">CloudStore</span>
+            <p className="text-xs text-muted-foreground -mt-1">A Akram Product</p>
+          </div>
+        </Link>
+        
+        <nav className="flex items-center space-x-4 text-sm font-medium">
+          <Link href="/" className="transition-colors hover:text-foreground/80 text-foreground">
+            Home
           </Link>
-          
-          <nav className="flex items-center space-x-6 text-sm font-medium">
-            <Link href="/" className="transition-colors hover:text-foreground/80 text-foreground">
-              Home
+          {user && (
+            <Link href="/listings/new" className="transition-colors hover:text-foreground/80 text-foreground">
+              Sell
             </Link>
-            {user && (
-              <Link href="/listings/new" className="transition-colors hover:text-foreground/80 text-foreground">
-                Sell
-              </Link>
-            )}
-          </nav>
-        </div>
+          )}
+        </nav>
 
         <div className="flex flex-1 items-center justify-end space-x-2">
           <div className="relative w-full max-w-xs">
