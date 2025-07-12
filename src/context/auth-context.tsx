@@ -12,7 +12,6 @@ interface AuthContextType {
   user: AppUser | null;
   firebaseUser: FirebaseUser | null;
   loading: boolean;
-  userLoaded: boolean; // Tracks if the user's DB profile has been loaded
   logout: () => Promise<void>;
 }
 
@@ -21,54 +20,43 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [user, setUser] = useState<AppUser | null>(null);
-  const [loading, setLoading] = useState(true); // Tracks Firebase Auth state
-  const [userLoaded, setUserLoaded] = useState(false); // Tracks if DB profile is loaded
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!auth || !db) {
+      console.warn("Firebase not configured. Auth services disabled.");
       setLoading(false);
       return;
     }
+    
     const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
       setFirebaseUser(fbUser);
       if (fbUser) {
+        // User is authenticated, now get their profile from DB
         const userRef = ref(db, `users/${fbUser.uid}`);
         
-        onValue(userRef, (snapshot) => {
+        const onValueCallback = (snapshot: any) => {
           if (snapshot.exists()) {
-            const userData = snapshot.val();
-            setUser(userData as AppUser);
-            setUserLoaded(true); // DB profile is loaded
-            setLoading(false);
+            setUser(snapshot.val() as AppUser);
           } else {
-            // This handles a race condition during registration. We'll wait a bit.
-            setTimeout(() => {
-              onValue(userRef, (snapshotRetry) => {
-                if(snapshotRetry.exists()) {
-                   setUser(snapshotRetry.val() as AppUser);
-                } else {
-                   console.warn(`User with UID ${fbUser.uid} not in DB.`);
-                   setUser(null);
-                }
-                setUserLoaded(true);
-                setLoading(false);
-              })
-            }, 1200);
+            console.warn(`User profile for UID ${fbUser.uid} not found in database.`);
+            setUser(null); // Or handle as an incomplete profile
           }
-        }, (error) => {
+          setLoading(false); // Finished loading process
+          off(userRef, 'value', onValueCallback); // Detach listener after getting value
+        };
+
+        onValue(userRef, onValueCallback, (error) => {
           console.error("Error fetching user profile:", error);
           setUser(null);
-          setUserLoaded(true);
           setLoading(false);
         });
-
-        return () => off(userRef);
 
       } else {
         // User is signed out
         setUser(null);
+        setFirebaseUser(null);
         setLoading(false);
-        setUserLoaded(true);
       }
     });
 
@@ -76,24 +64,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = async () => {
-    if(auth) {
-        setUser(null);
-        setUserLoaded(false);
-        await auth.signOut();
+    if (auth) {
+      await auth.signOut();
+      setUser(null);
+      setFirebaseUser(null);
+      setLoading(false);
     }
   };
 
-  // Show a global loader until both Firebase Auth and the user profile are checked.
-  if (loading || !userLoaded) {
+  if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
+      <div className="flex justify-center items-center h-screen w-full">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <AuthContext.Provider value={{ user, firebaseUser, loading, userLoaded, logout }}>
+    <AuthContext.Provider value={{ user, firebaseUser, loading, logout }}>
       {children}
     </AuthContext.Provider>
   );
