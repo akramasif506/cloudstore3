@@ -214,7 +214,7 @@ export function ListingForm() {
                 <FormLabel>Subcategory</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory || isLoading}>
                   <FormControl>
-                    <SelectTrigger><SelectValue placeholder="Select a subcategory" /></SelectValue>
+                    <SelectTrigger><SelectValue placeholder="Select a subcategory" /></SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     {selectedCategory && categories[selectedCategory as keyof typeof categories]?.map(subcat => (
