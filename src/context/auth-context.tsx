@@ -2,7 +2,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { onIdTokenChanged, User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { ref, onValue, off, Unsubscribe } from 'firebase/database';
 import { auth, db } from '@/lib/firebase';
 import type { User as AppUser } from '@/lib/types';
@@ -24,10 +24,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let databaseSubscription: Unsubscribe | undefined;
 
-    const unsubscribe = onIdTokenChanged(auth, async (fbUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       // First, clean up any existing database listener
       if (databaseSubscription) {
-        databaseSubscription(); // Unsubscribe from the listener
+        off(ref(db!, `users/${firebaseUser?.uid}`), 'value', databaseSubscription);
         databaseSubscription = undefined;
       }
       
@@ -73,11 +73,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Cleanup subscription on component unmount
     return () => {
         unsubscribe();
-        if (databaseSubscription) {
-            databaseSubscription();
+        if (databaseSubscription && firebaseUser?.uid) {
+            off(ref(db!, `users/${firebaseUser.uid}`), 'value', databaseSubscription);
         }
     };
-  }, []);
+  }, [firebaseUser?.uid]);
 
   const logout = async () => {
     if (auth) {
