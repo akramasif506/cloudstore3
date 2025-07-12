@@ -81,7 +81,7 @@ export function ListingForm() {
       toast({
         variant: "destructive",
         title: "Missing Information",
-        description: "Please provide a category, subcategory, and image before using the AI assistant.",
+        description: "Please provide a category, subcategory, and an image before using the AI assistant.",
       });
       return;
     }
