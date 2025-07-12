@@ -2,10 +2,7 @@
 'use server';
 
 import { z } from 'zod';
-import { db, storage } from '@/lib/firebase';
-import { adminDb } from '@/lib/firebase-admin';
-import { ref as dbRef, set, get } from 'firebase/database';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { adminDb, adminStorage } from '@/lib/firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
 import { listingSchema } from '@/lib/schemas';
 import { redirect } from 'next/navigation';
@@ -16,9 +13,8 @@ const listingActionSchema = listingSchema.extend({
   userId: z.string().min(1, { message: 'User must be logged in.' }),
 });
 
-
 export async function createListing(formData: FormData) {
-  if (!db || !storage || !adminDb) {
+  if (!adminDb || !adminStorage) {
     return { success: false, message: 'Firebase is not configured.' };
   }
   
@@ -72,10 +68,19 @@ export async function createListing(formData: FormData) {
   try {
     const imageBuffer = Buffer.from(await imageFile.arrayBuffer());
     const imageFileName = `${uuidv4()}.${imageFile.name.split('.').pop()}`;
-    const imageStorageRef = storageRef(storage, `product-images/${imageFileName}`);
+    const bucket = adminStorage.bucket();
+    const file = bucket.file(`product-images/${imageFileName}`);
     
-    await uploadBytes(imageStorageRef, imageBuffer);
-    const imageUrl = await getDownloadURL(imageStorageRef);
+    await file.save(imageBuffer, {
+        metadata: {
+            contentType: imageFile.type,
+        }
+    });
+
+    const [imageUrl] = await file.getSignedUrl({
+        action: 'read',
+        expires: '03-09-2491' // A very long-lived URL
+    });
     
     const productId = uuidv4();
     
@@ -93,7 +98,8 @@ export async function createListing(formData: FormData) {
       status: 'pending_review',
     };
     
-    await set(dbRef(db, `products/${productId}`), newProductData);
+    const productRef = adminDb.ref(`products/${productId}`);
+    await productRef.set(newProductData);
 
   } catch (error) {
     console.error('Error creating listing:', error);

@@ -9,6 +9,7 @@ if (!admin.apps.length) {
         privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
       }),
       databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
     });
   } catch (error: any) {
     console.error('Firebase admin initialization error', error.stack);
@@ -17,3 +18,4 @@ if (!admin.apps.length) {
 
 export const adminDb = admin.apps.length ? admin.database() : null;
 export const adminAuth = admin.apps.length ? admin.auth() : null;
+export const adminStorage = admin.apps.length ? admin.storage() : null;
