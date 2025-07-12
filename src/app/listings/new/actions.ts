@@ -14,19 +14,17 @@ export async function createListing(formData: FormData) {
     return { success: false, message: 'Firebase is not configured.' };
   }
   
-  const userId = formData.get('userId') as string;
+  const rawFormData = Object.fromEntries(formData.entries());
+  
+  // The userId must be present in the form data to proceed.
+  const userId = rawFormData.userId as string;
   if (!userId) {
     return {
       success: false,
       message: 'You must be logged in to create a listing.',
     };
   }
-  
-  const userName = formData.get('userName') as string;
-  const userAvatarUrl = formData.get('userAvatarUrl') as string;
 
-  const rawFormData = Object.fromEntries(formData.entries());
-  
   const validatedFields = listingSchema.safeParse({
     ...rawFormData,
     price: parseFloat(rawFormData.price as string),
@@ -58,13 +56,18 @@ export async function createListing(formData: FormData) {
     const imageUrl = await getDownloadURL(imageStorageRef);
     
     const productId = uuidv4();
+    const { productName, productDescription, price, category, subcategory, userName, userAvatarUrl } = validatedFields.data;
 
     const newProductData = {
-      ...validatedFields.data,
       id: productId,
+      name: productName,
+      description: productDescription,
+      price,
+      category,
+      subcategory,
       imageUrl: imageUrl,
       seller: {
-        id: userId,
+        id: validatedFields.data.userId, // Use the validated user ID
         name: userName,
         avatarUrl: userAvatarUrl || `https://placehold.co/100x100.png`,
       },
@@ -74,7 +77,6 @@ export async function createListing(formData: FormData) {
       status: 'pending_review',
     };
     
-    // Save to the new, simplified product path
     await set(dbRef(db, `products/${productId}`), newProductData);
 
   } catch (error) {

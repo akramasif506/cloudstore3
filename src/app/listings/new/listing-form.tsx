@@ -34,7 +34,13 @@ import { useRouter } from 'next/navigation';
 
 const isBrowser = typeof window !== 'undefined';
 
-const clientListingSchema = listingSchema.extend({
+// Client schema does not need the user fields, as they are not direct inputs.
+// It also handles the FileList for the image.
+const clientListingSchema = listingSchema.omit({ 
+  userId: true, 
+  userName: true, 
+  userAvatarUrl: true 
+}).extend({
   productImage: isBrowser
     ? z.instanceof(FileList).refine((files) => files?.length === 1, 'Product image is required.')
     : z.any(),
@@ -74,7 +80,6 @@ export function ListingForm() {
   });
 
   const isLoading = isSuggesting || isSubmitting;
-  // The form should be disabled if we are loading OR if the user profile hasn't loaded yet.
   const isFormDisabled = isLoading || !userLoaded;
 
 
@@ -160,9 +165,9 @@ export function ListingForm() {
       }
     }
     
+    // Add user details directly to the FormData object
     formData.append('userId', user.id);
-    // Use optional chaining just in case, though the userLoaded check should prevent this.
-    formData.append('userName', user.name || 'User'); 
+    formData.append('userName', user.name || 'Anonymous User'); 
     formData.append('userAvatarUrl', user.profileImageUrl || '');
 
     const result = await createListing(formData);
