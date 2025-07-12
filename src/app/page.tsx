@@ -37,15 +37,20 @@ export default async function Home({
   searchParams?: {
     category?: string;
     subcategory?: string;
-    // Add other filter params here like distance, price etc.
+    minPrice?: string;
+    maxPrice?: string;
   };
 }) {
   const allProducts = await getProducts();
 
+  const minPrice = searchParams?.minPrice ? Number(searchParams.minPrice) : 0;
+  const maxPrice = searchParams?.maxPrice ? Number(searchParams.maxPrice) : Infinity;
+
   const filteredProducts = allProducts.filter(product => {
     const categoryMatch = searchParams?.category ? product.category === searchParams.category : true;
     const subcategoryMatch = searchParams?.subcategory ? product.subcategory === searchParams.subcategory : true;
-    return categoryMatch && subcategoryMatch;
+    const priceMatch = product.price >= minPrice && product.price <= maxPrice;
+    return categoryMatch && subcategoryMatch && priceMatch;
   });
 
   return (

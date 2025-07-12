@@ -26,13 +26,18 @@ const categories = {
   'Other': ['Miscellaneous'],
 };
 
+const MAX_PRICE = 50000;
+
 export function ProductFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
   const [selectedSubcategory, setSelectedSubcategory] = useState(searchParams.get('subcategory') || '');
-  const [distance, setDistance] = useState([50]);
+  const [priceRange, setPriceRange] = useState([
+    Number(searchParams.get('minPrice')) || 0,
+    Number(searchParams.get('maxPrice')) || MAX_PRICE
+  ]);
 
   useEffect(() => {
     // When category changes, reset subcategory if it's not valid for the new category
@@ -53,8 +58,9 @@ export function ProductFilters() {
     } else {
       params.delete('subcategory');
     }
-    // TODO: Add distance filter logic
-    // params.set('distance', distance[0].toString());
+    
+    params.set('minPrice', priceRange[0].toString());
+    params.set('maxPrice', priceRange[1].toString());
     
     router.push(`/?${params.toString()}`);
   };
@@ -112,16 +118,15 @@ export function ProductFilters() {
 
         <div className="space-y-2">
           <div className="flex justify-between">
-            <Label>Distance</Label>
-            <span className="text-sm text-muted-foreground">{distance[0]} km</span>
+            <Label>Price Range</Label>
+            <span className="text-sm text-muted-foreground">Rs {priceRange[0]} - Rs {priceRange[1]}</span>
           </div>
           <Slider
-            defaultValue={[50]}
-            max={100}
-            step={1}
-            value={distance}
-            onValueChange={setDistance}
-            disabled // Disabled for now
+            min={0}
+            max={MAX_PRICE}
+            step={100}
+            value={priceRange}
+            onValueChange={setPriceRange}
           />
         </div>
         <Button className="w-full bg-accent hover:bg-accent/90" onClick={handleApplyFilters}>
