@@ -24,12 +24,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Sparkles } from 'lucide-react';
+import { Loader2, Sparkles, Frown, LogIn } from 'lucide-react';
 import { suggestListingDetails } from '@/ai/flows/suggest-listing-details';
 import { useToast } from "@/hooks/use-toast";
 import { createListing } from './actions';
 import { listingSchema } from '@/lib/schemas';
 import { useAuth } from '@/context/auth-context';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import Link from 'next/link';
 
 const isBrowser = typeof window !== 'undefined';
 
@@ -39,9 +41,7 @@ const clientListingSchema = listingSchema.extend({
     : z.any(),
 });
 
-
 type ClientListingSchema = z.infer<typeof clientListingSchema>;
-
 
 const categories = {
   'Furniture': ['Chairs', 'Tables', 'Shelving', 'Beds'],
@@ -57,7 +57,7 @@ export function ListingForm() {
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   
   const form = useForm<ClientListingSchema>({
     resolver: zodResolver(clientListingSchema),
@@ -71,7 +71,7 @@ export function ListingForm() {
     },
   });
 
-  const isFormProcessing = isSuggesting || isSubmitting;
+  const isFormProcessing = isSuggesting || isSubmitting || authLoading;
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -129,14 +129,20 @@ export function ListingForm() {
   };
 
   async function onSubmit(values: ClientListingSchema) {
+    if (!user) {
+        toast({
+            variant: "destructive",
+            title: "You must be logged in",
+            description: "Please log in to submit a listing.",
+        });
+        return;
+    }
+
     setIsSubmitting(true);
 
     const formData = new FormData();
-    // Only add userId if the user is logged in
-    if (user?.id) {
-        formData.append('userId', user.id);
-    }
-
+    formData.append('userId', user.id);
+    
     for (const key in values) {
       if (key === 'productImage') {
         if (values.productImage && values.productImage.length > 0) {
@@ -182,6 +188,35 @@ export function ListingForm() {
   const selectedCategory = form.watch('category');
   const productImageRef = form.register("productImage");
 
+  if (authLoading) {
+    return (
+        <div className="flex justify-center items-center p-20">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Card className="flex flex-col items-center justify-center text-center py-20 border-0 shadow-none">
+        <CardHeader>
+          <div className="mx-auto bg-muted rounded-full p-4 w-fit mb-4">
+            <Frown className="h-12 w-12 text-muted-foreground" />
+          </div>
+          <CardTitle>You're Not Logged In</CardTitle>
+          <CardDescription>You must be logged in to create a listing.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild>
+            <Link href="/login?redirect=/listings/new">
+                <LogIn className="mr-2 h-4 w-4" />
+                Go to Login Page
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Form {...form}>

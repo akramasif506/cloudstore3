@@ -10,9 +10,9 @@ import { listingSchema } from '@/lib/schemas';
 import { redirect } from 'next/navigation';
 import type { User } from '@/lib/types';
 
-// userId is now optional
+// This action now requires a userId
 const listingActionSchema = listingSchema.extend({
-  userId: z.string().optional(),
+  userId: z.string().min(1, { message: 'User must be logged in.' }),
 });
 
 
@@ -40,24 +40,22 @@ export async function createListing(formData: FormData) {
   const { userId, productName, productDescription, price, category, subcategory } = validatedFields.data;
 
   let seller = {
-      id: 'cloudstore-anonymous',
-      name: 'CloudStore',
+      id: 'anonymous',
+      name: 'Anonymous Seller',
   };
 
-  // If a userId is provided, fetch the user data
-  if (userId) {
-      const userRef = dbRef(db, `users/${userId}`);
-      const userSnapshot = await get(userRef);
-      if (userSnapshot.exists()) {
-        const sellerData: User = userSnapshot.val();
-        seller = {
-            id: sellerData.id,
-            name: sellerData.name || 'Anonymous User',
-        }
-      } else {
-        // Log a warning but proceed with the default seller
-        console.warn(`User with ID ${userId} not found, but listing creation is proceeding anonymously.`);
-      }
+  // Fetch the user data to use as the seller
+  const userRef = dbRef(db, `users/${userId}`);
+  const userSnapshot = await get(userRef);
+  if (userSnapshot.exists()) {
+    const sellerData: User = userSnapshot.val();
+    seller = {
+        id: sellerData.id,
+        name: sellerData.name || 'User',
+    }
+  } else {
+    // This is a critical error, the user must exist in the DB to create a listing.
+    return { success: false, message: 'Could not find user profile. Please try logging in again.' };
   }
   
   const imageFile = formData.get('productImage') as File;
@@ -100,11 +98,5 @@ export async function createListing(formData: FormData) {
     return { success: false, message: 'Failed to create listing.' };
   }
 
-  // Redirect to my-listings only if a user was logged in
-  if (userId) {
-    redirect('/my-listings');
-  } else {
-    // Or redirect to the homepage for anonymous users
-    redirect('/');
-  }
+  redirect('/my-listings');
 }
