@@ -131,7 +131,7 @@ export function ListingForm() {
     }
   };
 
-  const onSubmit = async (values: ClientListingSchema) => {
+  const onSubmit = (values: ClientListingSchema) => {
     if (!user) {
       toast({
         variant: "destructive",
