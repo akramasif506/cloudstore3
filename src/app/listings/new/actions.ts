@@ -16,14 +16,20 @@ export async function createListing(formData: FormData) {
   }
   
   const userId = formData.get('userId') as string;
-  const userName = formData.get('userName') as string;
-  const userAvatarUrl = formData.get('userAvatarUrl') as string;
 
-  if (!userId || !userName || !userAvatarUrl) {
+  if (!userId) {
     return {
       success: false,
-      message: 'You must be logged in to create a listing. Your user details could not be found.',
+      message: 'You must be logged in to create a listing. Your user ID could not be found.',
     };
+  }
+  
+  const userName = formData.get('userName') as string;
+  let userAvatarUrl = formData.get('userAvatarUrl') as string;
+
+  // Ensure there's a fallback avatar if it's missing for any reason
+  if (!userAvatarUrl) {
+    userAvatarUrl = `https://placehold.co/100x100.png`;
   }
 
   const rawFormData = Object.fromEntries(formData.entries());
