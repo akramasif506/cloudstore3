@@ -31,7 +31,6 @@ export interface Product {
   category: string;
   subcategory: string;
   imageUrl: string;
-  seller: Pick<User, 'id' | 'name' | 'profileImageUrl'>;
   reviews: Review[];
   distance: number; // in km
   status: 'active' | 'pending_review' | 'rejected' | 'sold';

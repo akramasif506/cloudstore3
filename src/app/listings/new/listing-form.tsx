@@ -70,9 +70,6 @@ export function ListingForm() {
       category: '',
       subcategory: '',
       productImage: undefined,
-      userId: '',
-      userName: '',
-      userAvatarUrl: '',
     },
   });
 
@@ -149,12 +146,6 @@ export function ListingForm() {
           formData.append(String(key), String(value));
         }
       }
-    }
-    
-    if (user) {
-        formData.append('userId', user.id);
-        formData.append('userName', user.name || 'Anonymous User'); 
-        formData.append('userAvatarUrl', user.profileImageUrl || '');
     }
 
     const result = await createListing(formData);
@@ -328,7 +319,7 @@ export function ListingForm() {
         />
         <Button type="submit" size="lg" className="w-full md:w-auto" disabled={isLoading}>
           {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          {isSubmitting ? 'Creating Listing...' : 'Create Listing'}
+          {isSubmitting ? 'Submitting for Review...' : 'Submit for Review'}
         </Button>
       </form>
     </Form>

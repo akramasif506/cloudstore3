@@ -91,26 +91,17 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
                     <Button variant="outline" size="lg" className="w-full mt-4">Make an Offer</Button>
                 </CardContent>
             </Card>
-            <Card>
+             <Card>
                 <CardHeader>
-                    <CardTitle className="text-xl">Seller Information</CardTitle>
+                    <CardTitle className="text-xl">About CloudStore</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <Link href={`/users/${product.seller.id}`} className="flex items-center gap-4 group">
-                        <Avatar className="h-16 w-16">
-                            <AvatarImage src={product.seller.avatarUrl} alt={product.seller.name} data-ai-hint="seller avatar" />
-                            <AvatarFallback>{product.seller.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <p className="font-semibold text-lg group-hover:underline">{product.seller.name}</p>
-                            <p className="text-sm text-muted-foreground">Member since 2022</p>
-                        </div>
-                    </Link>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                        <MapPin className="h-4 w-4" />
-                        <span>{product.distance}km away</span>
-                    </div>
-                     <Button variant="secondary" className="w-full">Contact Seller</Button>
+                    <p className="text-sm text-muted-foreground">
+                        All products on CloudStore are carefully curated and sold directly by us. We ensure quality and authenticity for every item.
+                    </p>
+                     <Button variant="secondary" className="w-full" asChild>
+                        <Link href="/contact">Contact Us</Link>
+                     </Button>
                 </CardContent>
             </Card>
         </div>

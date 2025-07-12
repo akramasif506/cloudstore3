@@ -62,7 +62,6 @@ export function PendingProductList({ initialProducts }: PendingProductListProps)
             <TableRow>
             <TableHead className="w-[80px]">Image</TableHead>
             <TableHead>Product Name</TableHead>
-            <TableHead>Seller</TableHead>
             <TableHead>Price</TableHead>
             <TableHead>Submitted</TableHead>
             <TableHead className="text-right">Actions</TableHead>
@@ -86,7 +85,6 @@ export function PendingProductList({ initialProducts }: PendingProductListProps)
                     {product.name}
                   </Link>
                 </TableCell>
-                <TableCell>{product.seller.name}</TableCell>
                 <TableCell>Rs {product.price.toFixed(2)}</TableCell>
                 <TableCell>{new Date(product.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell className="text-right">

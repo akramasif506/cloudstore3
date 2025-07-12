@@ -47,7 +47,7 @@ export async function createListing(formData: FormData) {
     const imageUrl = await getDownloadURL(imageStorageRef);
     
     const productId = uuidv4();
-    const { productName, productDescription, price, category, subcategory, userId, userName, userAvatarUrl } = validatedFields.data;
+    const { productName, productDescription, price, category, subcategory } = validatedFields.data;
 
     const newProductData = {
       id: productId,
@@ -57,11 +57,6 @@ export async function createListing(formData: FormData) {
       category,
       subcategory,
       imageUrl: imageUrl,
-      seller: {
-        id: userId || 'anonymous',
-        name: userName || 'Anonymous Seller',
-        avatarUrl: userAvatarUrl || `https://placehold.co/100x100.png`,
-      },
       reviews: [], 
       distance: Math.floor(Math.random() * 50) + 1, // Placeholder
       createdAt: new Date().toISOString(),
@@ -75,5 +70,5 @@ export async function createListing(formData: FormData) {
     return { success: false, message: 'Failed to create listing.' };
   }
 
-  redirect('/my-listings');
+  redirect('/dashboard');
 }

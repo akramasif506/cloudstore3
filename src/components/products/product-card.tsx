@@ -12,7 +12,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const imageUrl = product.imageUrl || 'https://placehold.co/400x300.png';
   return (
       <Card className="overflow-hidden h-full flex flex-col transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-        <Link href={`/listings/${product.id}`}>
+        <Link href={`/listings/${product.id}`} className="flex flex-col flex-grow">
           <CardHeader className="p-0">
             <div className="relative w-full aspect-video">
               <Image
@@ -29,17 +29,9 @@ export function ProductCard({ product }: ProductCardProps) {
             <p className="text-2xl font-bold text-primary">Rs {product.price.toFixed(2)}</p>
           </CardContent>
         </Link>
-        {product.seller && (
-          <CardFooter className="p-4 bg-secondary/30">
-            <Link href={`/users/${product.seller.id}`} className="flex items-center space-x-2 hover:underline">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={product.seller.avatarUrl} alt={product.seller.name} data-ai-hint="profile avatar" />
-                <AvatarFallback>{product.seller.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <span className="text-sm text-muted-foreground">{product.seller.name}</span>
-            </Link>
-          </CardFooter>
-        )}
+        <CardFooter className="p-4 bg-secondary/30">
+            <span className="text-sm text-muted-foreground">Sold by CloudStore</span>
+        </CardFooter>
       </Card>
   );
 }

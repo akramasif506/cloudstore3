@@ -40,9 +40,11 @@ export function Header() {
             <Link href="/" className="transition-colors hover:text-foreground/80 text-foreground/60">
               Home
             </Link>
-            <Link href="/listings/new" className="transition-colors hover:text-foreground/80 text-foreground/60">
-              Sell
-            </Link>
+             {user?.role === 'admin' && (
+              <Link href="/listings/new" className="transition-colors hover:text-foreground/80 text-foreground/60">
+                Add Product
+              </Link>
+            )}
           </nav>
         </div>
 
@@ -82,9 +84,6 @@ export function Header() {
                 )}
                 <DropdownMenuItem asChild>
                   <Link href="/profile"><User className="mr-2 h-4 w-4" />Profile</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                    <Link href="/my-listings"><Package className="mr-2 h-4 w-4" />My Listings</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/my-orders"><DollarSign className="mr-2 h-4 w-4" />My Orders</Link>
