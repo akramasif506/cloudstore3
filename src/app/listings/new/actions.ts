@@ -41,11 +41,17 @@ export async function createListing(formData: FormData) {
   }
 
   try {
-    // 1. Upload image to Firebase Storage
+    // 1. Upload image to Firebase Storage with the new path structure
     const imageBuffer = Buffer.from(await imageFile.arrayBuffer());
     const fileExtension = imageFile.name.split('.').pop();
     const imageFileName = `${uuidv4()}.${fileExtension}`;
-    const imageStorageRef = storageRef(storage, `product-images/${imageFileName}`);
+    
+    const uploadDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    const category = validatedFields.data.category;
+    
+    const imageStoragePath = `CloudStor/upload/under_review/${uploadDate}/product/${category}/${imageFileName}`;
+    const imageStorageRef = storageRef(storage, imageStoragePath);
+    
     await uploadBytes(imageStorageRef, imageBuffer);
 
     // 2. Get the public URL of the uploaded image
