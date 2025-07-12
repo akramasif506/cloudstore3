@@ -25,7 +25,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let databaseSubscription: Unsubscribe | undefined;
 
     const authStateUnsubscribe = onIdTokenChanged(auth, async (fbUser) => {
-      // If there's an old DB listener, turn it off.
       if (databaseSubscription) {
         databaseSubscription();
         databaseSubscription = undefined;
@@ -34,14 +33,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setFirebaseUser(fbUser);
 
       if (fbUser) {
-        // User is signed in. Create server session cookie.
         const idToken = await fbUser.getIdToken();
         await fetch('/api/auth', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${idToken}` },
         });
 
-        // Listen for their profile data from Realtime Database.
         if (db) {
             const userProfileRef = ref(db, `users/${fbUser.uid}`);
             databaseSubscription = onValue(userProfileRef, (snapshot) => {
@@ -50,23 +47,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }, (error) => {
                 console.error("Error fetching user profile:", error);
                 setUser(null);
-                setLoading(false);
+                setLoading(false); // Ensure loading is false on error
             });
         } else {
-            // DB not configured
              setUser(null);
-             setLoading(false);
+             setLoading(false); // Ensure loading is false if DB is not configured
         }
       } else {
-        // User is signed out. Clear everything.
         await fetch('/api/auth/logout', { method: 'POST' });
         setUser(null);
         setFirebaseUser(null);
-        setLoading(false);
+        setLoading(false); // Ensure loading is false when user is logged out
       }
     });
 
-    // Cleanup subscription on component unmount
     return () => {
         authStateUnsubscribe();
         if (databaseSubscription) {
