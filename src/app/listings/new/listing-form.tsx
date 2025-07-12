@@ -131,7 +131,7 @@ export function ListingForm() {
   };
 
   async function onSubmit(values: ClientListingSchema) {
-    if (!user?.id || !user.name || !user.profileImageUrl) {
+    if (!user?.id) {
       toast({
         variant: 'destructive',
         title: 'Not Logged In',
@@ -154,7 +154,7 @@ export function ListingForm() {
         // Ensure value is not undefined before appending
         const value = (values as any)[key];
         if (value !== undefined) {
-          formData.append(key, String(value));
+          formData.append(String(key), String(value));
         }
       }
     }

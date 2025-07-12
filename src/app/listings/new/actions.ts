@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 import { db, storage } from '@/lib/firebase';
-import { ref as dbRef, set } from 'firebase/database';
+import { ref as dbRef, set, get, child } from 'firebase/database';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
 import { listingSchema } from '@/lib/schemas';
@@ -18,10 +18,6 @@ export async function createListing(formData: FormData) {
   const userId = formData.get('userId') as string;
   const userName = formData.get('userName') as string;
   const userAvatarUrl = formData.get('userAvatarUrl') as string;
-
-  if (!userId || !userName || !userAvatarUrl) {
-    return { success: false, message: 'You must be logged in to create a listing.' };
-  }
 
   const rawFormData = Object.fromEntries(formData.entries());
   
