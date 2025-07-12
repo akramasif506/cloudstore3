@@ -48,6 +48,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // This effect is dedicated to fetching the user profile from the database when a firebaseUser exists.
     if (firebaseUser) {
+        if (!db) {
+            console.warn("Firebase DB not configured. Cannot fetch user profile.");
+            setUser(null);
+            setLoading(false);
+            return;
+        }
         const userRef = ref(db, `users/${firebaseUser.uid}`);
         
         const unsubscribeDb = onValue(userRef, (snapshot) => {
@@ -67,8 +73,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // Cleanup the database listener when the component unmounts or firebaseUser changes.
         return () => off(userRef, 'value', unsubscribeDb);
+    } else {
+        // If there's no firebaseUser, we're not waiting for a DB fetch, so loading is done.
+        setLoading(false);
     }
-    // If firebaseUser is null, the onAuthStateChanged listener has already set loading to false.
   }, [firebaseUser]);
 
 
