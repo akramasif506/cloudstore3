@@ -89,7 +89,7 @@ export async function createListing(formData: FormData) {
     }
     
     // 3. Construct the new database path
-    const newProductDbPath = `CloudStore/products/under_review/${userId}/${uploadDate}/${category}/${productId}`;
+    const newProductDbPath = `CloudStore/products/under_review/${uploadDate}/${category}/${productId}`;
 
     // 4. Prepare product data to be saved to Realtime Database
     const newProductData = {
@@ -99,7 +99,7 @@ export async function createListing(formData: FormData) {
       seller: {
         id: userProfile.id,
         name: userProfile.name,
-        profileImageUrl: userProfile.profileImageUrl,
+        avatarUrl: userProfile.profileImageUrl,
       },
       reviews: [], 
       distance: Math.floor(Math.random() * 50) + 1,
@@ -109,6 +109,9 @@ export async function createListing(formData: FormData) {
     
     // 5. Save product data to the specified path
     await set(dbRef(db, newProductDbPath), newProductData);
+
+    // 6. Also save to the general `products` path for easier querying
+    await set(dbRef(db, `products/${productId}`), newProductData);
 
 
   } catch (error) {
