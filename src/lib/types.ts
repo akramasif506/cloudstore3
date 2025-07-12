@@ -22,7 +22,7 @@ export interface Product {
   price: number;
   category: string;
   subcategory: string;
-  imageUrl: string | StaticImageData;
+  imageUrl: string;
   seller: User;
   reviews: Review[];
   distance: number; // in km

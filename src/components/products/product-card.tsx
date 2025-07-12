@@ -9,7 +9,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const imageUrl = product.imageUrl || 'https://placehold.co/400x225.png';
+  const imageUrl = product.imageUrl || 'https://placehold.co/400x300.png';
   return (
       <Card className="overflow-hidden h-full flex flex-col transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
         <Link href={`/listings/${product.id}`}>
