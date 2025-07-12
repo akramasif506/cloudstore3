@@ -37,8 +37,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const userData = snapshot.val();
             setUser(userData as AppUser);
           } else {
-            // This case might happen if the DB record hasn't been created yet.
-            // Create a temporary user object from auth data.
+            // This case can happen if the DB record hasn't been created yet
+            // or if there's a delay. We create a temporary user object from auth
+            // data to ensure the UI reflects the logged-in state immediately.
              setUser({
               id: fbUser.uid,
               name: fbUser.displayName || 'User',
