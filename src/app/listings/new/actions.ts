@@ -65,7 +65,7 @@ export async function createListing(formData: FormData) {
       reviews: [], 
       distance: Math.floor(Math.random() * 50) + 1, // Placeholder
       createdAt: new Date().toISOString(),
-      status: 'active',
+      status: 'pending_review',
     };
     
     await set(dbRef(db, `products/${productId}`), newProductData);
