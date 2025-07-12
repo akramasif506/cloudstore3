@@ -31,6 +31,9 @@ import { createListing } from './actions';
 import { listingSchema } from '@/lib/schemas';
 import { useAuth } from '@/context/auth-context';
 import { useRouter } from 'next/navigation';
+import { Frown } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import Link from 'next/link';
 
 const isBrowser = typeof window !== 'undefined';
 
@@ -60,6 +63,7 @@ export function ListingForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const router = useRouter();
   
   const form = useForm<ClientListingSchema>({
     resolver: zodResolver(clientListingSchema),
@@ -74,6 +78,25 @@ export function ListingForm() {
   });
 
   const isLoading = isSuggesting || isSubmitting;
+
+  if (!user) {
+    return (
+      <Card className="flex flex-col items-center justify-center text-center py-20">
+        <CardHeader>
+          <div className="mx-auto bg-muted rounded-full p-4 w-fit mb-4">
+            <Frown className="h-12 w-12 text-muted-foreground" />
+          </div>
+          <CardTitle>You're Not Logged In</CardTitle>
+          <CardDescription>Please log in to list a new product.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild>
+            <Link href="/login">Go to Login</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
 
   const fileToBase64 = (file: File): Promise<string> => {

@@ -38,6 +38,10 @@ export interface Product {
   reviews: Review[];
   status: 'active' | 'pending_review' | 'rejected' | 'sold';
   createdAt: string;
+  seller: {
+    id: string;
+    name: string;
+  };
 }
 
 export interface ContactMessage {

@@ -1,3 +1,4 @@
+
 import { ListingForm } from './listing-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FilePlus2 } from 'lucide-react';
@@ -12,8 +13,8 @@ export default function NewListingPage() {
               <FilePlus2 className="h-6 w-6" />
             </div>
             <div>
-              <CardTitle className="text-2xl font-headline">Add a New Product</CardTitle>
-              <CardDescription>Fill out the details below to add an item to the store. Use our AI assistant for help!</CardDescription>
+              <CardTitle className="text-2xl font-headline">Create a New Listing</CardTitle>
+              <CardDescription>Fill out the details below to list an item for sale. Use our AI assistant for help!</CardDescription>
             </div>
           </div>
         </CardHeader>

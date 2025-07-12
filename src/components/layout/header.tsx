@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Leaf, Search, User, LogOut, LayoutDashboard, DollarSign, Package, LogIn, UserPlus, ShoppingCart } from 'lucide-react';
+import { Leaf, Search, User, LogOut, LayoutDashboard, DollarSign, Package, LogIn, UserPlus, ShoppingCart, FilePlus2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -43,7 +43,7 @@ export function Header() {
             <Link href="/" className="transition-colors hover:text-foreground/80 text-foreground/60">
               Home
             </Link>
-             {user?.role === 'admin' && (
+             {user && (
               <Link href="/listings/new" className="transition-colors hover:text-foreground/80 text-foreground/60">
                 Add Product
               </Link>
@@ -100,6 +100,9 @@ export function Header() {
                 )}
                 <DropdownMenuItem asChild>
                   <Link href="/profile"><User className="mr-2 h-4 w-4" />Profile</Link>
+                </DropdownMenuItem>
+                 <DropdownMenuItem asChild>
+                  <Link href="/my-listings"><Package className="mr-2 h-4 w-4" />My Listings</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/my-orders"><DollarSign className="mr-2 h-4 w-4" />My Orders</Link>

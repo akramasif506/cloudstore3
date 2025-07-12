@@ -8,10 +8,16 @@ import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage
 import { v4 as uuidv4 } from 'uuid';
 import { listingSchema } from '@/lib/schemas';
 import { redirect } from 'next/navigation';
+import { auth } from '@/lib/firebase'; // Make sure auth is imported
 
 export async function createListing(formData: FormData) {
-  if (!db || !storage) {
+  if (!db || !storage || !auth) {
     return { success: false, message: 'Firebase is not configured.' };
+  }
+
+  const currentUser = auth.currentUser;
+  if (!currentUser) {
+    return { success: false, message: 'You must be logged in to create a listing.' };
   }
   
   const rawFormData = Object.fromEntries(formData.entries());
@@ -58,6 +64,10 @@ export async function createListing(formData: FormData) {
       subcategory,
       imageUrl: imageUrl,
       reviews: [], 
+      seller: {
+        id: currentUser.uid,
+        name: currentUser.displayName || 'Anonymous Seller',
+      },
       distance: Math.floor(Math.random() * 50) + 1, // Placeholder
       createdAt: new Date().toISOString(),
       status: 'pending_review',
@@ -70,5 +80,5 @@ export async function createListing(formData: FormData) {
     return { success: false, message: 'Failed to create listing.' };
   }
 
-  redirect('/dashboard');
+  redirect('/my-listings');
 }
