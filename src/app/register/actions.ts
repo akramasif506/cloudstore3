@@ -28,8 +28,8 @@ export async function registerUser(values: z.infer<typeof registerSchema>) {
       displayName: values.name,
     });
     
-    // Create user profile in Realtime Database at the new path
-    const userRef = ref(db, `CloudStore/users/premium/${user.uid}`);
+    // Create user profile in Realtime Database at the new, simplified path
+    const userRef = ref(db, `users/${user.uid}`);
     await set(userRef, {
       id: user.uid,
       name: values.name,
@@ -38,7 +38,7 @@ export async function registerUser(values: z.infer<typeof registerSchema>) {
       gender: values.gender,
       createdAt: new Date().toISOString(),
       role: 'user', // Default role
-      profileImageUrl: `https://placehold.co/100x100?text=${values.name.charAt(0)}` // Default avatar
+      profileImageUrl: `https://placehold.co/100x100.png?text=${values.name.charAt(0)}`
     });
 
     return { success: true, userId: user.uid };

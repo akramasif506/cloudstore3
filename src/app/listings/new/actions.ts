@@ -8,7 +8,6 @@ import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage
 import { v4 as uuidv4 } from 'uuid';
 import { listingSchema } from '@/lib/schemas';
 import { redirect } from 'next/navigation';
-import { format } from 'date-fns';
 
 export async function createListing(formData: FormData) {
   if (!db || !storage) {
@@ -16,21 +15,15 @@ export async function createListing(formData: FormData) {
   }
   
   const userId = formData.get('userId') as string;
-
   if (!userId) {
     return {
       success: false,
-      message: 'You must be logged in to create a listing. Your user ID could not be found.',
+      message: 'You must be logged in to create a listing.',
     };
   }
   
   const userName = formData.get('userName') as string;
-  let userAvatarUrl = formData.get('userAvatarUrl') as string;
-
-  // Ensure there's a fallback avatar if it's missing for any reason
-  if (!userAvatarUrl) {
-    userAvatarUrl = `https://placehold.co/100x100.png`;
-  }
+  const userAvatarUrl = formData.get('userAvatarUrl') as string;
 
   const rawFormData = Object.fromEntries(formData.entries());
   
@@ -57,7 +50,6 @@ export async function createListing(formData: FormData) {
   }
 
   try {
-    // 1. Upload image to Firebase Storage
     const imageBuffer = Buffer.from(await imageFile.arrayBuffer());
     const imageFileName = `${uuidv4()}.${imageFile.name.split('.').pop()}`;
     const imageStorageRef = storageRef(storage, `product-images/${imageFileName}`);
@@ -65,10 +57,7 @@ export async function createListing(formData: FormData) {
     await uploadBytes(imageStorageRef, imageBuffer);
     const imageUrl = await getDownloadURL(imageStorageRef);
     
-    // 2. Prepare product data
     const productId = uuidv4();
-    const currentDate = format(new Date(), 'yyyy-MM-dd');
-    const category = validatedFields.data.category;
 
     const newProductData = {
       ...validatedFields.data,
@@ -77,17 +66,16 @@ export async function createListing(formData: FormData) {
       seller: {
         id: userId,
         name: userName,
-        avatarUrl: userAvatarUrl,
+        avatarUrl: userAvatarUrl || `https://placehold.co/100x100.png`,
       },
       reviews: [], 
       distance: Math.floor(Math.random() * 50) + 1, // Placeholder
       createdAt: new Date().toISOString(),
-      status: 'under_review', // All new products are under review
+      status: 'pending_review',
     };
     
-    // 3. Save to the database path
-    const productPath = `/CloudStore/products/under_review/${currentDate}/${category}/${productId}`;
-    await set(dbRef(db, productPath), newProductData);
+    // Save to the new, simplified product path
+    await set(dbRef(db, `products/${productId}`), newProductData);
 
   } catch (error) {
     console.error('Error creating listing:', error);

@@ -31,8 +31,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setFirebaseUser(fbUser);
       if (fbUser) {
         // User is signed in, get their full profile from Realtime DB
-        // CORRECTED PATH: Look inside /CloudStore/users/premium/
-        const userRef = ref(db, `CloudStore/users/premium/${fbUser.uid}`);
+        // CORRECTED PATH: Look inside /users/
+        const userRef = ref(db, `users/${fbUser.uid}`);
         const listener = onValue(userRef, (snapshot) => {
           if (snapshot.exists()) {
             const userData = snapshot.val();

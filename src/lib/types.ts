@@ -34,6 +34,8 @@ export interface Product {
   seller: Pick<User, 'id' | 'name' | 'profileImageUrl'>;
   reviews: Review[];
   distance: number; // in km
+  status: 'active' | 'pending_review' | 'rejected' | 'sold';
+  createdAt: string;
 }
 
 export interface ContactMessage {

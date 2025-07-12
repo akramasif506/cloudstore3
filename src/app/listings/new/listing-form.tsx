@@ -151,7 +151,6 @@ export function ListingForm() {
           formData.append(key, values.productImage[0]);
         }
       } else {
-        // Ensure value is not undefined before appending
         const value = (values as any)[key];
         if (value !== undefined) {
           formData.append(String(key), String(value));
