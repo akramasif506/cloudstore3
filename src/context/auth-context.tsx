@@ -32,16 +32,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (fbUser) {
         // User is signed in, get their profile from Realtime DB
         const userRef = ref(db, `users/${fbUser.uid}`);
-        onValue(userRef, (snapshot) => {
+        const listener = onValue(userRef, (snapshot) => {
           const userData = snapshot.val();
           if (userData) {
             setUser(userData as AppUser);
           } else {
             // This might happen if user record creation fails after auth creation
-            setUser(null);
+             setUser({
+              id: fbUser.uid,
+              name: fbUser.displayName || 'User',
+              email: fbUser.email || '',
+              profileImageUrl: fbUser.photoURL || `https://placehold.co/100x100?text=${fbUser.email?.charAt(0) || 'U'}`,
+              createdAt: new Date().toISOString(),
+            });
           }
           setLoading(false);
         });
+        return () => off(userRef, 'value', listener);
       } else {
         // User is signed out
         setUser(null);
