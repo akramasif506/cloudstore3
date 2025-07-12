@@ -159,8 +159,10 @@ export function ListingForm() {
       }
     }
     
-    // Call the server action with formData and the user's ID
-    const result = await createListing(formData, user.id);
+    formData.append('userId', user.id);
+
+    // Call the server action with formData
+    const result = await createListing(formData);
 
     if (result?.success === false) {
       toast({
