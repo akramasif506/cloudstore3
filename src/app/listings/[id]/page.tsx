@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Star, Tag, User } from 'lucide-react';
+import { Star, Tag, User, Building } from 'lucide-react';
 import { CustomerFeedback } from '@/components/products/customer-feedback';
 import type { Product } from '@/lib/types';
 import { db } from '@/lib/firebase';
@@ -94,26 +94,17 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
              <Card>
                 <CardHeader>
                     <CardTitle className="text-xl flex items-center gap-2">
-                        <User className="h-5 w-5" />
-                        About the Seller
+                        <Building className="h-5 w-5" />
+                        Sold by CloudStore
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                     <div className="flex items-center gap-3">
-                        <Avatar>
-                            <AvatarImage src={`https://placehold.co/100x100.png`} data-ai-hint="seller avatar" />
-                            <AvatarFallback>{product.seller.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <p className="font-semibold">{product.seller.name}</p>
-                            <p className="text-sm text-muted-foreground">Member since {new Date(product.createdAt).getFullYear()}</p>
-                        </div>
-                    </div>
                     <p className="text-sm text-muted-foreground">
-                        All products are listed by individual sellers. Be sure to review their profile and ratings.
+                        All products on CloudStore are verified and sold directly by us. 
+                        We ensure quality and authenticity for a trustworthy shopping experience.
                     </p>
                      <Link href="/contact" className="w-full">
-                        <span className="inline-block w-full text-center py-2 px-4 border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md text-sm font-medium">Contact Seller</span>
+                        <span className="inline-block w-full text-center py-2 px-4 border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md text-sm font-medium">Contact Support</span>
                      </Link>
                 </CardContent>
             </Card>

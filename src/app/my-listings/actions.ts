@@ -27,9 +27,8 @@ export async function getMyListings(userId: string): Promise<Product[]> {
       }));
     }
     
-    // Filter to only show pending listings and sort by creation date
+    // Sort by creation date, newest first
     return allProducts
-        .filter(p => p.status === 'pending_review')
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   } catch (error) {

@@ -66,9 +66,8 @@ export async function createListing(formData: FormData) {
       reviews: [], 
       seller: {
         id: currentUser.uid,
-        name: currentUser.displayName || 'Anonymous Seller',
+        name: currentUser.displayName || 'Anonymous User',
       },
-      distance: Math.floor(Math.random() * 50) + 1, // Placeholder
       createdAt: new Date().toISOString(),
       status: 'pending_review',
     };

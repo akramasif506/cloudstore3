@@ -4,7 +4,7 @@ import Image from 'next/image';
 import type { Product } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User } from 'lucide-react';
+import { Building } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -33,8 +33,8 @@ export function ProductCard({ product }: ProductCardProps) {
         </Link>
         <CardFooter className="p-4 bg-secondary/30">
              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">{product.seller.name}</span>
+                <Building className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">CloudStore</span>
             </div>
         </CardFooter>
       </Card>
