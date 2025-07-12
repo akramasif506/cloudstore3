@@ -21,7 +21,7 @@ export function Header() {
   const { user, logout } = useAuth();
   const { items } = useCart();
 
-  const getFirstName = (fullName: string | undefined | null) => {
+  const getFirstName = (fullName: string | undefined | null): string => {
     if (!fullName) return '';
     return fullName.split(' ')[0];
   };
