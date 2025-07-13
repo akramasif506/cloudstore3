@@ -6,35 +6,11 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, PackageOpen, CheckCircle, Truck, Frown, Loader2 } from 'lucide-react';
 import type { Order } from '@/lib/types';
-import { db } from '@/lib/firebase';
-import { ref, query, get, orderByChild, equalTo } from 'firebase/database';
 import Link from 'next/link';
 import { useAuth } from '@/context/auth-context';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-
-async function getMyOrders(userId: string): Promise<Order[]> {
-    if (!db || !userId) {
-        return [];
-    }
-
-    try {
-        const ordersRef = ref(db, 'orders');
-        const userOrdersQuery = query(ordersRef, orderByChild('userId'), equalTo(userId));
-        const snapshot = await get(userOrdersQuery);
-
-        if (snapshot.exists()) {
-            const ordersData = snapshot.val();
-            return Object.keys(ordersData)
-                .map(key => ({ ...ordersData[key], id: key }))
-                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()); // Newest first
-        }
-        return [];
-    } catch (error) {
-        console.error("Error fetching user orders from Firebase:", error);
-        return [];
-    }
-}
+import { getMyOrders } from './actions';
 
 function StatusBadge({ status }: { status: Order['status'] }) {
     const baseClasses = "flex items-center gap-2 text-sm font-medium px-3 py-1 rounded-full w-fit";
@@ -61,9 +37,9 @@ export function MyOrdersClient() {
     const router = useRouter();
 
     useEffect(() => {
-        if (user?.id) {
+        if (user) {
             setIsLoading(true);
-            getMyOrders(user.id)
+            getMyOrders()
                 .then(setOrders)
                 .catch(console.error)
                 .finally(() => setIsLoading(false));
