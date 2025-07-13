@@ -17,6 +17,11 @@ export async function registerUser(values: z.infer<typeof registerSchema>) {
   try {
     const { db } = initializeAdmin();
     
+    // Check if any users exist to determine if this is the first user
+    const usersRef = db.ref('users');
+    const snapshot = await usersRef.once('value');
+    const isFirstUser = !snapshot.exists();
+    
     const userRecord = await getAuth().createUser({
         email: values.email,
         password: values.password,
@@ -32,7 +37,8 @@ export async function registerUser(values: z.infer<typeof registerSchema>) {
       mobileNumber: values.mobileNumber,
       gender: values.gender,
       createdAt: new Date().toISOString(),
-      role: 'user', // Default role
+      // Assign 'admin' role if it's the first user, otherwise 'user'
+      role: isFirstUser ? 'admin' : 'user',
       profileImageUrl: userRecord.photoURL,
     });
 
