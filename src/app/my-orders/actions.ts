@@ -1,3 +1,4 @@
+
 'use server';
 
 import type { Order } from '@/lib/types';
@@ -23,14 +24,19 @@ export async function getMyOrders(): Promise<Order[]> {
     const userId = decodedClaims.uid;
 
     const ordersRef = db.ref('orders');
-    const userOrdersQuery = ordersRef.orderByChild('userId').equalTo(userId);
-    const snapshot = await userOrdersQuery.once('value');
+    // Fetch all orders and filter on the server-side.
+    // This avoids needing a database index for the query.
+    const snapshot = await ordersRef.once('value');
     
     if (snapshot.exists()) {
         const ordersData = snapshot.val();
-        return Object.keys(ordersData)
-            .map(key => ({ ...ordersData[key], id: key }))
-            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()); // Newest first
+        const allOrders: Order[] = Object.keys(ordersData).map(key => ({ ...ordersData[key], id: key }));
+
+        // Filter for the current user's orders
+        const userOrders = allOrders.filter(order => order.userId === userId);
+
+        // Sort by creation date, newest first
+        return userOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
     return [];
   } catch (error) {
