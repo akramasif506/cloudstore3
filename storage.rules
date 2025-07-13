@@ -1,0 +1,25 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Files in the 'product-images' directory are publicly readable.
+    // This allows anyone with the URL to view the image, which is necessary
+    // for sharing on social media or other platforms.
+    // Writes are restricted to authenticated users to prevent unauthorized uploads.
+    match /product-images/{allPaths=**} {
+      allow read;
+      allow write: if request.auth != null;
+    }
+
+    // Files in the 'site-assets' directory (e.g., for the About page) 
+    // are also publicly readable.
+    match /site-assets/{allPaths=**} {
+      allow read;
+      allow write: if request.auth != null; // Or more specific admin logic if needed
+    }
+
+    // All other paths in the bucket are private by default.
+    // No one can read or write to other locations unless a specific rule allows it.
+    // This is a secure default.
+  }
+}

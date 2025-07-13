@@ -1,4 +1,3 @@
-
 // src/components/dashboard/recent-orders.tsx
 import type { Order } from '@/lib/types';
 import {
@@ -24,8 +23,7 @@ async function getRecentOrders(): Promise<Order[]> {
     try {
         // Fetch from the denormalized global list for recent orders
         const ordersRef = db.ref('all_orders');
-        const recentOrdersQuery = ordersRef.orderByChild('createdAt').limitToLast(5);
-        const snapshot = await recentOrdersQuery.once('value');
+        const snapshot = await ordersRef.once('value');
 
         if (snapshot.exists()) {
             const ordersData = snapshot.val();
@@ -33,8 +31,10 @@ async function getRecentOrders(): Promise<Order[]> {
                 ...ordersData[key],
                 id: key,
             }));
-            // The query returns them oldest first, so we reverse to show newest first
-            return ordersList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            // Sort all orders by date and take the most recent 5
+            return ordersList
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                .slice(0, 5);
         }
         return [];
     } catch (error) {
