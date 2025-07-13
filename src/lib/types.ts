@@ -50,6 +50,7 @@ export interface ContactMessage {
   email: string;
   message: string;
   timestamp: string;
+  contactNumber?: string;
 }
 
 export interface OrderItem {

@@ -37,7 +37,10 @@ export function RecentMessages({ messages }: RecentMessagesProps) {
                 </Avatar>
                 <div className='flex-1 text-left'>
                     <p className="font-semibold">{message.name}</p>
-                    <p className="text-sm text-muted-foreground">{message.email}</p>
+                    <p className="text-sm text-muted-foreground">
+                        {message.email}
+                        {message.contactNumber && ` • ${message.contactNumber}`}
+                    </p>
                 </div>
                 <p className="text-sm text-muted-foreground ml-auto whitespace-nowrap">
                     {formatTimestamp(message.timestamp)}

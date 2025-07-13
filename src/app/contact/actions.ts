@@ -9,6 +9,7 @@ const contactSchema = z.object({
   name: z.string().min(1, 'Name is required.'),
   email: z.string().email('A valid email is required.'),
   message: z.string().min(1, 'Message cannot be empty.'),
+  contactNumber: z.string().optional(),
 });
 
 export async function sendMessage(
