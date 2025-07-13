@@ -88,20 +88,9 @@ export function Header() {
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {user.role === 'admin' && (
-                    <>
                         <DropdownMenuItem asChild>
-                            <Link href="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" />Dashboard</Link>
+                            <Link href="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" />Admin Dashboard</Link>
                         </DropdownMenuItem>
-                         <DropdownMenuItem asChild>
-                            <Link href="/dashboard/manage-orders"><ShoppingBag className="mr-2 h-4 w-4" />Manage Orders</Link>
-                        </DropdownMenuItem>
-                         <DropdownMenuItem asChild>
-                            <Link href="/dashboard/broadcast-message">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
-                                Broadcast Message
-                            </Link>
-                        </DropdownMenuItem>
-                    </>
                     )}
                     <DropdownMenuItem asChild>
                     <Link href="/profile"><User className="mr-2 h-4 w-4" />Profile</Link>

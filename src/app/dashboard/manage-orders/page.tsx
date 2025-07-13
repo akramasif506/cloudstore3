@@ -1,12 +1,14 @@
 
-import { mockUser } from '@/lib/data';
+
 import { ShieldAlert, ShoppingBag } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getAllOrders } from './actions';
 import { ManageOrderList } from './manage-order-list';
+import { getCurrentUser } from '@/lib/auth';
 
 export default async function ManageOrdersPage() {
-  if (mockUser.role !== 'admin') {
+  const user = await getCurrentUser();
+  if (user?.role !== 'admin') {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
         <ShieldAlert className="w-16 h-16 text-destructive mb-4" />

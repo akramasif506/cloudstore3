@@ -1,12 +1,14 @@
 
+
 import { ShieldAlert, List } from 'lucide-react';
-import { mockUser } from '@/lib/data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getManageableProducts } from './actions';
 import { ManageProductList } from './manage-product-list';
+import { getCurrentUser } from '@/lib/auth';
 
 export default async function ManageProductsPage() {
-  if (mockUser.role !== 'admin') {
+  const user = await getCurrentUser();
+  if (user?.role !== 'admin') {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
         <ShieldAlert className="w-16 h-16 text-destructive mb-4" />

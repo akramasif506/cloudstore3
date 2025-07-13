@@ -1,13 +1,14 @@
+
 // src/app/dashboard/pending-products/page.tsx
 import { ShieldAlert, CheckCircle } from 'lucide-react';
 import { getPendingProducts } from './actions';
-import { mockUser } from '@/lib/data';
 import { PendingProductList } from './pending-product-list';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { getCurrentUser } from '@/lib/auth';
 
 export default async function PendingProductsPage() {
-  // Simple role check, in a real app this would be more robust
-  if (mockUser.role !== 'admin') {
+  const user = await getCurrentUser();
+  if (user?.role !== 'admin') {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
         <ShieldAlert className="w-16 h-16 text-destructive mb-4" />

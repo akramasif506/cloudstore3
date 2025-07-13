@@ -1,17 +1,18 @@
 
-import { mockUser } from '@/lib/data';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Package, ShieldAlert, CheckCircle, ShoppingCart, List, MessageSquare, Star, BookUser } from 'lucide-react';
+import { Users, Package, ShieldAlert, CheckCircle, ShoppingCart, List, MessageSquare, Star, BookUser, Megaphone } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { CategoryChart } from '@/components/dashboard/category-chart';
 import { RecentProducts } from '@/components/dashboard/recent-products';
 import { initializeAdmin } from '@/lib/firebase-admin';
-import type { Product, Order, ContactMessage } from '@/lib/types';
+import type { Product, Order, ContactMessage, User } from '@/lib/types';
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { RecentOrders } from '@/components/dashboard/recent-orders';
+import { getCurrentUser } from '@/lib/auth';
 
 
 async function getDashboardStats() {
@@ -73,9 +74,8 @@ async function getDashboardStats() {
 
 
 export default async function DashboardPage() {
-  // For development, we'll check the mock user. 
-  // In a real app, you would get the current user's role from your auth context.
-  const isAdmin = mockUser.role === 'admin';
+  const user = await getCurrentUser();
+  const isAdmin = user?.role === 'admin';
 
   if (!isAdmin) {
     return (
@@ -97,68 +97,81 @@ export default async function DashboardPage() {
                 <h1 className="text-3xl font-bold font-headline">Dashboard</h1>
                 <p className="text-muted-foreground">An overview of your store's activity.</p>
             </div>
-            <div className="flex gap-2">
-                <Button asChild>
-                    <Link href="/listings/new">
-                        <Package className="mr-2" />
-                        Add New Product
-                    </Link>
-                </Button>
-                <Button asChild variant="outline">
-                    <Link href="/dashboard/broadcast-message">
-                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
-                        Broadcast
-                    </Link>
-                </Button>
-            </div>
+            <Button asChild>
+                <Link href="/listings/new">
+                    <Package className="mr-2" />
+                    Add New Product
+                </Link>
+            </Button>
+      </div>
+      
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+            <CardHeader><CardTitle>Store Vitals</CardTitle></CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                 <StatsCard 
+                    title="Active Products" 
+                    value={activeProducts} 
+                    icon={List}
+                    href="/dashboard/manage-products"
+                    />
+                <StatsCard 
+                    title="Total Orders" 
+                    value={totalOrders} 
+                    icon={ShoppingCart} 
+                    href="/dashboard/manage-orders"
+                    />
+                <StatsCard 
+                    title="Pending Approval" 
+                    value={pendingProducts} 
+                    icon={CheckCircle}
+                    className={pendingProducts > 0 ? "border-amber-500 text-amber-600" : ""}
+                    href="/dashboard/pending-products"
+                    />
+                 <StatsCard 
+                    title="Messages" 
+                    value={totalMessages} 
+                    icon={MessageSquare}
+                    href="/dashboard/manage-messages"
+                    />
+                 <StatsCard 
+                    title="Total Products" 
+                    value={totalProducts} 
+                    icon={Package}
+                    href="/"
+                    />
+                <StatsCard 
+                    title="Users" 
+                    value={totalUsers} 
+                    icon={Users}
+                    />
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader><CardTitle>Site Management</CardTitle></CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <StatsCard 
+                    title="Featured Product" 
+                    value={"Manage"} 
+                    icon={Star}
+                    href="/dashboard/manage-featured-product"
+                    />
+                <StatsCard 
+                    title="About Page" 
+                    value={"Edit"} 
+                    icon={BookUser}
+                    href="/dashboard/manage-about-page"
+                    />
+                <StatsCard 
+                    title="Broadcast" 
+                    value={"Set Message"} 
+                    icon={Megaphone}
+                    href="/dashboard/broadcast-message"
+                    />
+            </CardContent>
+        </Card>
       </div>
 
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <StatsCard 
-          title="Total Products" 
-          value={totalProducts} 
-          icon={Package}
-          href="/"
-        />
-        <StatsCard 
-          title="Active Products" 
-          value={activeProducts} 
-          icon={List}
-          href="/dashboard/manage-products"
-        />
-        <StatsCard 
-          title="Pending Approval" 
-          value={pendingProducts} 
-          icon={CheckCircle}
-          className={pendingProducts > 0 ? "border-amber-500 text-amber-600" : ""}
-          href="/dashboard/pending-products"
-        />
-        <StatsCard 
-          title="Total Orders" 
-          value={totalOrders} 
-          icon={ShoppingCart} 
-          href="/dashboard/manage-orders"
-        />
-        <StatsCard 
-          title="Messages" 
-          value={totalMessages} 
-          icon={MessageSquare}
-          href="/dashboard/manage-messages"
-        />
-         <StatsCard 
-          title="Featured Product" 
-          value={"Manage"} 
-          icon={Star}
-          href="/dashboard/manage-featured-product"
-        />
-        <StatsCard 
-          title="About Page" 
-          value={"Edit"} 
-          icon={BookUser}
-          href="/dashboard/manage-about-page"
-        />
-      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         <Card className="lg:col-span-3">

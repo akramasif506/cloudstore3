@@ -1,13 +1,15 @@
 
+
 import { ShieldAlert, MessageSquare } from 'lucide-react';
-import { mockUser } from '@/lib/data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getAllMessages } from './actions';
 import { RecentMessages } from '@/components/dashboard/recent-messages';
+import { getCurrentUser } from '@/lib/auth';
 
 
 export default async function ManageMessagesPage() {
-  if (mockUser.role !== 'admin') {
+  const user = await getCurrentUser();
+  if (user?.role !== 'admin') {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
         <ShieldAlert className="w-16 h-16 text-destructive mb-4" />
