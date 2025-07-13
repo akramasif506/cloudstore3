@@ -8,6 +8,7 @@ import type { CartItem } from '@/context/cart-context';
 
 const placeOrderSchema = z.object({
   userId: z.string(),
+  customerName: z.string().min(1, 'Customer name is required.'),
   items: z.array(z.any()), // Not strictly validating cart items from client
   total: z.number(),
   shippingAddress: z.string().min(10, 'Shipping address is required.'),
@@ -16,6 +17,7 @@ const placeOrderSchema = z.object({
 
 export async function placeOrder(values: {
     userId: string;
+    customerName: string;
     items: CartItem[];
     total: number;
     shippingAddress: string;
@@ -36,12 +38,13 @@ export async function placeOrder(values: {
       return { success: false, message: 'Invalid order data.' };
   }
 
-  const { userId, items, total, shippingAddress, contactNumber } = validatedFields.data;
+  const { userId, customerName, items, total, shippingAddress, contactNumber } = validatedFields.data;
   const orderId = uuidv4();
 
   const orderData = {
     id: orderId,
     userId,
+    customerName,
     items: items.map(item => ({
         id: item.id,
         name: item.name,

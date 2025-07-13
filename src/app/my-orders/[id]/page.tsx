@@ -60,7 +60,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                         <div>
                             <h3 className="font-semibold text-lg mb-4 flex items-center gap-2"><Home className="h-5 w-5" />Shipping Details</h3>
                             <div className="text-muted-foreground space-y-2">
-                                <p className="flex items-start gap-3"><UserIcon className="h-4 w-4 mt-1 flex-shrink-0" /><span className="font-semibold text-foreground">CloudStore Customer</span></p>
+                                <p className="flex items-start gap-3"><UserIcon className="h-4 w-4 mt-1 flex-shrink-0" /><span className="font-semibold text-foreground">{order.customerName}</span></p>
                                 <p className="flex items-start gap-3"><Home className="h-4 w-4 mt-1 flex-shrink-0" /><span>{order.shippingAddress}</span></p>
                                 <p className="flex items-start gap-3"><Phone className="h-4 w-4 mt-1 flex-shrink-0" /><span>{order.contactNumber}</span></p>
                                 <p className="flex items-start gap-3"><Calendar className="h-4 w-4 mt-1 flex-shrink-0" /><span>Placed on {new Date(order.createdAt).toLocaleString()}</span></p>

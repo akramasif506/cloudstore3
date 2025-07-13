@@ -49,6 +49,7 @@ export function CartContents() {
     setIsPlacingOrder(true);
     const result = await placeOrder({
         userId: user.id,
+        customerName: user.name || 'Valued Customer',
         items,
         total: subtotal,
         shippingAddress: address,
