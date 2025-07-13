@@ -15,7 +15,7 @@ export default async function ManageProductsPage() {
         <h1 className="text-3xl font-bold font-headline">Access Denied</h1>
         <p className="text-muted-foreground">You do not have permission to view this page.</p>
       </div>
-    )
+    );
   }
 
   const products = await getManageableProducts();

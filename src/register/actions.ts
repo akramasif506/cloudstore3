@@ -39,7 +39,7 @@ export async function registerUser(values: z.infer<typeof registerSchema>) {
       createdAt: new Date().toISOString(),
       // Assign 'admin' role if it's the first user, otherwise 'user'
       role: isFirstUser ? 'admin' : 'user',
-      profileImageUrl: userRecord.photoURL,
+      profileImageUrl: userRecord.photoURL || `https://placehold.co/100x100.png`,
     });
 
     return { success: true, userId: userRecord.uid };

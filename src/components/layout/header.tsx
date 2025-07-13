@@ -99,7 +99,7 @@ export function Header() {
                     <Link href="/my-listings"><Package className="mr-2 h-4 w-4" />My Listings</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                    <Link href="/my-orders"><DollarSign className="mr-2 h-4 w-4" />My Orders</Link>
+                    <Link href="/my-orders"><ShoppingBag className="mr-2 h-4 w-4" />My Orders</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={logout}>

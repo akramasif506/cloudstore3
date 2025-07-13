@@ -48,12 +48,17 @@ async function getDashboardStats() {
             totalMessages = messagesSnapshot.size;
         }
 
+        const usersRef = db.ref('users');
+        const usersSnapshot = await usersRef.once('value');
+        let totalUsers = 0;
+        if (usersSnapshot.exists()) {
+            totalUsers = usersSnapshot.size;
+        }
 
         const totalProducts = products.length;
         const pendingProducts = products.filter(p => p.status === 'pending_review').length;
         const activeProducts = products.filter(p => p.status === 'active').length;
-        // In a real app, users would be in the database
-        const totalUsers = 1; 
+        
 
         const productsByCategory = products.reduce((acc, product) => {
             if (product.status === 'active') {
