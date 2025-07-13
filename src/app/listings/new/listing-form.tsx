@@ -53,35 +53,6 @@ const categories = {
   'Other': ['Miscellaneous'],
 };
 
-async function createListing(formData: FormData) {
-  try {
-    const response = await fetch('/api/listings', {
-      method: 'POST',
-      body: formData,
-      credentials: 'include', // Send cookies with the request
-    });
-    
-    const result = await response.json();
-
-    if (!response.ok) {
-      return {
-        success: false,
-        message: result.message || 'An error occurred.',
-        errors: result.errors,
-      };
-    }
-    
-    return { success: true, message: 'Listing submitted successfully!' };
-    
-  } catch (error) {
-    console.error('Error calling create listing API:', error);
-    if (error instanceof Error) {
-        return { success: false, message: `Failed to create listing: ${error.message}` };
-    }
-    return { success: false, message: 'An unknown error occurred while creating the listing.' };
-  }
-}
-
 export function ListingForm() {
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -184,35 +155,51 @@ export function ListingForm() {
       }
     }
 
-    const result = await createListing(formData);
+    let result;
+    try {
+      const response = await fetch('/api/listings', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include', // Ensure cookies are sent with the request
+      });
+      
+      result = await response.json();
+
+      if (!response.ok) {
+        // Handle server-side validation errors or other issues
+        toast({
+          variant: 'destructive',
+          title: 'Oh no! Something went wrong.',
+          description: result.message || 'An unknown error occurred.',
+        });
+        if (result.errors) {
+            for (const [field, messages] of Object.entries(result.errors)) {
+            if (messages) {
+                form.setError(field as FieldPath<ClientListingSchema>, {
+                type: 'server',
+                message: (messages as string[])[0],
+                });
+            }
+            }
+        }
+      } else {
+           toast({
+              title: "Listing Submitted!",
+              description: "Your item is now under review by our team.",
+           });
+           // Redirect on success
+           window.location.href = '/my-listings';
+      }
+    } catch (error) {
+        console.error('Error calling create listing API:', error);
+        toast({
+            variant: 'destructive',
+            title: 'Submission Failed',
+            description: 'Could not connect to the server. Please check your connection and try again.',
+        });
+    }
 
     setIsSubmitting(false);
-
-    if (result?.success === false) {
-      toast({
-        variant: 'destructive',
-        title: 'Oh no! Something went wrong.',
-        description: result.message,
-      });
-
-      if (result.errors) {
-        for (const [field, messages] of Object.entries(result.errors)) {
-          if (messages) {
-            form.setError(field as FieldPath<ClientListingSchema>, {
-              type: 'server',
-              message: messages[0],
-            });
-          }
-        }
-      }
-    } else {
-         toast({
-            title: "Listing Submitted!",
-            description: "Your item is now under review by our team.",
-         });
-         // Redirect on success
-         window.location.href = '/my-listings';
-    }
   };
   
   const selectedCategory = form.watch('category');
