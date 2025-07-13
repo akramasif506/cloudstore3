@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Leaf, Search, User, LogOut, LayoutDashboard, DollarSign, Package, LogIn, UserPlus, ShoppingCart, FilePlus2, Settings, ShoppingBag } from 'lucide-react';
+import { Leaf, Search, User, LogOut, LayoutDashboard, DollarSign, Package, LogIn, UserPlus, ShoppingCart, FilePlus2, Settings, ShoppingBag, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -56,29 +56,32 @@ export function Header() {
             <p className="text-xs text-muted-foreground -mt-1">A Akram Product</p>
           </div>
         </Link>
-        
-        <nav className="hidden md:flex items-center space-x-4 text-sm font-medium">
-          <Link href="/" className="transition-colors hover:text-foreground/80 text-foreground">
-            Home
-          </Link>
-          <Link href="/listings/new" className="transition-colors hover:text-foreground/80 text-foreground">
-            Sell
-          </Link>
-        </nav>
 
-        <div className="flex flex-1 items-center justify-end space-x-2 md:space-x-4">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search for items..."
-              className="pl-9 w-full"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={handleSearch}
-            />
-          </div>
+        <div className="flex flex-1 items-center space-x-2 md:space-x-6">
+            <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                type="search"
+                placeholder="Search for items..."
+                className="pl-9 w-full"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearch}
+                />
+            </div>
+            
+            <nav className="hidden md:flex items-center space-x-4 text-sm font-medium">
+                <Link href="/" className="transition-colors hover:text-foreground/80 text-foreground">
+                    Home
+                </Link>
+                <Link href="/listings/new" className="transition-colors hover:text-foreground/80 text-foreground">
+                    Sell
+                </Link>
+            </nav>
+        </div>
 
+
+        <div className="flex items-center justify-end space-x-2 md:space-x-4 ml-4">
           <Button variant="ghost" size="icon" asChild>
             <Link href="/cart" className="relative">
               <ShoppingCart />
@@ -119,6 +122,9 @@ export function Header() {
                         </DropdownMenuItem>
                          <DropdownMenuItem asChild>
                             <Link href="/dashboard/manage-orders"><ShoppingBag className="mr-2 h-4 w-4" />Manage Orders</Link>
+                        </DropdownMenuItem>
+                         <DropdownMenuItem asChild>
+                            <Link href="/dashboard/send-notification"><MessageSquare className="mr-2 h-4 w-4" />Send Notification</Link>
                         </DropdownMenuItem>
                     </>
                     )}

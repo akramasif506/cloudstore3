@@ -11,6 +11,7 @@ import { AuthProvider, useAuth } from '@/context/auth-context';
 import { Loader2 } from 'lucide-react';
 import React from 'react';
 import { CartProvider } from '@/context/cart-context';
+import { FirebaseMessagingProvider } from '@/context/firebase-messaging-provider';
 
 function AppContent({ children }: { children: React.ReactNode }) {
   const { loading } = useAuth();
@@ -50,12 +51,14 @@ export default function RootLayout({
       </head>
       <body className={cn('font-body antialiased min-h-screen flex flex-col')}>
         <AuthProvider>
-          <CartProvider>
-            <AppContent>
-              {children}
-            </AppContent>
-            <Toaster />
-          </CartProvider>
+          <FirebaseMessagingProvider>
+            <CartProvider>
+              <AppContent>
+                {children}
+              </AppContent>
+              <Toaster />
+            </CartProvider>
+          </FirebaseMessagingProvider>
         </AuthProvider>
       </body>
     </html>

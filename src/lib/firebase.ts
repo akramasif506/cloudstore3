@@ -3,6 +3,7 @@ import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getDatabase, type Database } from "firebase/database";
 import { getStorage, type FirebaseStorage } from "firebase/storage";
 import { getAuth, type Auth } from 'firebase/auth';
+import { getMessaging, type Messaging } from 'firebase/messaging';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -20,6 +21,7 @@ let app: FirebaseApp;
 let db: Database | null = null;
 let storage: FirebaseStorage | null = null;
 let auth: Auth | null = null;
+let messaging: Messaging | null = null;
 
 
 if (firebaseConfig.apiKey && firebaseConfig.databaseURL && firebaseConfig.storageBucket) {
@@ -27,8 +29,11 @@ if (firebaseConfig.apiKey && firebaseConfig.databaseURL && firebaseConfig.storag
     db = getDatabase(app);
     storage = getStorage(app);
     auth = getAuth(app);
+    if (typeof window !== 'undefined') {
+      messaging = getMessaging(app);
+    }
 } else {
     console.warn("Firebase config is incomplete. Firebase services will be disabled.");
 }
 
-export { db, storage, auth };
+export { app, db, storage, auth, messaging };
