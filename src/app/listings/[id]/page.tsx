@@ -1,4 +1,4 @@
-
+// src/app/listings/[id]/page.tsx
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -11,6 +11,8 @@ import type { Product } from '@/lib/types';
 import { db } from '@/lib/firebase';
 import { ref, get, child } from 'firebase/database';
 import { AddToCartButtons } from './add-to-cart-buttons';
+import { ShareButtons } from './share-buttons';
+import { headers } from 'next/headers';
 
 
 async function getProduct(id: string): Promise<Product | null> {
@@ -22,7 +24,7 @@ async function getProduct(id: string): Promise<Product | null> {
     const snapshot = await get(child(dbRef, `products/${id}`));
     if (snapshot.exists()) {
       const productData = snapshot.val();
-      return { ...productData, id }; // Ensure id is part of the returned object
+      return { ...productData, id, condition: productData.condition || 'Used' };
     }
     return null;
   } catch (error) {
@@ -41,6 +43,11 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
   
   const totalRating = product.reviews?.reduce((acc, review) => acc + review.rating, 0) || 0;
   const averageRating = product.reviews?.length > 0 ? (totalRating / product.reviews.length) : 0;
+  
+  const headersList = headers();
+  const host = headersList.get('host') || 'localhost:3000';
+  const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+  const productUrl = `${protocol}://${host}/listings/${product.id}`;
 
 
   return (
@@ -117,6 +124,7 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
                      </Link>
                 </CardContent>
             </Card>
+            <ShareButtons productName={product.name} productUrl={productUrl} />
         </div>
       </div>
     </div>
