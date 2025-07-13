@@ -142,14 +142,17 @@ export function ListingForm() {
     }
 
     setIsSubmitting(true);
-    
-    const serverActionValues = {
-        ...values,
-        productImage: values.productImage[0],
-    }
+
+    const formData = new FormData();
+    formData.append('productImage', values.productImage[0]);
+    formData.append('productName', values.productName);
+    formData.append('productDescription', values.productDescription);
+    formData.append('price', String(values.price));
+    formData.append('category', values.category);
+    formData.append('subcategory', values.subcategory);
 
     try {
-      const result = await createListing(serverActionValues);
+      const result = await createListing(formData);
 
       if (!result.success) {
         toast({

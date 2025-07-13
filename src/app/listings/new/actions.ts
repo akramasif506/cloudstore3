@@ -10,10 +10,6 @@ import type { User } from '@/lib/types';
 import { listingSchema } from '@/lib/schemas';
 import { revalidatePath } from 'next/cache';
 
-const clientListingSchema = listingSchema.extend({
-  productImage: z.any(),
-});
-
 function initializeAdmin() {
   const projectId = process.env.FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
@@ -50,7 +46,7 @@ function initializeAdmin() {
 
 
 export async function createListing(
-  values: z.infer<typeof clientListingSchema>
+  formData: FormData
 ): Promise<{ success: boolean; message: string; productId?: string; errors?: any }> {
   let adminAuth, db, storage;
   try {
@@ -78,13 +74,15 @@ export async function createListing(
 
   const userId = decodedClaims.uid;
   
-  const validatedFields = listingSchema.safeParse({
-    productName: values.productName,
-    productDescription: values.productDescription,
-    price: values.price,
-    category: values.category,
-    subcategory: values.subcategory,
-  });
+  const formValues = {
+    productName: formData.get('productName'),
+    productDescription: formData.get('productDescription'),
+    price: formData.get('price'),
+    category: formData.get('category'),
+    subcategory: formData.get('subcategory'),
+  };
+  
+  const validatedFields = listingSchema.safeParse(formValues);
 
   if (!validatedFields.success) {
     return {
@@ -94,7 +92,7 @@ export async function createListing(
     };
   }
 
-  const imageFile = values.productImage as File | null;
+  const imageFile = formData.get('productImage') as File | null;
   if (!imageFile || imageFile.size === 0) {
     return {
       success: false,
