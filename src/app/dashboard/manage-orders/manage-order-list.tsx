@@ -98,7 +98,7 @@ export function ManageOrderList({ initialOrders }: ManageOrderListProps) {
               <TableCell className="font-medium">#{order.id.substring(0, 8)}</TableCell>
               <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
               <TableCell>{order.contactNumber}</TableCell>
-              <TableCell>Rs {order.total.toFixed(2)}</TableCell>
+              <TableCell>Rs {typeof order.total === 'number' ? order.total.toFixed(2) : '0.00'}</TableCell>
               <TableCell>
                  <Badge variant="secondary" className={`capitalize ${statusStyles[order.status]}`}>
                     <div className="flex items-center gap-2">
