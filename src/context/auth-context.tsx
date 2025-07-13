@@ -22,43 +22,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setFirebaseUser(user);
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
+    let dbUnsubscribe: Unsubscribe | undefined;
 
-  useEffect(() => {
-    let unsubscribeFromDb: Unsubscribe | undefined;
-
-    if (firebaseUser) {
-      if (db) {
-        const userProfileRef = ref(db, `users/${firebaseUser.uid}`);
-        unsubscribeFromDb = onValue(
-          userProfileRef,
-          (snapshot) => {
-            const userProfile = snapshot.val();
-            setUser(userProfile ? { id: firebaseUser.uid, ...userProfile } : null);
-          },
-          (error) => {
-            console.error("Error fetching user profile:", error);
-            setUser(null);
-          }
-        );
-      } else {
-        setUser(null);
+    const authUnsubscribe = onAuthStateChanged(auth, (fbUser) => {
+      setFirebaseUser(fbUser);
+      
+      // If the user logs out, clear profile and stop listening
+      if (dbUnsubscribe) {
+        dbUnsubscribe();
       }
-    } else {
-      setUser(null);
-    }
-    
+
+      if (fbUser) {
+        // User is logged in, fetch their profile
+        if (db) {
+          const userProfileRef = ref(db, `users/${fbUser.uid}`);
+          dbUnsubscribe = onValue(
+            userProfileRef,
+            (snapshot) => {
+              const userProfile = snapshot.val();
+              if (userProfile) {
+                setUser({ id: fbUser.uid, ...userProfile });
+              } else {
+                // Handle case where user exists in Auth but not DB
+                setUser(null); 
+              }
+              setLoading(false);
+            },
+            (error) => {
+              console.error("Error fetching user profile:", error);
+              setUser(null);
+              setLoading(false);
+            }
+          );
+        } else {
+            // DB not ready
+            setUser(null);
+            setLoading(false);
+        }
+      } else {
+        // User is logged out
+        setUser(null);
+        setLoading(false);
+      }
+    });
+
+    // Cleanup function for the auth subscription
     return () => {
-      if (unsubscribeFromDb) {
-        unsubscribeFromDb();
+      authUnsubscribe();
+      if (dbUnsubscribe) {
+        dbUnsubscribe();
       }
     };
-  }, [firebaseUser]);
+  }, []);
 
 
   const logout = async () => {
