@@ -14,7 +14,7 @@ import {
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, CheckCircle, PackageCheck, PackageX, Edit, User, Eye } from 'lucide-react';
+import { Loader2, CheckCircle, PackageCheck, PackageX, Edit, User, Eye, Phone } from 'lucide-react';
 import Link from 'next/link';
 import { EditProductDialog } from './edit-product-dialog';
 import { updateProductStatus } from './actions';
@@ -88,6 +88,7 @@ export function ManageProductList({ initialProducts }: ManageProductListProps) {
             <TableHead className="w-[80px]">Image</TableHead>
             <TableHead>Product Name</TableHead>
             <TableHead>Seller</TableHead>
+            <TableHead>Contact</TableHead>
             <TableHead>Price</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Actions</TableHead>
@@ -116,6 +117,14 @@ export function ManageProductList({ initialProducts }: ManageProductListProps) {
                         <User className="h-4 w-4 text-muted-foreground" />
                         <span>{product.seller.name}</span>
                     </div>
+                </TableCell>
+                <TableCell>
+                    {product.seller.contactNumber && (
+                        <div className="flex items-center gap-2">
+                            <Phone className="h-4 w-4 text-muted-foreground" />
+                            <span>{product.seller.contactNumber}</span>
+                        </div>
+                    )}
                 </TableCell>
                 <TableCell>Rs {product.price.toFixed(2)}</TableCell>
                 <TableCell>

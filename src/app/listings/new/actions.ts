@@ -89,7 +89,8 @@ export async function createListing(
       reviews: [],
       seller: {
         id: userId,
-        name: seller.name || 'Unknown User'
+        name: seller.name || 'Unknown User',
+        contactNumber: seller.mobileNumber || ''
       },
       createdAt: new Date().toISOString(),
       status: 'pending_review',
