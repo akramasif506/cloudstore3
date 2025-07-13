@@ -1,3 +1,4 @@
+
 // src/app/listings/[id]/page.tsx
 import Image from 'next/image';
 import Link from 'next/link';
