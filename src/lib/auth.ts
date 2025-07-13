@@ -22,9 +22,6 @@ export async function getCurrentUser(): Promise<AppUser | null> {
   try {
     ({ adminAuth, db } = initializeAdmin());
     decodedIdToken = await adminAuth.verifySessionCookie(session, true);
-    if (!decodedIdToken) {
-      return null;
-    }
   } catch (error) {
     // Session cookie is invalid or expired.
     return null;
@@ -40,8 +37,8 @@ export async function getCurrentUser(): Promise<AppUser | null> {
       // Combine the ID from the token with the profile data from the DB
       // This is the correct way to merge auth and db user info.
       return { 
-        ...userProfileData,
         id: decodedIdToken.uid,
+        ...userProfileData
       };
     }
     // This case means user exists in Auth, but not in our Realtime DB.
