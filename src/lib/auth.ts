@@ -1,5 +1,4 @@
 
-
 // src/lib/auth.ts
 import { initializeAdmin } from '@/lib/firebase-admin';
 import type { User as AppUser } from '@/lib/types';
@@ -37,7 +36,13 @@ export async function getCurrentUser(): Promise<AppUser | null> {
     const snapshot = await get(userProfileRef);
 
     if (snapshot.exists()) {
-      return snapshot.val() as AppUser;
+      const userProfileData = snapshot.val();
+      // Combine the ID and role from the token with the profile data from the DB
+      return { 
+        ...userProfileData,
+        id: decodedIdToken.uid,
+        role: userProfileData.role || 'user' // Ensure role is present
+      };
     }
     return null; // User exists in Auth, but not in DB
   } catch (dbError) {
