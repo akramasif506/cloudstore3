@@ -22,7 +22,8 @@ export async function createListing(
     return { success: false, message: `Server configuration error: ${errorMessage}` };
   }
 
-  // Authorize the user
+  // Authorize the user by checking if a valid session exists.
+  // This is a redundant check as the client should be logged in, but it adds a layer of security.
   try {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) {
@@ -34,8 +35,10 @@ export async function createListing(
     }
   } catch (error) {
      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
-     return { success: false, message: `Authorization failed: ${errorMessage}` };
+     // We will return a generic authorization error to the client.
+     return { success: false, message: `Authorization failed. Please log in and try again.` };
   }
+
 
   const formValues = {
     productName: formData.get('productName'),
@@ -65,7 +68,7 @@ export async function createListing(
   }
 
   try {
-    // Fetch seller details from the database
+    // Fetch seller details from the database using the provided and verified userId
     const userRef = db.ref(`users/${userId}`);
     const userSnapshot = await userRef.once('value');
     if (!userSnapshot.exists()) {
