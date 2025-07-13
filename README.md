@@ -1,4 +1,4 @@
-# ReNest - A Secondhand Marketplace
+# CloudStore - A Secondhand Marketplace
 
 This is a Next.js application built with Firebase Studio.
 
