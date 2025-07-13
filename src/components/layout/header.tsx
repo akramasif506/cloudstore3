@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Leaf, User, LogOut, LayoutDashboard, DollarSign, Package, LogIn, UserPlus, ShoppingCart, FilePlus2, Settings, ShoppingBag, MessageSquare } from 'lucide-react';
+import { Leaf, User, LogOut, LayoutDashboard, DollarSign, Package, LogIn, UserPlus, ShoppingCart, FilePlus2, Settings, ShoppingBag, MessageSquare, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -42,7 +42,7 @@ export function Header() {
         </Link>
 
         <div className="flex flex-1 items-center space-x-2 md:space-x-6">
-            <nav className="flex items-center space-x-4 text-sm font-medium">
+            <nav className="hidden md:flex items-center space-x-4 text-sm font-medium">
                 <Link href="/" className="transition-colors hover:text-foreground/80 text-foreground">
                     Home
                 </Link>
@@ -110,20 +110,39 @@ export function Header() {
                 </DropdownMenu>
             </div>
           ) : (
-            <div className="hidden sm:flex items-center gap-2">
-                <Button asChild variant="ghost">
-                    <Link href="/login">
-                        <LogIn className="mr-2 h-4 w-4" />
-                        Login
-                    </Link>
-                </Button>
-                <Button asChild>
-                    <Link href="/register">
-                        <UserPlus className="mr-2 h-4 w-4" />
-                        Register
-                    </Link>
-                </Button>
-            </div>
+            <>
+              <div className="hidden sm:flex items-center gap-2">
+                  <Button asChild variant="ghost">
+                      <Link href="/login">
+                          <LogIn className="mr-2 h-4 w-4" />
+                          Login
+                      </Link>
+                  </Button>
+                  <Button asChild>
+                      <Link href="/register">
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          Register
+                      </Link>
+                  </Button>
+              </div>
+              <div className="sm:hidden">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                            <Menu />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-48" align="end">
+                         <DropdownMenuItem asChild>
+                            <Link href="/login"><LogIn className="mr-2 h-4 w-4" />Login</Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                            <Link href="/register"><UserPlus className="mr-2 h-4 w-4" />Register</Link>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </>
           )}
         </div>
       </div>
