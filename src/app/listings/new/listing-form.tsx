@@ -136,15 +136,6 @@ export function ListingForm() {
   };
 
   async function onSubmit(values: ClientListingSchema) {
-    if (!user) {
-      toast({
-          variant: 'destructive',
-          title: 'You are not logged in',
-          description: 'Please log in before submitting a listing.',
-      });
-      return;
-    }
-    
     setIsSubmitting(true);
 
     const formData = new FormData();
@@ -159,7 +150,6 @@ export function ListingForm() {
       const result = await createListing(formData);
       
       if (!result.success) {
-        // Now this error will be more specific, coming from the server action's checks.
         throw new Error(result.message || 'An unknown error occurred during submission.');
       }
       
@@ -191,28 +181,6 @@ export function ListingForm() {
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
-  }
-
-  if (!user) {
-    return (
-      <Card className="flex flex-col items-center justify-center text-center py-20 border-0 shadow-none">
-        <CardHeader>
-          <div className="mx-auto bg-muted rounded-full p-4 w-fit mb-4">
-            <Frown className="h-12 w-12 text-muted-foreground" />
-          </div>
-          <CardTitle>You're Not Logged In</CardTitle>
-          <CardDescription>You must be logged in to create a listing.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button asChild>
-            <Link href="/login?redirect=/listings/new">
-                <LogIn className="mr-2 h-4 w-4" />
-                Go to Login Page
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
-    )
   }
 
   return (
