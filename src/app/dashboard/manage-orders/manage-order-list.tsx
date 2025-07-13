@@ -87,6 +87,8 @@ export function ManageOrderList({ initialOrders }: ManageOrderListProps) {
             <TableHead>Order ID</TableHead>
             <TableHead>Date</TableHead>
             <TableHead>Customer</TableHead>
+            <TableHead>Contact</TableHead>
+            <TableHead>Address</TableHead>
             <TableHead>Total</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Actions</TableHead>
@@ -98,6 +100,8 @@ export function ManageOrderList({ initialOrders }: ManageOrderListProps) {
               <TableCell className="font-medium">#{order.id.substring(0, 8)}</TableCell>
               <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
               <TableCell>{order.customerName}</TableCell>
+              <TableCell>{order.contactNumber}</TableCell>
+              <TableCell className="max-w-[200px] truncate">{order.shippingAddress}</TableCell>
               <TableCell>Rs {typeof order.total === 'number' ? order.total.toFixed(2) : '0.00'}</TableCell>
               <TableCell>
                  <Badge variant="secondary" className={`capitalize ${statusStyles[order.status]}`}>
