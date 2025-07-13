@@ -6,4 +6,7 @@ export const listingSchema = z.object({
   price: z.coerce.number().positive('Price must be a positive number.'),
   category: z.string().nonempty('Please select a category.'),
   subcategory: z.string().nonempty('Please select a subcategory.'),
+  condition: z.enum(['New', 'Like New', 'Used'], {
+    required_error: 'Please select the item condition.',
+  }),
 });

@@ -32,6 +32,7 @@ export async function createListing(
     price: formData.get('price'),
     category: formData.get('category'),
     subcategory: formData.get('subcategory'),
+    condition: formData.get('condition'),
   };
   
   const validatedFields = listingSchema.safeParse(formValues);
@@ -85,6 +86,7 @@ export async function createListing(
       price: validatedFields.data.price,
       category: validatedFields.data.category,
       subcategory: validatedFields.data.subcategory,
+      condition: validatedFields.data.condition,
       imageUrl,
       reviews: [],
       seller: {

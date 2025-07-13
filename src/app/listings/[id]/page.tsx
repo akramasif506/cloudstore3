@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Star, Tag, User, Building } from 'lucide-react';
+import { Star, Tag, User, Building, ShieldCheck } from 'lucide-react';
 import { CustomerFeedback } from '@/components/products/customer-feedback';
 import type { Product } from '@/lib/types';
 import { db } from '@/lib/firebase';
@@ -59,11 +59,20 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
         </Card>
         <div className="mt-8">
             <h1 className="text-4xl font-bold font-headline mb-4">{product.name}</h1>
-            <div className="flex items-center gap-4 text-muted-foreground mb-4">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-muted-foreground mb-4">
                 <div className="flex items-center gap-1">
                     <Tag className="w-4 h-4" />
                     <span>{product.category} &gt; {product.subcategory}</span>
                 </div>
+                {product.condition && (
+                    <>
+                        <Separator orientation="vertical" className="h-4" />
+                        <div className="flex items-center gap-1">
+                            <ShieldCheck className="w-4 h-4" />
+                            <span>{product.condition}</span>
+                        </div>
+                    </>
+                )}
                  {product.reviews?.length > 0 && (
                     <>
                         <Separator orientation="vertical" className="h-4" />

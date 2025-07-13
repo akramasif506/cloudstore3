@@ -53,6 +53,8 @@ const categories = {
   'Other': ['Miscellaneous'],
 };
 
+const conditions = ['New', 'Like New', 'Used'];
+
 
 export function EditProductDialog({ product, onSuccess, onError }: EditProductDialogProps) {
     const [open, setOpen] = useState(false);
@@ -67,6 +69,7 @@ export function EditProductDialog({ product, onSuccess, onError }: EditProductDi
             price: product.price,
             category: product.category,
             subcategory: product.subcategory,
+            condition: product.condition || 'Used',
         },
     });
 
@@ -174,37 +177,57 @@ export function EditProductDialog({ product, onSuccess, onError }: EditProductDi
                                 )}
                             />
                         </div>
-
-                         <FormField
-                            control={form.control}
-                            name="price"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Price</FormLabel>
-                                <div className="relative">
-                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                    <span className="text-gray-500 sm:text-sm">Rs</span>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                                control={form.control}
+                                name="price"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Price</FormLabel>
+                                    <div className="relative">
+                                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                        <span className="text-gray-500 sm:text-sm">Rs</span>
+                                        </div>
+                                        <FormControl>
+                                        <Input
+                                            type="number"
+                                            placeholder="0.00"
+                                            className="pl-8"
+                                            step="0.01"
+                                            {...field}
+                                            onChange={(e) => {
+                                            const value = e.target.value;
+                                            field.onChange(value === '' ? undefined : Number(value));
+                                            }}
+                                            value={field.value ?? ''}
+                                        />
+                                        </FormControl>
                                     </div>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                             <FormField
+                                control={form.control}
+                                name="condition"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Condition</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                                     <FormControl>
-                                    <Input
-                                        type="number"
-                                        placeholder="0.00"
-                                        className="pl-8"
-                                        step="0.01"
-                                        {...field}
-                                        onChange={(e) => {
-                                        const value = e.target.value;
-                                        field.onChange(value === '' ? undefined : Number(value));
-                                        }}
-                                        value={field.value ?? ''}
-                                    />
+                                        <SelectTrigger><SelectValue placeholder="Select a condition" /></SelectTrigger>
                                     </FormControl>
-                                </div>
-                                <FormMessage />
+                                    <SelectContent>
+                                        {conditions.map(con => (
+                                        <SelectItem key={con} value={con}>{con}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                    </Select>
+                                    <FormMessage />
                                 </FormItem>
-                            )}
-                        />
-
+                                )}
+                            />
+                        </div>
                         <DialogFooter>
                             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
                             <Button type="submit" disabled={isSubmitting}>

@@ -56,6 +56,8 @@ const categories = {
   'Other': ['Miscellaneous'],
 };
 
+const conditions = ['New', 'Like New', 'Used'];
+
 export function ListingForm() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -74,6 +76,7 @@ export function ListingForm() {
       price: undefined,
       category: '',
       subcategory: '',
+      condition: undefined,
       productImage: undefined,
     },
   });
@@ -118,6 +121,7 @@ export function ListingForm() {
       form.setValue('price', result.price, { shouldValidate: true });
       form.setValue('category', result.category, { shouldValidate: true });
       form.setValue('subcategory', result.subcategory, { shouldValidate: true });
+      form.setValue('condition', result.condition, { shouldValidate: true });
 
       setHasGenerated(true);
       toast({
@@ -156,6 +160,7 @@ export function ListingForm() {
     formData.append('price', String(values.price));
     formData.append('category', values.category);
     formData.append('subcategory', values.subcategory);
+    formData.append('condition', values.condition);
 
     try {
       const result = await createListing(user.id, formData);
@@ -318,6 +323,26 @@ export function ListingForm() {
                         </div>
                         <FormMessage />
                         </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="condition"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Condition</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value} disabled={isFormProcessing}>
+                        <FormControl>
+                            <SelectTrigger><SelectValue placeholder="Select a condition" /></SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            {conditions.map(con => (
+                            <SelectItem key={con} value={con}>{con}</SelectItem>
+                            ))}
+                        </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
                     )}
                 />
             </div>

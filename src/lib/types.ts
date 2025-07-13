@@ -27,6 +27,8 @@ export interface Review {
   date: string;
 }
 
+export type Condition = 'New' | 'Like New' | 'Used';
+
 export interface Product {
   id: string;
   name: string;
@@ -35,6 +37,7 @@ export interface Product {
   category: string;
   subcategory: string;
   imageUrl: string;
+  condition?: Condition;
   reviews: Review[];
   status: 'active' | 'pending_review' | 'rejected' | 'sold';
   createdAt: string;

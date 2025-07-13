@@ -28,6 +28,7 @@ const categoryList = Object.entries(categories).map(([category, subcategories]) 
   `- ${category}: ${subcategories.join(', ')}`
 ).join('\n');
 
+const conditions = ['New', 'Like New', 'Used'];
 
 const ExtractListingDetailsInputSchema = z.object({
   userDescription: z.string().describe('The free-text description of the product provided by the user, which may include details about condition and price.'),
@@ -44,6 +45,7 @@ const ExtractListingDetailsOutputSchema = z.object({
   price: z.number().describe("The product's price, extracted from the user's description. Should be a number."),
   category: z.nativeEnum(Object.keys(categories)).describe('The most appropriate top-level category for the product.'),
   subcategory: z.string().describe('The most appropriate subcategory for the product, based on the selected category.'),
+  condition: z.enum(conditions as [string, ...string[]]).describe("The condition of the item. Choose from 'New', 'Like New', or 'Used' based on the user's description."),
 });
 
 export type ExtractListingDetailsOutput = z.infer<typeof ExtractListingDetailsOutputSchema>;
@@ -66,6 +68,7 @@ You must extract or generate the following information:
 2.  **productDescription**: Write a clear, appealing description. Mention the item's features and any condition details from the user's text.
 3.  **price**: Identify the price from the user's text. It must be a number.
 4.  **category** and **subcategory**: Based on the image and text, classify the item into the most relevant category and subcategory from the provided list.
+5.  **condition**: Determine the item's condition from the user's description. You must choose one of the following options: ${conditions.join(', ')}.
 
 Here are the available categories and subcategories:
 ${categoryList}

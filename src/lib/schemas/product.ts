@@ -7,4 +7,5 @@ export const updateProductSchema = z.object({
   price: z.coerce.number().positive('Price must be a positive number.'),
   category: z.string().nonempty('Please select a category.'),
   subcategory: z.string().nonempty('Please select a subcategory.'),
+  condition: z.enum(['New', 'Like New', 'Used']),
 });
