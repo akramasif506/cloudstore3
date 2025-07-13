@@ -1,8 +1,9 @@
-
 // src/lib/firebase-admin.ts
 import admin from 'firebase-admin';
 import 'dotenv/config';
 
+// This function initializes the Firebase Admin SDK.
+// It should only be called in server-side code.
 export function initializeAdmin() {
   const projectId = process.env.FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;

@@ -4,46 +4,11 @@
 import { cookies } from 'next/headers';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
-import admin from 'firebase-admin';
 
 import type { User } from '@/lib/types';
 import { listingSchema } from '@/lib/schemas';
 import { revalidatePath } from 'next/cache';
-
-function initializeAdmin() {
-  const projectId = process.env.FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
-
-  if (!projectId || !clientEmail || !privateKey) {
-    throw new Error('Firebase Admin SDK credentials are not defined in environment variables.');
-  }
-
-  if (admin.apps.length > 0) {
-    return {
-      adminAuth: admin.auth(),
-      db: admin.database(),
-      storage: admin.storage(),
-    };
-  }
-
-  const app = admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: projectId,
-      clientEmail: clientEmail,
-      privateKey: privateKey.replace(/\\n/g, '\n'),
-    }),
-    databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  });
-
-  return {
-    adminAuth: app.auth(),
-    db: app.database(),
-    storage: app.storage(),
-  };
-}
-
+import { initializeAdmin } from '@/lib/firebase-admin';
 
 export async function createListing(
   formData: FormData
@@ -69,6 +34,7 @@ export async function createListing(
   try {
     decodedClaims = await adminAuth.verifySessionCookie(session, true);
   } catch (error) {
+    console.error("Error verifying session cookie:", error);
     return { success: false, message: 'Unauthorized: Invalid session cookie.' };
   }
 
@@ -109,11 +75,12 @@ export async function createListing(
       const sellerData: User = userSnapshot.val();
       seller = { id: sellerData.id, name: sellerData.name || 'User' };
     } else {
-      return { success: false, message: 'Could not find user profile.' };
+      console.warn(`User profile not found for UID: ${userId}`);
+      return { success: false, message: 'Could not find your user profile to create the listing.' };
     }
   } catch (error) {
     console.error("Error fetching user profile:", error);
-    return { success: false, message: 'Error fetching user data.' };
+    return { success: false, message: 'Error fetching your user data.' };
   }
 
   try {
@@ -128,7 +95,7 @@ export async function createListing(
 
     const [imageUrl] = await file.getSignedUrl({
       action: 'read',
-      expires: '03-09-2491',
+      expires: '03-09-2491', // A far-future expiration date
     });
 
     const productId = uuidv4();
