@@ -104,13 +104,15 @@ export default async function DashboardPage() {
         <StatsCard 
           title="Total Products" 
           value={totalProducts} 
-          icon={Package} 
+          icon={Package}
+          href="/"
         />
         <StatsCard 
           title="Pending Approval" 
           value={pendingProducts} 
           icon={CheckCircle}
           className={pendingProducts > 0 ? "border-amber-500 text-amber-600" : ""}
+          href="/dashboard/pending-products"
         />
         <StatsCard 
           title="Total Users" 
