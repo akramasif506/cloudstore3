@@ -47,7 +47,7 @@ export function ShareButtons({ productName, productUrl }: ShareButtonsProps) {
   
   const shareText = `Check out this listing on CloudStore: ${productName}`;
   const twitterUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(productUrl)}&text=${encodeURIComponent(shareText)}`;
-  const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + productUrl)}`;
+  const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText}\n${productUrl}`)}`;
 
   return (
     <Card>
