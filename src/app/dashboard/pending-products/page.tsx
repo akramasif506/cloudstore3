@@ -1,23 +1,12 @@
 
+
 // src/app/dashboard/pending-products/page.tsx
 import { ShieldAlert, CheckCircle } from 'lucide-react';
 import { getPendingProducts } from './actions';
 import { PendingProductList } from './pending-product-list';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { getCurrentUser } from '@/lib/auth';
 
 export default async function PendingProductsPage() {
-  const user = await getCurrentUser();
-  if (user?.role !== 'admin') {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-center">
-        <ShieldAlert className="w-16 h-16 text-destructive mb-4" />
-        <h1 className="text-3xl font-bold font-headline">Access Denied</h1>
-        <p className="text-muted-foreground">You do not have permission to view this page.</p>
-      </div>
-    );
-  }
-
   const pendingProducts = await getPendingProducts();
 
   return (

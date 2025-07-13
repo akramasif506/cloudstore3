@@ -12,7 +12,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { RecentOrders } from '@/components/dashboard/recent-orders';
-import { getCurrentUser } from '@/lib/auth';
 
 
 async function getDashboardStats() {
@@ -79,22 +78,8 @@ async function getDashboardStats() {
 
 
 export default async function DashboardPage() {
-  const user = await getCurrentUser();
-  const isAdmin = user?.role === 'admin';
-
-  if (!isAdmin) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-center">
-        <ShieldAlert className="w-16 h-16 text-destructive mb-4" />
-        <h1 className="text-3xl font-bold font-headline">Access Denied</h1>
-        <p className="text-muted-foreground">You do not have permission to view this page.</p>
-      </div>
-    )
-  }
-
   const { totalProducts, activeProducts, pendingProducts, totalUsers, totalOrders, totalMessages, chartData } = await getDashboardStats();
   
-
   return (
     <div className="space-y-8">
         <div className="flex justify-between items-start">

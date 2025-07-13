@@ -6,21 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { getManageableProducts } from '../manage-products/actions';
 import { getFeaturedProduct } from './actions';
 import { FeaturedProductForm } from './featured-product-form';
-import { getCurrentUser } from '@/lib/auth';
-
 
 export default async function ManageFeaturedProductPage() {
-  const user = await getCurrentUser();
-  if (user?.role !== 'admin') {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-center">
-        <ShieldAlert className="w-16 h-16 text-destructive mb-4" />
-        <h1 className="text-3xl font-bold font-headline">Access Denied</h1>
-        <p className="text-muted-foreground">You do not have permission to view this page.</p>
-      </div>
-    );
-  }
-
   const allProducts = await getManageableProducts();
   const featuredProduct = await getFeaturedProduct();
 

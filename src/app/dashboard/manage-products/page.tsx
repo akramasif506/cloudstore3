@@ -4,20 +4,8 @@ import { ShieldAlert, List } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getManageableProducts } from './actions';
 import { ManageProductList } from './manage-product-list';
-import { getCurrentUser } from '@/lib/auth';
 
 export default async function ManageProductsPage() {
-  const user = await getCurrentUser();
-  if (user?.role !== 'admin') {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-center">
-        <ShieldAlert className="w-16 h-16 text-destructive mb-4" />
-        <h1 className="text-3xl font-bold font-headline">Access Denied</h1>
-        <p className="text-muted-foreground">You do not have permission to view this page.</p>
-      </div>
-    );
-  }
-
   const products = await getManageableProducts();
 
   return (
