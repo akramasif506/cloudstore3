@@ -136,6 +136,15 @@ export function ListingForm() {
   };
 
   async function onSubmit(values: ClientListingSchema) {
+    if (!user) {
+      toast({
+        variant: 'destructive',
+        title: 'Authentication Error',
+        description: 'You must be logged in to create a listing.',
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     const formData = new FormData();
@@ -147,7 +156,7 @@ export function ListingForm() {
     formData.append('subcategory', values.subcategory);
 
     try {
-      const result = await createListing(formData);
+      const result = await createListing(user.id, formData);
       
       if (!result.success) {
         throw new Error(result.message || 'An unknown error occurred during submission.');
@@ -180,6 +189,30 @@ export function ListingForm() {
       <div className="flex justify-center items-center p-20">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Card>
+        <CardHeader>
+          <div className="mx-auto bg-muted rounded-full p-4 w-fit mb-4">
+              <LogIn className="h-12 w-12 text-muted-foreground" />
+          </div>
+          <CardTitle className="text-center">You need to be logged in</CardTitle>
+          <CardDescription className="text-center">
+            Please log in or create an account to sell your items on CloudStore.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center gap-4">
+          <Button asChild>
+            <Link href="/login?redirect=/listings/new">Login</Link>
+          </Button>
+           <Button asChild variant="outline">
+            <Link href="/register">Create Account</Link>
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 

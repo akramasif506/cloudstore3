@@ -3,22 +3,38 @@
 
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
+import { cookies } from 'next/headers';
 
 import { listingSchema } from '@/lib/schemas';
 import { revalidatePath } from 'next/cache';
 import { initializeAdmin } from '@/lib/firebase-admin';
 
 export async function createListing(
+  userId: string,
   formData: FormData
 ): Promise<{ success: boolean; message: string; productId?: string; errors?: any }> {
-  let db, storage;
+  let db, storage, adminAuth;
   try {
-    // We only need db and storage, not auth
-    ({ db, storage } = initializeAdmin());
+    ({ db, storage, adminAuth } = initializeAdmin());
   } catch (error) {
     console.error("Firebase Admin Init Error:", error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
     return { success: false, message: `Server configuration error: ${errorMessage}` };
+  }
+
+  // Authorize the user
+  try {
+    const sessionCookie = cookies().get('session')?.value;
+    if (!sessionCookie) {
+      throw new Error('Unauthorized: No session cookie found.');
+    }
+    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
+    if (decodedClaims.uid !== userId) {
+      throw new Error('Unauthorized: User ID mismatch.');
+    }
+  } catch (error) {
+     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+     return { success: false, message: `Authorization failed: ${errorMessage}` };
   }
 
   const formValues = {
@@ -48,10 +64,15 @@ export async function createListing(
     };
   }
 
-  // Hardcode a generic seller since validation is deferred to admin approval.
-  const seller = { id: 'unauthenticated-user', name: 'CloudStore User' };
-
   try {
+    // Fetch seller details from the database
+    const userRef = db.ref(`users/${userId}`);
+    const userSnapshot = await userRef.once('value');
+    if (!userSnapshot.exists()) {
+        return { success: false, message: 'Seller profile not found.' };
+    }
+    const seller = userSnapshot.val();
+
     const imageBuffer = Buffer.from(await imageFile.arrayBuffer());
     const imageFileName = `${uuidv4()}.${imageFile.name.split('.').pop()}`;
     const bucket = storage.bucket();
@@ -77,7 +98,10 @@ export async function createListing(
       subcategory: validatedFields.data.subcategory,
       imageUrl,
       reviews: [],
-      seller, // Use the generic seller
+      seller: {
+        id: userId,
+        name: seller.name || 'Unknown User'
+      },
       createdAt: new Date().toISOString(),
       status: 'pending_review',
     };
