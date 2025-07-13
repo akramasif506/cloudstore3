@@ -46,12 +46,6 @@ export function Header() {
           <Link href="/listings/new" className="transition-colors hover:text-foreground/80 text-foreground">
             Sell
           </Link>
-           <Link href="/config-status" className="transition-colors hover:text-foreground/80 text-foreground">
-            Config Status
-          </Link>
-           <Link href="/test-sell" className="transition-colors hover:text-foreground/80 text-foreground flex items-center gap-1">
-            <KeyRound className="h-4 w-4 text-amber-500" /> Test
-          </Link>
         </nav>
 
         <div className="flex flex-1 items-center justify-end space-x-4">
