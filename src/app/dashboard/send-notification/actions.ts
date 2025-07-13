@@ -4,34 +4,12 @@
 import { z } from 'zod';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import type { MulticastMessage } from 'firebase-admin/messaging';
-import type { User } from '@/lib/types';
 
 const sendNotificationSchema = z.object({
-  target: z.enum(['all', 'specific']),
-  userId: z.string().optional(),
   title: z.string().min(1, 'Title is required.'),
   body: z.string().min(1, 'Body is required.'),
   link: z.string().url('Please enter a valid URL.').optional().or(z.literal('')),
 });
-
-export async function getAllUsers(): Promise<Pick<User, 'id' | 'name'>[]> {
-    try {
-        const { db } = initializeAdmin();
-        const usersRef = db.ref('users');
-        const snapshot = await usersRef.once('value');
-        if (snapshot.exists()) {
-            const usersData = snapshot.val();
-            return Object.keys(usersData).map(id => ({
-                id,
-                name: usersData[id].name || `User ${id.substring(0, 6)}`,
-            }));
-        }
-        return [];
-    } catch (error) {
-        console.error("Error fetching all users:", error);
-        return [];
-    }
-}
 
 export async function sendNotification(
   values: z.infer<typeof sendNotificationSchema>
@@ -41,40 +19,21 @@ export async function sendNotification(
     return { success: false, message: 'Invalid form data.' };
   }
 
-  const { target, userId, title, body, link } = validatedFields.data;
+  const { title, body, link } = validatedFields.data;
   const { db, messaging } = initializeAdmin();
 
   try {
-    const fcmTokens: string[] = [];
-
-    if (target === 'specific') {
-      if (!userId) {
-        return { success: false, message: 'User ID is required for specific targeting.' };
-      }
-      const tokensSnapshot = await db.ref(`fcm_tokens/${userId}`).once('value');
-      if (tokensSnapshot.exists()) {
-        const tokensData = tokensSnapshot.val();
-        // The data is an object where keys are push IDs and values are tokens
-        fcmTokens.push(...Object.values<string>(tokensData));
-      }
-    } else {
-      // Target is 'all'
-      const allTokensSnapshot = await db.ref('fcm_tokens').once('value');
-      if (allTokensSnapshot.exists()) {
-        const allUsersTokensData = allTokensSnapshot.val();
-        // allUsersTokensData is an object where keys are user IDs
-        for (const uid in allUsersTokensData) {
-            const userTokens = allUsersTokensData[uid];
-            if (typeof userTokens === 'object' && userTokens !== null) {
-                // userTokens is an object where keys are push IDs and values are tokens
-                fcmTokens.push(...Object.values<string>(userTokens));
-            }
-        }
-      }
+    const tokensSnapshot = await db.ref('fcm_tokens').once('value');
+    if (!tokensSnapshot.exists()) {
+      return { success: false, message: 'No registered devices found.' };
     }
+    
+    // The data is an object where keys are push IDs and values are the tokens
+    const tokensData = tokensSnapshot.val();
+    const fcmTokens = Object.values<string>(tokensData);
 
     if (fcmTokens.length === 0) {
-      return { success: false, message: 'No registered devices found for the selected target.' };
+      return { success: false, message: 'No registered devices found.' };
     }
     
     // Remove duplicate tokens to avoid sending multiple times to the same device
