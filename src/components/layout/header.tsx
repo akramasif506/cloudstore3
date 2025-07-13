@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Leaf, Search, User, LogOut, LayoutDashboard, DollarSign, Package, LogIn, UserPlus, ShoppingCart, FilePlus2, Settings } from 'lucide-react';
+import { Leaf, Search, User, LogOut, LayoutDashboard, DollarSign, Package, LogIn, UserPlus, ShoppingCart, FilePlus2, Settings, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -48,6 +48,9 @@ export function Header() {
           </Link>
            <Link href="/config-status" className="transition-colors hover:text-foreground/80 text-foreground">
             Config Status
+          </Link>
+           <Link href="/test-sell" className="transition-colors hover:text-foreground/80 text-foreground flex items-center gap-1">
+            <KeyRound className="h-4 w-4 text-amber-500" /> Test
           </Link>
         </nav>
 
