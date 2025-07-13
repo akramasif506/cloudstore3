@@ -6,7 +6,7 @@ import { useState } from 'react';
 import copy from 'copy-to-clipboard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Share2, Link as LinkIcon, Check, Twitter, MessageCircle } from 'lucide-react';
+import { Share2, Link as LinkIcon, Check, Facebook, Instagram } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ShareButtonsProps {
@@ -47,9 +47,10 @@ export function ShareButtons({ productName, productUrl }: ShareButtonsProps) {
   };
   
   const shareText = `Check out this listing on CloudStore: ${productName}`;
-  const twitterUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(productUrl)}&text=${encodeURIComponent(shareText)}`;
-  // Format with a newline to encourage link detection
-  const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText}\n\n${productUrl}`)}`;
+  const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}`;
+  const instagramUrl = `https://www.instagram.com`;
+  // Format with newlines to encourage link detection
+  const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText}\n\n${productUrl}\n`)}`;
 
   return (
     <Card>
@@ -65,14 +66,27 @@ export function ShareButtons({ productName, productUrl }: ShareButtonsProps) {
                 {copied ? <Check className="text-green-500" /> : <LinkIcon />}
                 <span>{copied ? 'Copied!' : 'Copy Link'}</span>
             </Button>
-            <Button asChild variant="outline" size="icon" aria-label="Share on Twitter">
-                <a href={twitterUrl} target="_blank" rel="noopener noreferrer">
-                    <Twitter />
+            <Button asChild variant="outline" size="icon" aria-label="Share on Facebook">
+                <a href={facebookUrl} target="_blank" rel="noopener noreferrer">
+                    <Facebook />
                 </a>
             </Button>
              <Button asChild variant="outline" size="icon" aria-label="Share on WhatsApp">
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
                     <WhatsAppIcon />
+                </a>
+            </Button>
+             <Button asChild variant="outline" size="icon" aria-label="Share on Instagram">
+                <a href={instagramUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => {
+                    e.preventDefault();
+                    copy(productUrl);
+                    toast({
+                        title: 'Link Copied!',
+                        description: 'Paste this link into your Instagram post or story.',
+                    });
+                    window.open(instagramUrl, '_blank');
+                }}>
+                    <Instagram />
                 </a>
             </Button>
         </div>
