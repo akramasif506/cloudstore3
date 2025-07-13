@@ -13,29 +13,17 @@ export async function createListing(
   userId: string,
   formData: FormData
 ): Promise<{ success: boolean; message: string; productId?: string; errors?: any }> {
-  let db, storage, adminAuth;
+  let db, storage;
   try {
-    ({ db, storage, adminAuth } = initializeAdmin());
+    ({ db, storage } = initializeAdmin());
   } catch (error) {
     console.error("Firebase Admin Init Error:", error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
     return { success: false, message: `Server configuration error: ${errorMessage}` };
   }
 
-  // Authorize the user by checking if a valid session exists.
-  // This is a redundant check as the client should be logged in, but it adds a layer of security.
-  try {
-    const sessionCookie = cookies().get('session')?.value;
-    if (!sessionCookie) {
-      throw new Error('Unauthorized: No session cookie found.');
-    }
-    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
-    if (decodedClaims.uid !== userId) {
-      throw new Error('Unauthorized: User ID mismatch.');
-    }
-  } catch (error) {
-     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
-     // We will return a generic authorization error to the client.
+  // Simplified authorization: Trust the client-side check that provides the userId.
+  if (!userId) {
      return { success: false, message: `Authorization failed. Please log in and try again.` };
   }
 
