@@ -31,7 +31,9 @@ import { listingSchema } from '@/lib/schemas';
 import { useAuth } from '@/context/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
+import { createListing } from './actions';
+import { useRouter } from 'next/navigation';
+
 
 const isBrowser = typeof window !== 'undefined';
 
@@ -58,6 +60,7 @@ export function ListingForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { user, loading: isAuthLoading } = useAuth();
+  const router = useRouter();
   
   const form = useForm<ClientListingSchema>({
     resolver: zodResolver(clientListingSchema),
@@ -141,32 +144,18 @@ export function ListingForm() {
     setIsSubmitting(true);
 
     const formData = new FormData();
+    const imageFile = values.productImage[0];
+    formData.append('productImage', imageFile);
     
-    for (const key in values) {
-      if (key === 'productImage') {
-        if (values.productImage && values.productImage.length > 0) {
-          formData.append(key, values.productImage[0]);
-        }
-      } else {
-        const value = (values as any)[key];
-        if (value !== undefined) {
-          formData.append(String(key), String(value));
-        }
-      }
+    const serverActionValues = {
+        ...values,
+        productImage: imageFile,
     }
 
-    let result;
     try {
-      const response = await fetch('/api/listings', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include', // Ensure cookies are sent with the request
-      });
-      
-      result = await response.json();
+      const result = await createListing(serverActionValues);
 
-      if (!response.ok) {
-        // Handle server-side validation errors or other issues
+      if (!result.success) {
         toast({
           variant: 'destructive',
           title: 'Oh no! Something went wrong.',
@@ -187,11 +176,10 @@ export function ListingForm() {
               title: "Listing Submitted!",
               description: "Your item is now under review by our team.",
            });
-           // Redirect on success
-           window.location.href = '/my-listings';
+           router.push('/my-listings');
       }
     } catch (error) {
-        console.error('Error calling create listing API:', error);
+        console.error('Error calling create listing action:', error);
         toast({
             variant: 'destructive',
             title: 'Submission Failed',
