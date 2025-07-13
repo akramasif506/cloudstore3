@@ -1,4 +1,3 @@
-
 // src/app/dashboard/pending-products/pending-product-list.tsx
 "use client";
 
@@ -15,7 +14,7 @@ import {
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, CheckCircle, Info, Edit, User } from 'lucide-react';
+import { Loader2, CheckCircle, Info, Edit, User, Phone } from 'lucide-react';
 import Link from 'next/link';
 import { EditProductDialog } from './edit-product-dialog';
 
@@ -64,6 +63,7 @@ export function PendingProductList({ initialProducts }: PendingProductListProps)
             <TableHead className="w-[80px]">Image</TableHead>
             <TableHead>Product Name</TableHead>
             <TableHead>Seller</TableHead>
+            <TableHead>Contact</TableHead>
             <TableHead>Price</TableHead>
             <TableHead>Submitted</TableHead>
             <TableHead className="text-right">Actions</TableHead>
@@ -92,6 +92,14 @@ export function PendingProductList({ initialProducts }: PendingProductListProps)
                         <User className="h-4 w-4 text-muted-foreground" />
                         <span>{product.seller.name}</span>
                     </div>
+                </TableCell>
+                <TableCell>
+                    {product.seller.contactNumber && (
+                        <div className="flex items-center gap-2">
+                            <Phone className="h-4 w-4 text-muted-foreground" />
+                            <span>{product.seller.contactNumber}</span>
+                        </div>
+                    )}
                 </TableCell>
                 <TableCell>Rs {product.price.toFixed(2)}</TableCell>
                 <TableCell>{new Date(product.createdAt).toLocaleDateString()}</TableCell>
