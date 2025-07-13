@@ -32,6 +32,9 @@ export function FirebaseMessagingProvider({ children }: { children: React.ReactN
       try {
         if (Notification.permission === 'granted') {
           console.log('Notification permission already granted.');
+        } else if (Notification.permission === 'denied') {
+          console.log('Notification permission has been blocked.');
+          return; // Stop execution if permission is denied
         } else if (Notification.permission === 'default') {
           console.log('Requesting notification permission...');
           const permission = await Notification.requestPermission();
