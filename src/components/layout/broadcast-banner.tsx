@@ -1,34 +1,36 @@
+
 // src/components/layout/broadcast-banner.tsx
 "use client";
 
 import { useEffect, useState } from 'react';
 import { getBroadcastMessage } from '@/app/dashboard/broadcast-message/actions';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Megaphone, X } from 'lucide-react';
 import Link from 'next/link';
 
 type BroadcastMessage = {
+  id: number;
   message: string;
   link: string | null;
 };
+
+const DISMISSED_KEY = 'dismissedBroadcastId';
 
 export function BroadcastBanner() {
   const [broadcast, setBroadcast] = useState<BroadcastMessage | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // Check if the banner has been dismissed during this session
-    const dismissed = sessionStorage.getItem('broadcastDismissed');
-    if (dismissed) {
-      return;
-    }
-
     async function fetchMessage() {
       try {
         const data = await getBroadcastMessage();
         if (data && data.message) {
-          setBroadcast(data);
-          setIsVisible(true);
+          const dismissedId = sessionStorage.getItem(DISMISSED_KEY);
+          // Show if there is a message AND its ID is not the one we dismissed.
+          if (String(data.id) !== dismissedId) {
+            setBroadcast(data);
+            setIsVisible(true);
+          }
         }
       } catch (error) {
         console.error("Failed to fetch broadcast message:", error);
@@ -38,9 +40,10 @@ export function BroadcastBanner() {
   }, []);
 
   const handleDismiss = () => {
+    if (!broadcast) return;
     setIsVisible(false);
-    // Remember dismissal for the current browser session
-    sessionStorage.setItem('broadcastDismissed', 'true');
+    // Remember the ID of the dismissed message for the current browser session
+    sessionStorage.setItem(DISMISSED_KEY, String(broadcast.id));
   };
 
   if (!broadcast || !isVisible) {

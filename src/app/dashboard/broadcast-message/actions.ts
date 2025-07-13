@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -25,6 +26,7 @@ export async function setBroadcastMessage(
   try {
     const broadcastRef = db.ref(BROADCAST_PATH);
     await broadcastRef.set({
+      id: new Date().getTime(), // Add a unique ID for the message
       message,
       link: link || null,
       updatedAt: new Date().toISOString(),
@@ -55,7 +57,7 @@ export async function clearBroadcastMessage(): Promise<{ success: boolean; messa
   }
 }
 
-export async function getBroadcastMessage(): Promise<{ message: string; link: string | null } | null> {
+export async function getBroadcastMessage(): Promise<{ id: number; message: string; link: string | null } | null> {
     const { db } = initializeAdmin();
     try {
         const broadcastRef = db.ref(BROADCAST_PATH);
