@@ -1,7 +1,7 @@
 
 import { mockUser } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Package, ShieldAlert, CheckCircle, ShoppingCart, ListManage } from 'lucide-react';
+import { Users, Package, ShieldAlert, CheckCircle, ShoppingCart, List } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { CategoryChart } from '@/components/dashboard/category-chart';
 import { RecentProducts } from '@/components/dashboard/recent-products';
@@ -111,7 +111,7 @@ export default async function DashboardPage() {
         <StatsCard 
           title="Active Products" 
           value={activeProducts} 
-          icon={ListManage}
+          icon={List}
           href="/dashboard/manage-products"
         />
         <StatsCard 
