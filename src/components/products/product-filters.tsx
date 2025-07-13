@@ -26,6 +26,8 @@ const categories = {
   'Other': ['Miscellaneous'],
 };
 
+const conditions = ['New', 'Like New', 'Used'];
+
 const MAX_PRICE = 50000;
 
 export function ProductFilters() {
@@ -34,6 +36,7 @@ export function ProductFilters() {
   
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
   const [selectedSubcategory, setSelectedSubcategory] = useState(searchParams.get('subcategory') || '');
+  const [selectedCondition, setSelectedCondition] = useState(searchParams.get('condition') || '');
   const [priceRange, setPriceRange] = useState([
     Number(searchParams.get('minPrice')) || 0,
     Number(searchParams.get('maxPrice')) || MAX_PRICE
@@ -48,17 +51,16 @@ export function ProductFilters() {
 
   const handleApplyFilters = () => {
     const params = new URLSearchParams(searchParams);
-    if (selectedCategory) {
-      params.set('category', selectedCategory);
-    } else {
-      params.delete('category');
-    }
-    if (selectedSubcategory) {
-      params.set('subcategory', selectedSubcategory);
-    } else {
-      params.delete('subcategory');
-    }
     
+    if (selectedCategory) params.set('category', selectedCategory);
+    else params.delete('category');
+    
+    if (selectedSubcategory) params.set('subcategory', selectedSubcategory);
+    else params.delete('subcategory');
+    
+    if (selectedCondition) params.set('condition', selectedCondition);
+    else params.delete('condition');
+
     params.set('minPrice', priceRange[0].toString());
     params.set('maxPrice', priceRange[1].toString());
     
@@ -88,9 +90,10 @@ export function ProductFilters() {
           <Label htmlFor="category">Category</Label>
           <Select onValueChange={handleCategoryChange} value={selectedCategory}>
             <SelectTrigger id="category">
-              <SelectValue placeholder="Select a category" />
+              <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="">All Categories</SelectItem>
               {Object.keys(categories).map(cat => (
                 <SelectItem key={cat} value={cat}>{cat}</SelectItem>
               ))}
@@ -106,11 +109,27 @@ export function ProductFilters() {
             disabled={!selectedCategory}
           >
             <SelectTrigger id="subcategory">
-              <SelectValue placeholder="Select a subcategory" />
+              <SelectValue placeholder="All Subcategories" />
             </SelectTrigger>
             <SelectContent>
+               <SelectItem value="">All Subcategories</SelectItem>
               {selectedCategory && categories[selectedCategory as keyof typeof categories]?.map(subcat => (
                 <SelectItem key={subcat} value={subcat}>{subcat}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="condition">Condition</Label>
+          <Select onValueChange={setSelectedCondition} value={selectedCondition}>
+            <SelectTrigger id="condition">
+              <SelectValue placeholder="Any Condition" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Any Condition</SelectItem>
+              {conditions.map(c => (
+                 <SelectItem key={c} value={c}>{c}</SelectItem>
               ))}
             </SelectContent>
           </Select>
