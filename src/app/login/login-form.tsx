@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from 'react-hook-form';
@@ -17,7 +18,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import { loginWithCredentials } from './actions';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address.'),
@@ -44,9 +46,37 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   async function onSubmit(values: z.infer<typeof loginSchema>) {
     setIsLoading(true);
     
-    const result = await loginWithCredentials(values);
+    if (!auth) {
+        toast({
+            variant: "destructive",
+            title: "Login Failed",
+            description: "Firebase client is not available. Please check your configuration.",
+        });
+        setIsLoading(false);
+        return;
+    }
 
-    if (result.success) {
+    try {
+        // 1. Sign in with client SDK
+        const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
+        const user = userCredential.user;
+
+        // 2. Get the ID token
+        const idToken = await user.getIdToken();
+
+        // 3. Send the token to our API route to set the session cookie
+        const response = await fetch('/api/auth', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ idToken }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to create session.');
+        }
+
         toast({
             title: "Login Successful!",
             description: "Welcome back! Redirecting...",
@@ -56,17 +86,30 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             onSuccess();
         } else {
             const redirectUrl = searchParams.get('redirect') || '/';
-            window.location.href = redirectUrl;
+            // Use window.location to force a full page reload, ensuring server components re-render with the new session
+            window.location.href = redirectUrl; 
         }
-    } else {
+
+    } catch (error: any) {
+        let message = 'An unknown error occurred during login.';
+        switch (error.code) {
+            case 'auth/invalid-credential':
+            case 'auth/user-not-found':
+            case 'auth/wrong-password':
+                message = 'Invalid email or password.';
+                break;
+            case 'auth/too-many-requests':
+                message = 'Too many login attempts. Please try again later.';
+                break;
+        }
         toast({
             variant: "destructive",
             title: "Login Failed",
-            description: result.message,
+            description: message,
         });
+    } finally {
+        setIsLoading(false);
     }
-
-    setIsLoading(false);
   }
 
   return (

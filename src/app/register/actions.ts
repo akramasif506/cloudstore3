@@ -2,9 +2,7 @@
 'use server';
 
 import { z } from 'zod';
-import { auth, db } from '@/lib/firebase';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { ref, set } from 'firebase/database';
+import { initializeAdmin } from '@/lib/firebase-admin';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -14,41 +12,27 @@ const registerSchema = z.object({
   gender: z.string(),
 });
 
-export async function registerUser(values: z.infer<typeof registerSchema>) {
-  if (!auth || !db) {
-    return { success: false, error: 'Firebase is not configured.' };
-  }
-  
+// This action now only handles creating the user in the database.
+// The client will handle creating the user in Firebase Auth.
+export async function createUserProfileInDb(values: z.infer<typeof registerSchema> & { uid: string }) {
   try {
-    const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-    const user = userCredential.user;
-
-    // Update Firebase Auth profile
-    await updateProfile(user, {
-      displayName: values.name,
-    });
+    const { db } = initializeAdmin();
     
-    // Create user profile in Realtime Database at the correct path
-    const userRef = ref(db, `users/${user.uid}`);
-    await set(userRef, {
-      id: user.uid,
+    const userRef = db.ref(`users/${values.uid}`);
+    await userRef.set({
+      id: values.uid,
       name: values.name,
       email: values.email,
       mobileNumber: values.mobileNumber,
       gender: values.gender,
       createdAt: new Date().toISOString(),
       role: 'user', // Default role
-      profileImageUrl: `https://placehold.co/100x100.png`
+      profileImageUrl: `https://placehold.co/100x100.png`,
     });
 
-    return { success: true, userId: user.uid };
+    return { success: true };
   } catch (error: any) {
-    let errorMessage = 'An unknown error occurred.';
-    if (error.code === 'auth/email-already-in-use') {
-      errorMessage = 'This email address is already in use.';
-    } else {
-        console.error("Firebase registration error:", error);
-    }
-    return { success: false, error: errorMessage };
+    console.error("Firebase DB user creation error:", error);
+    return { success: false, error: 'Failed to save user profile.' };
   }
 }
