@@ -16,8 +16,8 @@ export function Footer() {
           <nav className="flex space-x-6 text-sm text-muted-foreground">
             <Link href="/about" className="hover:text-foreground">About</Link>
             <Link href="/contact" className="hover:text-foreground">Contact Us</Link>
-            <Link href="#" className="hover:text-foreground">Terms of Service</Link>
-            <Link href="#" className="hover:text-foreground">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-foreground">Terms of Service</Link>
+            <Link href="/privacy" className="hover:text-foreground">Privacy Policy</Link>
           </nav>
         </div>
         <div className="mt-8 text-center text-sm text-muted-foreground">
