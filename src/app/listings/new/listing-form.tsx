@@ -24,8 +24,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Sparkles, Frown, LogIn } from 'lucide-react';
-import { suggestListingDetails } from '@/ai/flows/suggest-listing-details';
+import { Loader2, Sparkles, Frown, LogIn, Wand2, RefreshCw } from 'lucide-react';
+import { extractListingDetails } from '@/ai/flows/extract-listing-details';
 import { useToast } from "@/hooks/use-toast";
 import { listingSchema } from '@/lib/schemas';
 import { useAuth } from '@/context/auth-context';
@@ -41,6 +41,7 @@ const clientListingSchema = listingSchema.extend({
   productImage: isBrowser
     ? z.instanceof(FileList).refine((files) => files?.length === 1, 'Product image is required.')
     : z.any(),
+  initialDescription: z.string().min(10, "Please describe your item in a bit more detail."),
 });
 
 type ClientListingSchema = z.infer<typeof clientListingSchema>;
@@ -56,15 +57,18 @@ const categories = {
 };
 
 export function ListingForm() {
-  const [isSuggesting, setIsSuggesting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasGenerated, setHasGenerated] = useState(false);
   const { toast } = useToast();
   const { user, loading: isAuthLoading } = useAuth();
   const router = useRouter();
   
   const form = useForm<ClientListingSchema>({
     resolver: zodResolver(clientListingSchema),
+    mode: "onBlur",
     defaultValues: {
+      initialDescription: '',
       productName: '',
       productDescription: '',
       price: undefined,
@@ -73,8 +77,8 @@ export function ListingForm() {
       productImage: undefined,
     },
   });
-
-  const isFormProcessing = isSuggesting || isSubmitting;
+  
+  const isFormProcessing = isGenerating || isSubmitting;
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -85,62 +89,54 @@ export function ListingForm() {
     });
   };
 
-  const handleSuggestDetails = async () => {
-    const { productName, productDescription, category, subcategory, productImage } = form.getValues();
+  const handleGenerateDetails = async () => {
+    const { initialDescription, productImage } = form.getValues();
     const imageFile = productImage?.[0];
 
-    if (!imageFile || !category || !subcategory) {
+    if (!imageFile || !initialDescription) {
+      form.trigger(['initialDescription', 'productImage']);
       toast({
         variant: "destructive",
         title: "Missing Information",
-        description: "Please provide a category, subcategory, and an image before using the AI assistant.",
+        description: "Please describe your item and upload an image before generating the listing.",
       });
       return;
     }
 
-    setIsSuggesting(true);
+    setIsGenerating(true);
+    setHasGenerated(false);
     try {
       const imageDataUrl = await fileToBase64(imageFile);
-      const result = await suggestListingDetails({
-        productName: productName || "Item",
-        productDescription: productDescription || "A secondhand item.",
-        category,
-        subcategory,
+      const result = await extractListingDetails({
+        userDescription: initialDescription,
         productImage: imageDataUrl,
       });
+      
+      form.setValue('productName', result.productName, { shouldValidate: true });
+      form.setValue('productDescription', result.productDescription, { shouldValidate: true });
+      form.setValue('price', result.price, { shouldValidate: true });
+      form.setValue('category', result.category, { shouldValidate: true });
+      form.setValue('subcategory', result.subcategory, { shouldValidate: true });
 
-      if (result.suggestedTitle) {
-        form.setValue('productName', result.suggestedTitle, { shouldValidate: true });
-      }
-      if (result.suggestedDescription) {
-        form.setValue('productDescription', result.suggestedDescription, { shouldValidate: true });
-      }
+      setHasGenerated(true);
       toast({
-        title: "Suggestions applied!",
-        description: "The AI has updated your title and description.",
+        title: "Details Generated!",
+        description: "The AI has created your listing details. Please review them below.",
       });
     } catch (error) {
-      console.error("AI suggestion failed:", error);
+      console.error("AI generation failed:", error);
       toast({
         variant: "destructive",
         title: "AI Assistant Error",
-        description: "Could not generate suggestions. Please try again.",
+        description: "Could not generate details. The AI might be having trouble with the request. Please try again.",
       });
     } finally {
-      setIsSuggesting(false);
+      setIsGenerating(false);
     }
   };
 
   async function onSubmit(values: ClientListingSchema) {
-    if (!user) {
-        toast({
-            variant: "destructive",
-            title: "You must be logged in",
-            description: "Please log in to submit a listing.",
-        });
-        return;
-    }
-
+    if (!user) return;
     setIsSubmitting(true);
 
     const formData = new FormData();
@@ -153,37 +149,21 @@ export function ListingForm() {
 
     try {
       const result = await createListing(formData);
+      if (!result.success) throw new Error(result.message);
+      
+      toast({
+          title: "Listing Submitted!",
+          description: "Your item is now under review by our team.",
+      });
+      router.push('/my-listings');
 
-      if (!result.success) {
-        toast({
+    } catch (error: any) {
+      console.error('Error calling create listing action:', error);
+      toast({
           variant: 'destructive',
-          title: 'Oh no! Something went wrong.',
-          description: result.message || 'An unknown error occurred.',
-        });
-        if (result.errors) {
-            for (const [field, messages] of Object.entries(result.errors)) {
-            if (messages) {
-                form.setError(field as FieldPath<ClientListingSchema>, {
-                type: 'server',
-                message: (messages as string[])[0],
-                });
-            }
-            }
-        }
-      } else {
-           toast({
-              title: "Listing Submitted!",
-              description: "Your item is now under review by our team.",
-           });
-           router.push('/my-listings');
-      }
-    } catch (error) {
-        console.error('Error calling create listing action:', error);
-        toast({
-            variant: 'destructive',
-            title: 'Submission Failed',
-            description: 'Could not connect to the server. Please check your connection and try again.',
-        });
+          title: 'Submission Failed',
+          description: error.message || 'Could not connect to the server. Please check your connection and try again.',
+      });
     }
 
     setIsSubmitting(false);
@@ -226,150 +206,169 @@ export function ListingForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="productImage"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Product Image</FormLabel>
-              <FormControl>
-                <Input type="file" accept="image/*" {...productImageRef} disabled={isFormProcessing} />
-              </FormControl>
-              <FormDescription>Upload a clear photo of your item.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-4 p-6 border-dashed border-2 rounded-lg bg-muted/30">
+          <h3 className="text-lg font-semibold">1. Describe Your Item</h3>
           <FormField
             control={form.control}
-            name="category"
+            name="productImage"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Category</FormLabel>
-                <Select
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    form.setValue('subcategory', '');
-                  }}
-                  defaultValue={field.value}
-                  disabled={isFormProcessing}
-                >
-                  <FormControl>
-                    <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {Object.keys(categories).map(cat => (
-                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="subcategory"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Subcategory</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory || isFormProcessing}>
-                  <FormControl>
-                    <SelectTrigger><SelectValue placeholder="Select a subcategory" /></SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {selectedCategory && categories[selectedCategory as keyof typeof categories]?.map(subcat => (
-                      <SelectItem key={subcat} value={subcat}>{subcat}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleSuggestDetails}
-            disabled={isFormProcessing}
-            className="w-full md:w-auto"
-          >
-            {isSuggesting ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Sparkles className="mr-2 h-4 w-4" />
-            )}
-            Suggest with AI
-          </Button>
-          <p className="text-sm text-muted-foreground">Let AI write your title and description based on your image and category.</p>
-        </div>
-
-        <FormField
-          control={form.control}
-          name="productName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Listing Title</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. Vintage Leather Armchair" {...field} disabled={isFormProcessing} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="productDescription"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea placeholder="Describe your item in detail..." rows={6} {...field} disabled={isFormProcessing} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="price"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Price</FormLabel>
-              <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                  <span className="text-gray-500 sm:text-sm">Rs</span>
-                </div>
+                <FormLabel>Product Image</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="0.00"
-                    className="pl-8"
-                    step="0.01"
-                    disabled={isFormProcessing}
+                  <Input type="file" accept="image/*" {...productImageRef} disabled={isFormProcessing} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="initialDescription"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Describe your item, its condition, and price</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="e.g. I'm selling a slightly used brown leather armchair. It's in great condition, just a small scuff on the left arm. Asking for around 8000 Rs."
+                    rows={4}
                     {...field}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      field.onChange(value === '' ? undefined : Number(value));
-                    }}
-                    value={field.value ?? ''}
+                    disabled={isFormProcessing}
                   />
                 </FormControl>
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button type="submit" size="lg" className="w-full md:w-auto" disabled={isFormProcessing}>
-          {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          {isSubmitting ? 'Submitting for Review...' : 'Submit for Review'}
-        </Button>
+                 <FormDescription>
+                    Be as descriptive as possible. Our AI will use this to generate the listing.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+           <Button
+              type="button"
+              onClick={handleGenerateDetails}
+              disabled={isFormProcessing}
+              size="lg"
+            >
+              {isGenerating ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Wand2 className="mr-2 h-4 w-4" />
+              )}
+              Generate Listing Details
+            </Button>
+        </div>
+
+        {hasGenerated && (
+        <div className="space-y-6">
+            <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">2. Review and Submit</h3>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setHasGenerated(false)} disabled={isFormProcessing}>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Start Over
+                </Button>
+            </div>
+            <FormField
+                control={form.control}
+                name="productName"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Listing Title</FormLabel>
+                    <FormControl>
+                        <Input {...field} disabled={isFormProcessing} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <FormField
+                    control={form.control}
+                    name="price"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Price</FormLabel>
+                        <div className="relative">
+                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <span className="text-gray-500 sm:text-sm">Rs</span>
+                            </div>
+                            <FormControl>
+                            <Input
+                                type="number"
+                                className="pl-8"
+                                step="0.01"
+                                {...field}
+                                disabled={isFormProcessing}
+                                onChange={(e) => field.onChange(Number(e.target.value))}
+                            />
+                            </FormControl>
+                        </div>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value} disabled={isFormProcessing}>
+                        <FormControl>
+                            <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            {Object.keys(categories).map(cat => (
+                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                            ))}
+                        </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="subcategory"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Subcategory</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory || isFormProcessing}>
+                        <FormControl>
+                            <SelectTrigger><SelectValue placeholder="Select a subcategory" /></SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            {selectedCategory && categories[selectedCategory as keyof typeof categories]?.map(subcat => (
+                            <SelectItem key={subcat} value={subcat}>{subcat}</SelectItem>
+                            ))}
+                        </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+            </div>
+             <FormField
+                control={form.control}
+                name="productDescription"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                        <Textarea rows={6} {...field} disabled={isFormProcessing} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+          <Button type="submit" size="lg" className="w-full md:w-auto" disabled={isFormProcessing}>
+            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {isSubmitting ? 'Submitting for Review...' : 'Submit for Review'}
+          </Button>
+        </div>
+        )}
       </form>
     </Form>
   );
 }
+
