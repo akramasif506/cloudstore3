@@ -1,7 +1,7 @@
 
 import { mockUser } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Package, MessageSquare, ShieldAlert, CheckCircle, ShoppingCart } from 'lucide-react';
+import { Users, Package, ShieldAlert, CheckCircle, ShoppingCart, ListManage } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { CategoryChart } from '@/components/dashboard/category-chart';
 import { RecentProducts } from '@/components/dashboard/recent-products';
@@ -20,7 +20,7 @@ async function getDashboardStats() {
         ({ db } = initializeAdmin());
     } catch (error) {
         console.error("Firebase Admin SDK init error:", error);
-        return { totalProducts: 0, pendingProducts: 0, totalUsers: 0, totalOrders: 0, chartData: [] };
+        return { totalProducts: 0, activeProducts: 0, pendingProducts: 0, totalUsers: 0, totalOrders: 0, chartData: [] };
     }
 
     try {
@@ -44,6 +44,7 @@ async function getDashboardStats() {
 
         const totalProducts = products.length;
         const pendingProducts = products.filter(p => p.status === 'pending_review').length;
+        const activeProducts = products.filter(p => p.status === 'active').length;
         // In a real app, users would be in the database
         const totalUsers = 1; 
         const totalOrders = orders.length;
@@ -57,11 +58,11 @@ async function getDashboardStats() {
 
         const chartData = Object.entries(productsByCategory).map(([name, products]) => ({ name, products }));
 
-        return { totalProducts, pendingProducts, totalUsers, totalOrders, chartData };
+        return { totalProducts, activeProducts, pendingProducts, totalUsers, totalOrders, chartData };
 
     } catch (error) {
         console.error("Error fetching dashboard stats from Firebase:", error);
-        return { totalProducts: 0, pendingProducts: 0, totalUsers: 0, totalOrders: 0, chartData: [] };
+        return { totalProducts: 0, activeProducts: 0, pendingProducts: 0, totalUsers: 0, totalOrders: 0, chartData: [] };
     }
 }
 
@@ -81,7 +82,7 @@ export default async function DashboardPage() {
     )
   }
 
-  const { totalProducts, pendingProducts, totalUsers, totalOrders, chartData } = await getDashboardStats();
+  const { totalProducts, activeProducts, pendingProducts, totalUsers, totalOrders, chartData } = await getDashboardStats();
   
 
   return (
@@ -92,9 +93,9 @@ export default async function DashboardPage() {
                 <p className="text-muted-foreground">An overview of your store's activity.</p>
             </div>
             <Button asChild>
-                <Link href="/dashboard/pending-products">
-                    <CheckCircle className="mr-2" />
-                    Approve Products
+                <Link href="/listings/new">
+                    <Package className="mr-2" />
+                    Add New Product
                 </Link>
             </Button>
       </div>
@@ -108,16 +109,17 @@ export default async function DashboardPage() {
           href="/"
         />
         <StatsCard 
+          title="Active Products" 
+          value={activeProducts} 
+          icon={ListManage}
+          href="/dashboard/manage-products"
+        />
+        <StatsCard 
           title="Pending Approval" 
           value={pendingProducts} 
           icon={CheckCircle}
           className={pendingProducts > 0 ? "border-amber-500 text-amber-600" : ""}
           href="/dashboard/pending-products"
-        />
-        <StatsCard 
-          title="Total Users" 
-          value={totalUsers} 
-          icon={Users} 
         />
         <StatsCard 
           title="Total Orders" 
