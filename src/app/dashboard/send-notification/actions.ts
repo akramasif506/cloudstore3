@@ -4,6 +4,7 @@
 import { z } from 'zod';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import type { MulticastMessage } from 'firebase-admin/messaging';
+import type { User } from '@/lib/types';
 
 const sendNotificationSchema = z.object({
   target: z.enum(['all', 'specific']),
@@ -12,6 +13,25 @@ const sendNotificationSchema = z.object({
   body: z.string().min(1, 'Body is required.'),
   link: z.string().url('Please enter a valid URL.').optional().or(z.literal('')),
 });
+
+export async function getAllUsers(): Promise<Pick<User, 'id' | 'name'>[]> {
+    try {
+        const { db } = initializeAdmin();
+        const usersRef = db.ref('users');
+        const snapshot = await usersRef.once('value');
+        if (snapshot.exists()) {
+            const usersData = snapshot.val();
+            return Object.keys(usersData).map(id => ({
+                id,
+                name: usersData[id].name || `User ${id.substring(0, 6)}`,
+            }));
+        }
+        return [];
+    } catch (error) {
+        console.error("Error fetching all users:", error);
+        return [];
+    }
+}
 
 export async function sendNotification(
   values: z.infer<typeof sendNotificationSchema>

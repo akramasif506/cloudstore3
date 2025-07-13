@@ -1,7 +1,7 @@
 // src/app/dashboard/send-notification/notification-form.tsx
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -19,8 +19,17 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import { sendNotification } from './actions';
+import { sendNotification, getAllUsers } from './actions';
 import { Loader2 } from 'lucide-react';
+import type { User } from '@/lib/types';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 
 const notificationSchema = z.object({
   target: z.enum(['all', 'specific'], {
@@ -31,13 +40,18 @@ const notificationSchema = z.object({
   body: z.string().min(10, 'Body must be at least 10 characters.'),
   link: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
 }).refine(data => data.target === 'all' || (data.target === 'specific' && data.userId), {
-  message: "User ID is required for specific targeting.",
+  message: "A specific user must be selected.",
   path: ["userId"],
 });
 
 export function NotificationForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [users, setUsers] = useState<Pick<User, 'id' | 'name'>[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    getAllUsers().then(setUsers);
+  }, []);
 
   const form = useForm<z.infer<typeof notificationSchema>>({
     resolver: zodResolver(notificationSchema),
@@ -83,7 +97,10 @@ export function NotificationForm() {
               <FormLabel>Target Audience</FormLabel>
               <FormControl>
                 <RadioGroup
-                  onValueChange={field.onChange}
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    form.setValue('userId', ''); // Reset user selection
+                  }}
                   defaultValue={field.value}
                   className="flex space-x-4"
                   disabled={isSubmitting}
@@ -104,16 +121,27 @@ export function NotificationForm() {
         />
 
         {target === 'specific' && (
-          <FormField
+           <FormField
             control={form.control}
             name="userId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>User ID</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter the user's ID" {...field} disabled={isSubmitting} />
-                </FormControl>
-                <FormDescription>You can find the User ID in your database.</FormDescription>
+                <FormLabel>User</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting || users.length === 0}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a user to notify" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {users.map(user => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.name} ({user.id.substring(0, 8)}...)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription>Select a user from the list.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
