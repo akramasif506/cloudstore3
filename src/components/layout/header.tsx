@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Leaf, Search, User, LogOut, LayoutDashboard, DollarSign, Package, LogIn, UserPlus, ShoppingCart, FilePlus2 } from 'lucide-react';
+import { Leaf, Search, User, LogOut, LayoutDashboard, DollarSign, Package, LogIn, UserPlus, ShoppingCart, FilePlus2, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -45,6 +45,9 @@ export function Header() {
           </Link>
           <Link href="/listings/new" className="transition-colors hover:text-foreground/80 text-foreground">
             Sell
+          </Link>
+           <Link href="/config-status" className="transition-colors hover:text-foreground/80 text-foreground">
+            Config Status
           </Link>
         </nav>
 

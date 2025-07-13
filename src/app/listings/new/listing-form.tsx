@@ -58,6 +58,7 @@ async function createListing(formData: FormData) {
     const response = await fetch('/api/listings', {
       method: 'POST',
       body: formData,
+      credentials: 'include', // Send cookies with the request
     });
     
     const result = await response.json();

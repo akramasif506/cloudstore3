@@ -1,3 +1,4 @@
+
 // src/lib/firebase-admin.ts
 import admin from 'firebase-admin';
 import 'dotenv/config';
@@ -11,23 +12,19 @@ export function initializeAdmin() {
     throw new Error('Firebase Admin SDK credentials are not defined in environment variables.');
   }
 
-  if (admin.apps.length > 0) {
-    return {
-      adminAuth: admin.auth(),
-      db: admin.database(),
-      storage: admin.storage(),
-    };
-  }
-
-  const app = admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: projectId,
-      clientEmail: clientEmail,
-      privateKey: privateKey.replace(/\\n/g, '\n'),
-    }),
-    databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  });
+  // A more robust way to get the app instance, preventing "Connection closed" errors.
+  // This gets the existing app if it's initialized, otherwise initializes a new one.
+  const app = admin.apps.length
+    ? admin.app()
+    : admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: projectId,
+          clientEmail: clientEmail,
+          privateKey: privateKey.replace(/\\n/g, '\n'),
+        }),
+        databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
+        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+      });
 
   return {
     adminAuth: app.auth(),
