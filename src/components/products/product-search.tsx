@@ -9,20 +9,25 @@ import { Search } from 'lucide-react';
 export function ProductSearch() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+  const initialQuery = searchParams.get('q') || '';
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
 
+  // This effect ensures that if the URL changes (e.g., via back/forward browser buttons),
+  // the input field's state is updated to match.
   useEffect(() => {
     setSearchQuery(searchParams.get('q') || '');
   }, [searchParams]);
 
   const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(searchParams);
       if (searchQuery) {
         params.set('q', searchQuery);
       } else {
+        // This is key: if the search query is empty, remove the 'q' param from the URL
         params.delete('q');
       }
+      // Pushing the new URL will trigger the useEffect hook and re-sync state
       router.push(`/?${params.toString()}`);
     }
   };
