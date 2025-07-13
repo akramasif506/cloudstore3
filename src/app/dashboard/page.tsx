@@ -1,7 +1,7 @@
 
 import { mockUser } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Package, ShieldAlert, CheckCircle, ShoppingCart, List, MessageSquare } from 'lucide-react';
+import { Users, Package, ShieldAlert, CheckCircle, ShoppingCart, List, MessageSquare, Star } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { CategoryChart } from '@/components/dashboard/category-chart';
 import { RecentProducts } from '@/components/dashboard/recent-products';
@@ -109,7 +109,7 @@ export default async function DashboardPage() {
       </div>
 
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <StatsCard 
           title="Total Products" 
           value={totalProducts} 
@@ -134,6 +134,12 @@ export default async function DashboardPage() {
           value={totalOrders} 
           icon={ShoppingCart} 
           href="/dashboard/manage-orders"
+        />
+         <StatsCard 
+          title="Featured Product" 
+          value={"Manage"} 
+          icon={Star}
+          href="/dashboard/manage-featured-product"
         />
       </div>
 
