@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Leaf, Search, User, LogOut, LayoutDashboard, DollarSign, Package, LogIn, UserPlus, ShoppingCart, FilePlus2, Settings } from 'lucide-react';
+import { Leaf, Search, User, LogOut, LayoutDashboard, DollarSign, Package, LogIn, UserPlus, ShoppingCart, FilePlus2, Settings, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -34,7 +34,7 @@ export function Header() {
 
   const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      const params = new URLSearchParams(searchParams);
+      const params = new URLSearchParams(searchParams.toString());
       if (searchQuery) {
         params.set('q', searchQuery);
       } else {
@@ -117,9 +117,14 @@ export function Header() {
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {user.role === 'admin' && (
-                    <DropdownMenuItem asChild>
-                        <Link href="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" />Dashboard</Link>
-                    </DropdownMenuItem>
+                    <>
+                        <DropdownMenuItem asChild>
+                            <Link href="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" />Dashboard</Link>
+                        </DropdownMenuItem>
+                         <DropdownMenuItem asChild>
+                            <Link href="/dashboard/manage-orders"><ShoppingBag className="mr-2 h-4 w-4" />Manage Orders</Link>
+                        </DropdownMenuItem>
+                    </>
                     )}
                     <DropdownMenuItem asChild>
                     <Link href="/profile"><User className="mr-2 h-4 w-4" />Profile</Link>

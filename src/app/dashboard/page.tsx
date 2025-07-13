@@ -125,6 +125,7 @@ export default async function DashboardPage() {
           title="Total Orders" 
           value={totalOrders} 
           icon={ShoppingCart} 
+          href="/dashboard/manage-orders"
         />
       </div>
 
@@ -150,8 +151,11 @@ export default async function DashboardPage() {
       </div>
       
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Recent Orders</CardTitle>
+           <Button asChild variant="outline">
+             <Link href="/dashboard/manage-orders">View All Orders</Link>
+           </Button>
         </CardHeader>
         <CardContent>
            <Suspense fallback={<Skeleton className="h-24 w-full" />}>
