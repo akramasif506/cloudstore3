@@ -22,50 +22,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let databaseSubscription: Unsubscribe | undefined;
-
-    const authStateUnsubscribe = onAuthStateChanged(auth, (fbUser) => {
-      // First, cancel any existing database listener
-      if (databaseSubscription) {
-        off(ref(db!, `users/${firebaseUser?.uid}`), 'value', databaseSubscription);
-        databaseSubscription = undefined;
-      }
-      
-      setFirebaseUser(fbUser);
-
-      if (fbUser) {
-        // If user is logged in, fetch their profile from the database.
-        if (db) {
-            const userProfileRef = ref(db, `users/${fbUser.uid}`);
-            databaseSubscription = onValue(userProfileRef, (snapshot) => {
-                const userProfile = snapshot.val();
-                setUser(userProfile ? { id: fbUser.uid, ...userProfile } : null);
-                setLoading(false);
-            }, (error) => {
-                console.error("Error fetching user profile:", error);
-                setUser(null);
-                setLoading(false);
-            });
-        } else {
-             // If DB is not configured, we can't fetch a profile.
-             setUser(null);
-             setLoading(false);
-        }
-      } else {
-        // User is logged out
-        setUser(null);
-        setFirebaseUser(null);
-        setLoading(false);
-      }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setFirebaseUser(user);
+      setLoading(false);
     });
+    return () => unsubscribe();
+  }, []);
 
+  useEffect(() => {
+    let unsubscribeFromDb: Unsubscribe | undefined;
+
+    if (firebaseUser) {
+      if (db) {
+        const userProfileRef = ref(db, `users/${firebaseUser.uid}`);
+        unsubscribeFromDb = onValue(
+          userProfileRef,
+          (snapshot) => {
+            const userProfile = snapshot.val();
+            setUser(userProfile ? { id: firebaseUser.uid, ...userProfile } : null);
+          },
+          (error) => {
+            console.error("Error fetching user profile:", error);
+            setUser(null);
+          }
+        );
+      } else {
+        setUser(null);
+      }
+    } else {
+      setUser(null);
+    }
+    
     return () => {
-        authStateUnsubscribe();
-        if (databaseSubscription && firebaseUser && db) {
-            off(ref(db, `users/${firebaseUser.uid}`), 'value', databaseSubscription);
-        }
+      if (unsubscribeFromDb) {
+        unsubscribeFromDb();
+      }
     };
   }, [firebaseUser]);
+
 
   const logout = async () => {
     if (auth) {
