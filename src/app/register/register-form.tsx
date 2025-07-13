@@ -15,12 +15,12 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from "@/hooks/use-toast";
-import { createUserProfileInDb } from './actions';
+import { registerUser } from '@/register/actions';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
 const registerSchema = z.object({
@@ -51,63 +51,49 @@ export function RegisterForm() {
   async function onSubmit(values: z.infer<typeof registerSchema>) {
     setIsLoading(true);
 
-    if (!auth) {
-        toast({
-            variant: "destructive",
-            title: "Registration Failed",
-            description: "Firebase client is not available.",
-        });
-        setIsLoading(false);
-        return;
-    }
-    
     try {
-        // 1. Create user with Firebase Auth on the client
-        const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-        const user = userCredential.user;
+      // 1. Call the unified server action to create user in Auth and DB
+      const result = await registerUser(values);
 
-        // 2. Update their Auth profile
-        await updateProfile(user, { displayName: values.name });
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to register user.');
+      }
 
-        // 3. Call server action to create user profile in the database
-        const profileResult = await createUserProfileInDb({ ...values, uid: user.uid });
-        if (!profileResult.success) {
-            throw new Error(profileResult.error || 'Failed to save profile.');
-        }
-        
-        // 4. Get ID token for the new user to create a session
-        const idToken = await user.getIdToken();
-        const response = await fetch('/api/auth', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idToken }),
-        });
+      // 2. Automatically log the new user in on the client
+      if (!auth) {
+        throw new Error("Firebase client not available to log in.");
+      }
+      const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
+      const user = userCredential.user;
 
-        if (!response.ok) {
-            throw new Error('Failed to create session after registration.');
-        }
+      // 3. Get the ID token and create the session via API route
+      const idToken = await user.getIdToken();
+      const response = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      });
 
-        toast({
-            title: "Registration Successful!",
-            description: "Your account has been created. Redirecting...",
-        });
-        // Full page redirect to ensure session is active
-        window.location.href = '/'; 
+      if (!response.ok) {
+        throw new Error('Failed to create session after registration.');
+      }
+
+      toast({
+        title: "Registration Successful!",
+        description: "Your account has been created. Redirecting...",
+      });
+
+      // Full page redirect to ensure session is active
+      window.location.href = '/';
+
     } catch (error: any) {
-        let errorMessage = 'An unknown error occurred.';
-        if (error.code === 'auth/email-already-in-use') {
-            errorMessage = 'This email address is already in use.';
-        } else {
-            console.error("Registration error:", error);
-            errorMessage = error.message;
-        }
-        toast({
-            variant: "destructive",
-            title: "Registration Failed",
-            description: errorMessage,
-        });
+      toast({
+        variant: "destructive",
+        title: "Registration Failed",
+        description: error.message || "An unknown error occurred.",
+      });
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   }
 

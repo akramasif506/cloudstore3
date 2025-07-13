@@ -15,7 +15,7 @@ const registerSchema = z.object({
 
 export async function registerUser(values: z.infer<typeof registerSchema>) {
   try {
-    const { adminAuth, db } = initializeAdmin();
+    const { db } = initializeAdmin();
     
     const userRecord = await getAuth().createUser({
         email: values.email,
