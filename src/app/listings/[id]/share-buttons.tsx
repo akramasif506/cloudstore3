@@ -1,3 +1,4 @@
+
 // src/app/listings/[id]/share-buttons.tsx
 "use client";
 
@@ -47,7 +48,8 @@ export function ShareButtons({ productName, productUrl }: ShareButtonsProps) {
   
   const shareText = `Check out this listing on CloudStore: ${productName}`;
   const twitterUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(productUrl)}&text=${encodeURIComponent(shareText)}`;
-  const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText}\n${productUrl}`)}`;
+  // Format with a newline to encourage link detection
+  const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText}\n\n${productUrl}`)}`;
 
   return (
     <Card>
