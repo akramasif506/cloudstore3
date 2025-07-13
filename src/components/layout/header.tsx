@@ -57,7 +57,7 @@ export function Header() {
           </div>
         </Link>
         
-        <nav className="flex items-center space-x-4 text-sm font-medium">
+        <nav className="hidden md:flex items-center space-x-4 text-sm font-medium">
           <Link href="/" className="transition-colors hover:text-foreground/80 text-foreground">
             Home
           </Link>
@@ -66,8 +66,8 @@ export function Header() {
           </Link>
         </nav>
 
-        <div className="flex flex-1 items-center justify-end space-x-4">
-          <div className="relative w-56 hidden md:block">
+        <div className="flex flex-1 items-center justify-end space-x-2 md:space-x-4">
+          <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
@@ -93,10 +93,6 @@ export function Header() {
 
           {user ? (
             <div className="flex items-center gap-4">
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-semibold">Hello, {getFirstName(user.name)}!</p>
-                  <p className="text-xs text-muted-foreground -mt-1">Welcome back</p>
-                </div>
                 <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -144,7 +140,7 @@ export function Header() {
                 </DropdownMenu>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-2">
                 <Button asChild variant="ghost">
                     <Link href="/login">
                         <LogIn className="mr-2 h-4 w-4" />
