@@ -142,14 +142,10 @@ export function ListingForm() {
     }
 
     setIsSubmitting(true);
-
-    const formData = new FormData();
-    const imageFile = values.productImage[0];
-    formData.append('productImage', imageFile);
     
     const serverActionValues = {
         ...values,
-        productImage: imageFile,
+        productImage: values.productImage[0],
     }
 
     try {
