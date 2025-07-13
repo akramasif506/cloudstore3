@@ -9,27 +9,24 @@ import { Separator } from '@/components/ui/separator';
 import { Star, Tag, User, Building, ShieldCheck } from 'lucide-react';
 import { CustomerFeedback } from '@/components/products/customer-feedback';
 import type { Product } from '@/lib/types';
-import { db } from '@/lib/firebase';
-import { ref, get, child } from 'firebase/database';
+import { initializeAdmin } from '@/lib/firebase-admin';
 import { AddToCartButtons } from './add-to-cart-buttons';
 import { ShareButtons } from './share-buttons';
 import { headers } from 'next/headers';
 
 
 async function getProduct(id: string): Promise<Product | null> {
-  if (!db) {
-    return null;
-  }
   try {
-    const dbRef = ref(db);
-    const snapshot = await get(child(dbRef, `products/${id}`));
+    const { db } = initializeAdmin();
+    const productRef = db.ref(`products/${id}`);
+    const snapshot = await productRef.once('value');
     if (snapshot.exists()) {
       const productData = snapshot.val();
       return { ...productData, id, condition: productData.condition || 'Used' };
     }
     return null;
   } catch (error) {
-    console.error("Error fetching product:", error);
+    console.error("Error fetching product with Admin SDK:", error);
     return null;
   }
 }
