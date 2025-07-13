@@ -1,20 +1,24 @@
 // src/app/my-orders/[id]/page.tsx
 import { notFound } from 'next/navigation';
-import { db } from '@/lib/firebase';
-import { ref, get } from 'firebase/database';
 import type { Order } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import Image from 'next/image';
 import { Package, Truck, CheckCircle, Frown, PackageOpen, Home, Phone, User as UserIcon, Calendar } from 'lucide-react';
+import { initializeAdmin } from '@/lib/firebase-admin';
 
 async function getOrder(id: string): Promise<Order | null> {
-    if (!db) {
+    let db;
+    try {
+        ({ db } = initializeAdmin());
+    } catch (error) {
+        console.error("Firebase Admin Init Error:", error);
         return null;
     }
+    
     try {
-        const orderRef = ref(db, `orders/${id}`);
-        const snapshot = await get(orderRef);
+        const orderRef = db.ref(`orders/${id}`);
+        const snapshot = await orderRef.once('value');
         if (snapshot.exists()) {
             return { ...snapshot.val(), id };
         }
