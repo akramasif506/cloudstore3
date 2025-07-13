@@ -6,7 +6,7 @@ import { StatsCard } from '@/components/dashboard/stats-card';
 import { CategoryChart } from '@/components/dashboard/category-chart';
 import { RecentProducts } from '@/components/dashboard/recent-products';
 import { initializeAdmin } from '@/lib/firebase-admin';
-import type { Product, Order } from '@/lib/types';
+import type { Product, Order, ContactMessage } from '@/lib/types';
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
@@ -20,7 +20,7 @@ async function getDashboardStats() {
         ({ db } = initializeAdmin());
     } catch (error) {
         console.error("Firebase Admin SDK init error:", error);
-        return { totalProducts: 0, activeProducts: 0, pendingProducts: 0, totalUsers: 0, totalOrders: 0, chartData: [] };
+        return { totalProducts: 0, activeProducts: 0, pendingProducts: 0, totalUsers: 0, totalOrders: 0, totalMessages: 0, chartData: [] };
     }
 
     try {
@@ -33,12 +33,18 @@ async function getDashboardStats() {
             products = Object.keys(productsData).map(key => ({...productsData[key], id: key}));
         }
 
-        const ordersRef = db.ref('orders');
+        const ordersRef = db.ref('all_orders');
         const ordersSnapshot = await ordersRef.once('value');
-        let orders: Order[] = [];
+        let totalOrders = 0;
         if(ordersSnapshot.exists()){
-            const ordersData = ordersSnapshot.val();
-            orders = Object.keys(ordersData).map(key => ({...ordersData[key], id: key}));
+            totalOrders = ordersSnapshot.size;
+        }
+
+        const messagesRef = db.ref('messages');
+        const messagesSnapshot = await messagesRef.once('value');
+        let totalMessages = 0;
+        if (messagesSnapshot.exists()) {
+            totalMessages = messagesSnapshot.size;
         }
 
 
@@ -47,7 +53,6 @@ async function getDashboardStats() {
         const activeProducts = products.filter(p => p.status === 'active').length;
         // In a real app, users would be in the database
         const totalUsers = 1; 
-        const totalOrders = orders.length;
 
         const productsByCategory = products.reduce((acc, product) => {
             if (product.status === 'active') {
@@ -58,11 +63,11 @@ async function getDashboardStats() {
 
         const chartData = Object.entries(productsByCategory).map(([name, products]) => ({ name, products }));
 
-        return { totalProducts, activeProducts, pendingProducts, totalUsers, totalOrders, chartData };
+        return { totalProducts, activeProducts, pendingProducts, totalUsers, totalOrders, totalMessages, chartData };
 
     } catch (error) {
         console.error("Error fetching dashboard stats from Firebase:", error);
-        return { totalProducts: 0, activeProducts: 0, pendingProducts: 0, totalUsers: 0, totalOrders: 0, chartData: [] };
+        return { totalProducts: 0, activeProducts: 0, pendingProducts: 0, totalUsers: 0, totalOrders: 0, totalMessages: 0, chartData: [] };
     }
 }
 
@@ -82,7 +87,7 @@ export default async function DashboardPage() {
     )
   }
 
-  const { totalProducts, activeProducts, pendingProducts, totalUsers, totalOrders, chartData } = await getDashboardStats();
+  const { totalProducts, activeProducts, pendingProducts, totalUsers, totalOrders, totalMessages, chartData } = await getDashboardStats();
   
 
   return (
@@ -134,6 +139,12 @@ export default async function DashboardPage() {
           value={totalOrders} 
           icon={ShoppingCart} 
           href="/dashboard/manage-orders"
+        />
+        <StatsCard 
+          title="Messages" 
+          value={totalMessages} 
+          icon={MessageSquare}
+          href="/dashboard/manage-messages"
         />
          <StatsCard 
           title="Featured Product" 
