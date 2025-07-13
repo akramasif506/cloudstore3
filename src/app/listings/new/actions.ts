@@ -13,26 +13,27 @@ import { initializeAdmin } from '@/lib/firebase-admin';
 export async function createListing(
   formData: FormData
 ): Promise<{ success: boolean; message: string; productId?: string; errors?: any }> {
-  let adminAuth, db, storage;
+  let db, storage, adminAuth;
   try {
-    ({ adminAuth, db, storage } = initializeAdmin());
+    ({ db, storage, adminAuth } = initializeAdmin());
   } catch (error) {
     console.error("Firebase Admin Init Error:", error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
     return { success: false, message: `Server configuration error: ${errorMessage}` };
   }
 
+  // Final check to ensure a session cookie exists, providing a clear error if not.
   const session = cookies().get('session')?.value;
   if (!session) {
-    return { success: false, message: 'Unauthorized: No session cookie found.' };
+    return { success: false, message: 'Unauthorized: No session cookie found. Please log in again.' };
   }
 
   let decodedClaims;
   try {
     decodedClaims = await adminAuth.verifySessionCookie(session, true);
   } catch (error) {
-    console.error("Error verifying session cookie:", error);
-    return { success: false, message: 'Unauthorized: Invalid session cookie.' };
+    console.error("Error verifying session cookie in createListing:", error);
+    return { success: false, message: 'Unauthorized: Your session is invalid. Please log in again.' };
   }
 
   const userId = decodedClaims.uid;
@@ -64,15 +65,15 @@ export async function createListing(
     };
   }
 
-  let seller = { id: 'anonymous', name: 'Anonymous Seller' };
+  let seller: { id: string; name: string; };
   try {
     const userRef = db.ref(`users/${userId}`);
     const userSnapshot = await userRef.once('value');
     if (userSnapshot.exists()) {
       const sellerData: User = userSnapshot.val();
-      seller = { id: sellerData.id, name: sellerData.name || 'User' };
+      seller = { id: userId, name: sellerData.name || 'CloudStore User' };
     } else {
-      console.warn(`User profile not found for UID: ${userId}`);
+      console.warn(`User profile not found for UID: ${userId}.`);
       return { success: false, message: 'Could not find your user profile to create the listing.' };
     }
   } catch (error) {
@@ -115,6 +116,8 @@ export async function createListing(
     await productRef.set(newProductData);
 
     revalidatePath('/my-listings');
+    revalidatePath('/dashboard/pending-products');
+
 
     return { success: true, message: "Listing submitted successfully!", productId: productId };
   } catch (error) {

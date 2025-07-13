@@ -136,7 +136,15 @@ export function ListingForm() {
   };
 
   async function onSubmit(values: ClientListingSchema) {
-    if (!user) return;
+    if (!user) {
+      toast({
+          variant: 'destructive',
+          title: 'You are not logged in',
+          description: 'Please log in before submitting a listing.',
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
 
     const formData = new FormData();
@@ -149,7 +157,11 @@ export function ListingForm() {
 
     try {
       const result = await createListing(formData);
-      if (!result.success) throw new Error(result.message);
+      
+      if (!result.success) {
+        // Now this error will be more specific, coming from the server action's checks.
+        throw new Error(result.message || 'An unknown error occurred during submission.');
+      }
       
       toast({
           title: "Listing Submitted!",
@@ -162,11 +174,11 @@ export function ListingForm() {
       toast({
           variant: 'destructive',
           title: 'Submission Failed',
-          description: error.message || 'Could not connect to the server. Please check your connection and try again.',
+          description: error.message,
       });
+    } finally {
+        setIsSubmitting(false);
     }
-
-    setIsSubmitting(false);
   };
   
   const selectedCategory = form.watch('category');
@@ -371,4 +383,3 @@ export function ListingForm() {
     </Form>
   );
 }
-
