@@ -26,13 +26,13 @@ export function ProductSort() {
   };
 
   return (
-    <div className="flex items-center justify-end gap-2">
-        <Label htmlFor="sort-by" className="text-sm">Sort by</Label>
+    <div className="flex items-center justify-end gap-2 w-full">
+        <Label htmlFor="sort-by" className="text-sm shrink-0">Sort by</Label>
         <Select
             onValueChange={handleSortChange}
             defaultValue={searchParams.get('sortBy') || 'newest'}
         >
-            <SelectTrigger id="sort-by" className="w-[180px]">
+            <SelectTrigger id="sort-by" className="w-full">
                 <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>

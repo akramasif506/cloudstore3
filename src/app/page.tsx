@@ -1,6 +1,7 @@
 
 import { ProductFilters } from '@/components/products/product-filters';
 import { ProductGrid } from '@/components/products/product-grid';
+import { ProductSearch } from '@/components/products/product-search';
 import { ProductSort } from '@/components/products/product-sort';
 import { db } from '@/lib/firebase';
 import type { Product } from '@/lib/types';
@@ -94,7 +95,14 @@ export default async function Home({
         </div>
       </div>
       <div className="lg:col-span-3 space-y-6">
-        <ProductSort />
+        <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <div className="w-full sm:flex-grow">
+                <ProductSearch />
+            </div>
+            <div className="w-full sm:w-auto">
+                <ProductSort />
+            </div>
+        </div>
         <ProductGrid products={filteredProducts} adProducts={adProducts} />
       </div>
     </div>

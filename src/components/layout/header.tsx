@@ -2,9 +2,8 @@
 "use client";
 
 import Link from 'next/link';
-import { Leaf, Search, User, LogOut, LayoutDashboard, DollarSign, Package, LogIn, UserPlus, ShoppingCart, FilePlus2, Settings, ShoppingBag, MessageSquare } from 'lucide-react';
+import { Leaf, User, LogOut, LayoutDashboard, DollarSign, Package, LogIn, UserPlus, ShoppingCart, FilePlus2, Settings, ShoppingBag, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,32 +15,17 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/context/auth-context';
 import { useCart } from '@/context/cart-context';
-import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 export function Header() {
   const { user, logout } = useAuth();
   const { items } = useCart();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
 
 
   const getFirstName = (fullName: string | undefined | null): string => {
     if (!fullName) return '';
     return fullName.split(' ')[0];
-  };
-
-  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      const params = new URLSearchParams(searchParams.toString());
-      if (searchQuery) {
-        params.set('q', searchQuery);
-      } else {
-        params.delete('q');
-      }
-      router.push(`/?${params.toString()}`);
-    }
   };
 
   const cartItemCount = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -58,19 +42,7 @@ export function Header() {
         </Link>
 
         <div className="flex flex-1 items-center space-x-2 md:space-x-6">
-            <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                type="search"
-                placeholder="Search for items..."
-                className="pl-9 w-full"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={handleSearch}
-                />
-            </div>
-            
-            <nav className="hidden md:flex items-center space-x-4 text-sm font-medium">
+            <nav className="flex items-center space-x-4 text-sm font-medium">
                 <Link href="/" className="transition-colors hover:text-foreground/80 text-foreground">
                     Home
                 </Link>
