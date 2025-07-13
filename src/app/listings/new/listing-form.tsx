@@ -125,10 +125,11 @@ export function ListingForm() {
       });
     } catch (error) {
       console.error("AI generation failed:", error);
+      setHasGenerated(true); // Allow manual entry even if AI fails
       toast({
         variant: "destructive",
         title: "AI Assistant Error",
-        description: "Could not generate details. The AI might be having trouble with the request. Please try again.",
+        description: "Could not generate details. Please fill in the information manually.",
       });
     } finally {
       setIsGenerating(false);
