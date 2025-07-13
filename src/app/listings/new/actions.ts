@@ -3,16 +3,20 @@
 
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
-import { cookies } from 'next/headers';
-
-import { listingSchema } from '@/lib/schemas';
 import { revalidatePath } from 'next/cache';
 import { initializeAdmin } from '@/lib/firebase-admin';
+import { listingSchema } from '@/lib/schemas';
 
 export async function createListing(
   userId: string,
   formData: FormData
 ): Promise<{ success: boolean; message: string; productId?: string; errors?: any }> {
+  
+  // This check is essential for security.
+  if (!userId) {
+     return { success: false, message: `Authorization failed. Please log in and try again.` };
+  }
+
   let db, storage;
   try {
     ({ db, storage } = initializeAdmin());
@@ -21,12 +25,6 @@ export async function createListing(
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
     return { success: false, message: `Server configuration error: ${errorMessage}` };
   }
-
-  // Simplified authorization: Trust the client-side check that provides the userId.
-  if (!userId) {
-     return { success: false, message: `Authorization failed. Please log in and try again.` };
-  }
-
 
   const formValues = {
     productName: formData.get('productName'),
