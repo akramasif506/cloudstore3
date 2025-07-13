@@ -91,9 +91,9 @@ export function ListingForm() {
 
   const handleGenerateDetails = async () => {
     const { initialDescription, productImage } = form.getValues();
-    const imageFile = productImage?.[0];
-
-    if (!imageFile || !initialDescription) {
+    
+    // Improved check: Ensure productImage exists and has a file.
+    if (!productImage || productImage.length === 0 || !initialDescription) {
       form.trigger(['initialDescription', 'productImage']);
       toast({
         variant: "destructive",
@@ -102,6 +102,7 @@ export function ListingForm() {
       });
       return;
     }
+    const imageFile = productImage[0];
 
     setIsGenerating(true);
     setHasGenerated(false);
