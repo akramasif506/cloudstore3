@@ -11,7 +11,7 @@ import { AuthProvider, useAuth } from '@/context/auth-context';
 import { Loader2 } from 'lucide-react';
 import React from 'react';
 import { CartProvider } from '@/context/cart-context';
-import { FirebaseMessagingProvider } from '@/context/firebase-messaging-provider';
+import { BroadcastBanner } from '@/components/layout/broadcast-banner';
 
 function AppContent({ children }: { children: React.ReactNode }) {
   const { loading } = useAuth();
@@ -27,6 +27,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Header />
+      <BroadcastBanner />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </main>
@@ -51,14 +52,12 @@ export default function RootLayout({
       </head>
       <body className={cn('font-body antialiased min-h-screen flex flex-col')}>
         <AuthProvider>
-          <FirebaseMessagingProvider>
             <CartProvider>
               <AppContent>
                 {children}
               </AppContent>
               <Toaster />
             </CartProvider>
-          </FirebaseMessagingProvider>
         </AuthProvider>
       </body>
     </html>
