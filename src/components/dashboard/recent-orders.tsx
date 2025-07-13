@@ -1,3 +1,4 @@
+
 // src/components/dashboard/recent-orders.tsx
 import type { Order } from '@/lib/types';
 import {
@@ -8,18 +9,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { db } from '@/lib/firebase';
-import { ref, get, query, limitToLast } from 'firebase/database';
 import { Badge } from '../ui/badge';
+import { initializeAdmin } from '@/lib/firebase-admin';
 
 async function getRecentOrders(): Promise<Order[]> {
-    if (!db) {
-        return [];
-    }
+    let db;
     try {
-        const ordersRef = ref(db, 'orders');
-        const recentOrdersQuery = query(ordersRef, limitToLast(5));
-        const snapshot = await get(recentOrdersQuery);
+      ({ db } = initializeAdmin());
+    } catch (error) {
+      console.error("Firebase Admin SDK init error:", error);
+      return [];
+    }
+
+    try {
+        const ordersRef = db.ref('orders');
+        const recentOrdersQuery = ordersRef.orderByKey().limitToLast(5);
+        const snapshot = await recentOrdersQuery.once('value');
         if (snapshot.exists()) {
             const ordersData = snapshot.val();
             const ordersList = Object.keys(ordersData).map(key => ({

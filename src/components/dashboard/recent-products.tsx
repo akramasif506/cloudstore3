@@ -1,17 +1,23 @@
+
 import type { Product } from '@/lib/types';
 import Image from 'next/image';
 import Link from 'next/link';
-import { db } from '@/lib/firebase';
-import { ref, get, query, limitToLast } from 'firebase/database';
+import { initializeAdmin } from '@/lib/firebase-admin';
 
 async function getRecentProducts(): Promise<Product[]> {
-    if (!db) {
-        return [];
-    }
+    let db;
     try {
-        const productsRef = ref(db, 'products');
-        const recentProductsQuery = query(productsRef, limitToLast(5));
-        const snapshot = await get(recentProductsQuery);
+      ({ db } = initializeAdmin());
+    } catch (error) {
+      console.error("Firebase Admin SDK init error:", error);
+      return [];
+    }
+
+    try {
+        const productsRef = db.ref('products');
+        const recentProductsQuery = productsRef.orderByKey().limitToLast(5);
+        const snapshot = await recentProductsQuery.once('value');
+
         if (snapshot.exists()) {
             const productsData = snapshot.val();
             const productsList = Object.keys(productsData).map(key => ({

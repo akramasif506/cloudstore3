@@ -5,10 +5,8 @@ import { Users, Package, MessageSquare, ShieldAlert, CheckCircle, ShoppingCart }
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { CategoryChart } from '@/components/dashboard/category-chart';
 import { RecentProducts } from '@/components/dashboard/recent-products';
-import { RecentMessages } from '@/components/dashboard/recent-messages';
-import { db } from '@/lib/firebase';
-import { ref, get, query, limitToLast } from 'firebase/database';
-import type { ContactMessage, Product, Order } from '@/lib/types';
+import { initializeAdmin } from '@/lib/firebase-admin';
+import type { Product, Order } from '@/lib/types';
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
@@ -16,37 +14,18 @@ import { Button } from '@/components/ui/button';
 import { RecentOrders } from '@/components/dashboard/recent-orders';
 
 
-async function getRecentMessages(): Promise<ContactMessage[]> {
-  if (!db) {
-    console.warn("Firebase is not configured. Returning empty messages.");
-    return [];
-  }
-  try {
-    const messagesRef = ref(db, 'messages');
-    // Fetch the last 10 messages
-    const messagesQuery = query(messagesRef, limitToLast(10));
-    const snapshot = await get(messagesQuery);
-    if (snapshot.exists()) {
-      const messagesData = snapshot.val();
-      // Convert the object of messages into an array
-      return Object.keys(messagesData)
-        .map(key => ({ id: key, ...messagesData[key] }))
-        .reverse(); // Show newest messages first
-    }
-    return [];
-  } catch (error) {
-    console.error("Error fetching messages from Firebase:", error);
-    return [];
-  }
-}
-
 async function getDashboardStats() {
-    if (!db) {
+    let db;
+    try {
+        ({ db } = initializeAdmin());
+    } catch (error) {
+        console.error("Firebase Admin SDK init error:", error);
         return { totalProducts: 0, pendingProducts: 0, totalUsers: 0, totalOrders: 0, chartData: [] };
     }
+
     try {
-        const productsRef = ref(db, 'products');
-        const productsSnapshot = await get(productsRef);
+        const productsRef = db.ref('products');
+        const productsSnapshot = await productsRef.once('value');
         
         let products: Product[] = [];
         if (productsSnapshot.exists()) {
@@ -54,8 +33,8 @@ async function getDashboardStats() {
             products = Object.keys(productsData).map(key => ({...productsData[key], id: key}));
         }
 
-        const ordersRef = ref(db, 'orders');
-        const ordersSnapshot = await get(ordersRef);
+        const ordersRef = db.ref('orders');
+        const ordersSnapshot = await ordersRef.once('value');
         let orders: Order[] = [];
         if(ordersSnapshot.exists()){
             const ordersData = ordersSnapshot.val();
@@ -88,7 +67,6 @@ async function getDashboardStats() {
 
 
 export default async function DashboardPage() {
-  const recentMessages = await getRecentMessages();
   // For development, we'll check the mock user. 
   // In a real app, you would get the current user's role from your auth context.
   const isAdmin = mockUser.role === 'admin';
