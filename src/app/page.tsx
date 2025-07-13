@@ -36,6 +36,7 @@ export default async function Home({
   searchParams
 }: {
   searchParams?: {
+    q?: string;
     category?: string;
     subcategory?: string;
     minPrice?: string;
@@ -45,6 +46,7 @@ export default async function Home({
 }) {
   const allProducts = await getProducts();
 
+  const searchQuery = searchParams?.q?.toLowerCase() || '';
   const minPrice = searchParams?.minPrice ? Number(searchParams.minPrice) : 0;
   const maxPrice = searchParams?.maxPrice ? Number(searchParams.maxPrice) : Infinity;
   const sortBy = searchParams?.sortBy || 'newest';
@@ -53,7 +55,10 @@ export default async function Home({
     const categoryMatch = searchParams?.category ? product.category === searchParams.category : true;
     const subcategoryMatch = searchParams?.subcategory ? product.subcategory === searchParams.subcategory : true;
     const priceMatch = product.price >= minPrice && product.price <= maxPrice;
-    return categoryMatch && subcategoryMatch && priceMatch;
+    const searchMatch = searchQuery 
+      ? product.name.toLowerCase().includes(searchQuery) || product.description.toLowerCase().includes(searchQuery)
+      : true;
+    return categoryMatch && subcategoryMatch && priceMatch && searchMatch;
   });
 
   // Sort products
