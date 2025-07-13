@@ -13,9 +13,7 @@ export async function getMyListings(userId: string): Promise<Product[]> {
   
   try {
     const productsRef = ref(db, 'products');
-    // Query all products where the seller ID matches the current user's ID
-    const userProductsQuery = query(productsRef, orderByChild('seller/id'), equalTo(userId));
-    const snapshot = await get(userProductsQuery);
+    const snapshot = await get(productsRef);
     
     let allProducts: Product[] = [];
     if (snapshot.exists()) {
@@ -27,8 +25,11 @@ export async function getMyListings(userId: string): Promise<Product[]> {
       }));
     }
     
+    // Filter products on the server
+    const userProducts = allProducts.filter(product => product.seller && product.seller.id === userId);
+    
     // Sort by creation date, newest first
-    return allProducts
+    return userProducts
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   } catch (error) {
