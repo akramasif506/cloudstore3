@@ -37,7 +37,7 @@ export function CartContents() {
   const isOrderReady = address.trim() !== '' && contactNumber.trim() !== '' && user;
 
   const handlePlaceOrder = async () => {
-    if (!isOrderReady) {
+    if (!isOrderReady || !user) {
         toast({
             variant: "destructive",
             title: "Cannot place order",

@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import type { CartItem } from '@/context/cart-context';
 
 const placeOrderSchema = z.object({
-  userId: z.string(),
+  userId: z.string().min(1, 'User ID is required.'),
   customerName: z.string().min(1, 'Customer name is required.'),
   items: z.array(z.any()), // Not strictly validating cart items from client
   total: z.number(),
