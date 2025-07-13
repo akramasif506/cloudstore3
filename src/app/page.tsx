@@ -47,16 +47,19 @@ export default async function Home({
   const allProducts = await getProducts();
 
   const searchQuery = searchParams?.q?.toLowerCase() || '';
+  const category = searchParams?.category;
+  const subcategory = searchParams?.subcategory;
   const minPrice = searchParams?.minPrice ? Number(searchParams.minPrice) : 0;
   const maxPrice = searchParams?.maxPrice ? Number(searchParams.maxPrice) : Infinity;
   const sortBy = searchParams?.sortBy || 'newest';
 
   const filteredProducts = allProducts.filter(product => {
-    const categoryMatch = searchParams?.category ? product.category === searchParams.category : true;
-    const subcategoryMatch = searchParams?.subcategory ? product.subcategory === searchParams.subcategory : true;
+    const categoryMatch = category ? product.category === category : true;
+    const subcategoryMatch = subcategory ? product.subcategory === subcategory : true;
     const priceMatch = product.price >= minPrice && product.price <= maxPrice;
-    const searchMatch = searchQuery 
-      ? product.name.toLowerCase().includes(searchQuery) || product.description.toLowerCase().includes(searchQuery)
+    const searchMatch = searchQuery
+      ? product.name.toLowerCase().includes(searchQuery) || 
+        product.description.toLowerCase().includes(searchQuery)
       : true;
     return categoryMatch && subcategoryMatch && priceMatch && searchMatch;
   });
@@ -77,7 +80,6 @@ export default async function Home({
   let adProducts: Product[] = [];
   if (filteredProducts.length === 0 && allProducts.length > 0) {
     // If no products match filter, show a few other products as ads
-    // This simple logic takes up to 3 products that were NOT in the filtered list
     adProducts = allProducts
       .filter(p => !filteredProducts.some(fp => fp.id === p.id))
       .slice(0, 3);
