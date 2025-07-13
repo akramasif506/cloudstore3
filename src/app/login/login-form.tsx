@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from 'react-hook-form';
@@ -18,9 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import { auth } from '@/lib/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-
+import { loginWithCredentials } from './actions';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address.'),
@@ -47,63 +44,29 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   async function onSubmit(values: z.infer<typeof loginSchema>) {
     setIsLoading(true);
     
-    if (!auth) {
-        toast({ variant: "destructive", title: "Login Failed", description: "Firebase is not configured."});
-        setIsLoading(false);
-        return;
-    }
+    const result = await loginWithCredentials(values);
 
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
-      const idToken = await userCredential.user.getIdToken();
+    if (result.success) {
+        toast({
+            title: "Login Successful!",
+            description: "Welcome back! Redirecting...",
+        });
 
-      // Set session cookie
-      await fetch('/api/auth', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${idToken}`,
-        },
-      });
-      
-      toast({
-        title: "Login Successful!",
-        description: "Welcome back! Redirecting...",
-      });
-      
-      if (onSuccess) {
-        onSuccess();
-      } else {
-        const redirectUrl = searchParams.get('redirect') || '/';
-        // A full page refresh is the most reliable way to sync server and client state.
-        window.location.href = redirectUrl;
-      }
-
-    } catch (error: any) {
-        let errorMessage = 'An unknown error occurred.';
-        switch (error.code) {
-        case 'auth/user-not-found':
-        case 'auth/wrong-password':
-        case 'auth/invalid-credential':
-            errorMessage = 'Invalid email or password.';
-            break;
-        case 'auth/invalid-email':
-            errorMessage = 'Please enter a valid email address.';
-            break;
-        case 'auth/too-many-requests':
-            errorMessage = 'Too many login attempts. Please try again later.';
-            break;
-        default:
-            console.error('Firebase login error:', error);
-            break;
+        if (onSuccess) {
+            onSuccess();
+        } else {
+            const redirectUrl = searchParams.get('redirect') || '/';
+            window.location.href = redirectUrl;
         }
+    } else {
         toast({
             variant: "destructive",
             title: "Login Failed",
-            description: errorMessage,
+            description: result.message,
         });
-    } finally {
-        setIsLoading(false);
     }
+
+    setIsLoading(false);
   }
 
   return (
