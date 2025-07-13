@@ -113,7 +113,7 @@ export function MyListingsClient() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ProductGrid products={pendingProducts} />
+                <ProductGrid products={pendingProducts} showViewButton={true} />
               </CardContent>
             </Card>
           )}
@@ -130,7 +130,7 @@ export function MyListingsClient() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ProductGrid products={activeProducts} />
+                <ProductGrid products={activeProducts} showViewButton={true} />
               </CardContent>
             </Card>
           )}

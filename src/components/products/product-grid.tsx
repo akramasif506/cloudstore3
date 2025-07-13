@@ -6,9 +6,10 @@ import { Separator } from '../ui/separator';
 interface ProductGridProps {
   products: Product[];
   adProducts?: Product[];
+  showViewButton?: boolean;
 }
 
-export function ProductGrid({ products, adProducts = [] }: ProductGridProps) {
+export function ProductGrid({ products, adProducts = [], showViewButton = false }: ProductGridProps) {
   if (products.length === 0) {
     return (
       <div className="space-y-8">
@@ -36,7 +37,7 @@ export function ProductGrid({ products, adProducts = [] }: ProductGridProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
+        <ProductCard key={product.id} product={product} showViewButton={showViewButton} />
       ))}
     </div>
   );
