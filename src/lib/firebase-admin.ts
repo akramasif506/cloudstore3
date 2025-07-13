@@ -31,5 +31,6 @@ export function initializeAdmin() {
     adminAuth: app.auth(),
     db: app.database(),
     storage: app.storage(),
+    messaging: app.messaging(),
   };
 }

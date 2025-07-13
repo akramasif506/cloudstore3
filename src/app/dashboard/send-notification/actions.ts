@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 import { initializeAdmin } from '@/lib/firebase-admin';
-import type { Message } from 'firebase-admin/messaging';
+import type { MulticastMessage } from 'firebase-admin/messaging';
 
 const sendNotificationSchema = z.object({
   target: z.enum(['all', 'specific']),
@@ -22,7 +22,7 @@ export async function sendNotification(
   }
 
   const { target, userId, title, body, link } = validatedFields.data;
-  const { db, adminAuth } = initializeAdmin();
+  const { db, adminAuth, messaging } = initializeAdmin();
 
   try {
     const fcmTokens: string[] = [];
@@ -41,8 +41,11 @@ export async function sendNotification(
       const allTokensSnapshot = await db.ref('fcm_tokens').once('value');
       if (allTokensSnapshot.exists()) {
         const allTokensData = allTokensSnapshot.val();
-        for (const userId in allTokensData) {
-          fcmTokens.push(...Object.values<string>(allTokensData[userId]));
+        for (const uid in allTokensData) {
+            const userTokens = allTokensData[uid];
+            if (typeof userTokens === 'object' && userTokens !== null) {
+                fcmTokens.push(...Object.values<string>(userTokens));
+            }
         }
       }
     }
@@ -50,8 +53,11 @@ export async function sendNotification(
     if (fcmTokens.length === 0) {
       return { success: false, message: 'No registered devices found for the selected target.' };
     }
+    
+    // Remove duplicate tokens to avoid sending multiple times to the same device
+    const uniqueTokens = [...new Set(fcmTokens)];
 
-    const message: Message = {
+    const message: MulticastMessage = {
       notification: {
         title,
         body,
@@ -61,14 +67,12 @@ export async function sendNotification(
           link: link || '/',
         },
       },
-      // This will be sent to all tokens
-      token: '', // This will be overridden in sendToDevice
+      tokens: uniqueTokens,
     };
     
-    // Firebase Admin SDK's sendToDevice can handle an array of tokens
-    const response = await adminAuth.sendToDevice(fcmTokens, message.notification!);
+    const response = await messaging.sendEachForMulticast(message);
 
-    const successes = response.results.filter(r => r.messageId).length;
+    const successes = response.responses.filter(r => r.success).length;
     const failures = response.failureCount;
 
     return {

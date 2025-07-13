@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import { app, db } from '@/lib/firebase';
 import { useAuth } from './auth-context';
-import { ref, set, push } from 'firebase/database';
+import { ref, set, push, query, orderByValue, equalTo, get } from 'firebase/database';
 import { useToast } from '@/hooks/use-toast';
 
 export function FirebaseMessagingProvider({ children }: { children: React.ReactNode }) {
@@ -29,13 +29,16 @@ export function FirebaseMessagingProvider({ children }: { children: React.ReactN
     });
 
     const requestPermissionAndGetToken = async () => {
+      if (!user) return; // Only run if user is logged in
+
       try {
-        if (Notification.permission === 'granted') {
-          console.log('Notification permission already granted.');
-        } else if (Notification.permission === 'denied') {
+        // Check current permission status
+        if (Notification.permission === 'denied') {
           console.log('Notification permission has been blocked.');
           return; // Stop execution if permission is denied
-        } else if (Notification.permission === 'default') {
+        }
+        
+        if (Notification.permission === 'default') {
           console.log('Requesting notification permission...');
           const permission = await Notification.requestPermission();
           if (permission !== 'granted') {
@@ -44,19 +47,26 @@ export function FirebaseMessagingProvider({ children }: { children: React.ReactN
           }
         }
 
+        // Permission is granted, now get the token
         const currentToken = await getToken(messaging, {
           vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
         });
 
         if (currentToken) {
           console.log('FCM Token:', currentToken);
-          if (user) {
-            // Save the token to the Realtime Database
-            const userTokensRef = ref(db, `fcm_tokens/${user.id}`);
+          // Save the token to the Realtime Database, but only if it's not already there for this user
+          const userTokensRef = ref(db, `fcm_tokens/${user.id}`);
+          const tokenQuery = query(userTokensRef, orderByValue(), equalTo(currentToken));
+          const snapshot = await get(tokenQuery);
+
+          if (!snapshot.exists()) {
             const newTokenRef = push(userTokensRef);
             await set(newTokenRef, currentToken);
-            console.log('FCM token saved for user:', user.id);
+            console.log('New FCM token saved for user:', user.id);
+          } else {
+            console.log('FCM token already exists for user:', user.id);
           }
+
         } else {
           console.log('No registration token available. Request permission to generate one.');
         }
@@ -65,10 +75,7 @@ export function FirebaseMessagingProvider({ children }: { children: React.ReactN
       }
     };
     
-    // We only request permission if a user is logged in
-    if (user) {
-      requestPermissionAndGetToken();
-    }
+    requestPermissionAndGetToken();
     
     // Cleanup
     return () => {
