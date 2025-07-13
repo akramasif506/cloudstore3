@@ -17,7 +17,8 @@ async function getOrder(id: string): Promise<Order | null> {
     }
     
     try {
-        const orderRef = db.ref(`orders/${id}`);
+        // Fetch from the denormalized 'all_orders' path for direct lookup
+        const orderRef = db.ref(`all_orders/${id}`);
         const snapshot = await orderRef.once('value');
         if (snapshot.exists()) {
             return { ...snapshot.val(), id };

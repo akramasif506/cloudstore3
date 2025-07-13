@@ -22,16 +22,19 @@ async function getRecentOrders(): Promise<Order[]> {
     }
 
     try {
-        const ordersRef = db.ref('orders');
-        const recentOrdersQuery = ordersRef.orderByKey().limitToLast(5);
+        // Fetch from the denormalized global list for recent orders
+        const ordersRef = db.ref('all_orders');
+        const recentOrdersQuery = ordersRef.orderByChild('createdAt').limitToLast(5);
         const snapshot = await recentOrdersQuery.once('value');
+
         if (snapshot.exists()) {
             const ordersData = snapshot.val();
             const ordersList = Object.keys(ordersData).map(key => ({
                 ...ordersData[key],
                 id: key,
             }));
-            return ordersList.reverse(); // Show newest first
+            // The query returns them oldest first, so we reverse to show newest first
+            return ordersList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         }
         return [];
     } catch (error) {

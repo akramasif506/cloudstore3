@@ -55,14 +55,20 @@ export async function placeOrder(values: {
     total,
     shippingAddress,
     contactNumber,
-    status: 'Pending',
+    status: 'Pending' as const,
     createdAt: new Date().toISOString(),
   };
 
   try {
-    const ordersRef = db.ref(`orders/${orderId}`);
-    await ordersRef.set(orderData);
-    console.log(`Order ${orderId} saved to Firebase.`);
+    // Store the order under the user's ID for efficient retrieval
+    const userOrderRef = db.ref(`orders/${userId}/${orderId}`);
+    await userOrderRef.set(orderData);
+    
+    // Also store a copy for direct lookup by admins or for the order detail page
+    const globalOrderRef = db.ref(`all_orders/${orderId}`);
+    await globalOrderRef.set(orderData);
+
+    console.log(`Order ${orderId} saved for user ${userId} and globally.`);
     return { success: true, orderId };
   } catch (error) {
     console.error('Error saving order to Firebase:', error);
