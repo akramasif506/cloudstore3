@@ -34,9 +34,9 @@ export function ProductFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
-  const [selectedSubcategory, setSelectedSubcategory] = useState(searchParams.get('subcategory') || '');
-  const [selectedCondition, setSelectedCondition] = useState(searchParams.get('condition') || '');
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
+  const [selectedSubcategory, setSelectedSubcategory] = useState(searchParams.get('subcategory') || 'all');
+  const [selectedCondition, setSelectedCondition] = useState(searchParams.get('condition') || 'all');
   const [priceRange, setPriceRange] = useState([
     Number(searchParams.get('minPrice')) || 0,
     Number(searchParams.get('maxPrice')) || MAX_PRICE
@@ -44,21 +44,21 @@ export function ProductFilters() {
 
   useEffect(() => {
     // When category changes, reset subcategory if it's not valid for the new category
-    if (selectedCategory && !categories[selectedCategory as keyof typeof categories]?.includes(selectedSubcategory)) {
-      setSelectedSubcategory('');
+    if (selectedCategory !== 'all' && !categories[selectedCategory as keyof typeof categories]?.includes(selectedSubcategory)) {
+      setSelectedSubcategory('all');
     }
   }, [selectedCategory, selectedSubcategory]);
 
   const handleApplyFilters = () => {
     const params = new URLSearchParams(searchParams);
     
-    if (selectedCategory) params.set('category', selectedCategory);
+    if (selectedCategory && selectedCategory !== 'all') params.set('category', selectedCategory);
     else params.delete('category');
     
-    if (selectedSubcategory) params.set('subcategory', selectedSubcategory);
+    if (selectedSubcategory && selectedSubcategory !== 'all') params.set('subcategory', selectedSubcategory);
     else params.delete('subcategory');
     
-    if (selectedCondition) params.set('condition', selectedCondition);
+    if (selectedCondition && selectedCondition !== 'all') params.set('condition', selectedCondition);
     else params.delete('condition');
 
     params.set('minPrice', priceRange[0].toString());
@@ -70,7 +70,7 @@ export function ProductFilters() {
   const handleCategoryChange = (value: string) => {
     setSelectedCategory(value);
     // Reset subcategory when category changes
-    setSelectedSubcategory('');
+    setSelectedSubcategory('all');
   };
 
   const handleSubcategoryChange = (value: string) => {
@@ -93,7 +93,7 @@ export function ProductFilters() {
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Categories</SelectItem>
+              <SelectItem value="all">All Categories</SelectItem>
               {Object.keys(categories).map(cat => (
                 <SelectItem key={cat} value={cat}>{cat}</SelectItem>
               ))}
@@ -106,14 +106,14 @@ export function ProductFilters() {
           <Select 
             onValueChange={handleSubcategoryChange} 
             value={selectedSubcategory}
-            disabled={!selectedCategory}
+            disabled={!selectedCategory || selectedCategory === 'all'}
           >
             <SelectTrigger id="subcategory">
               <SelectValue placeholder="All Subcategories" />
             </SelectTrigger>
             <SelectContent>
-               <SelectItem value="">All Subcategories</SelectItem>
-              {selectedCategory && categories[selectedCategory as keyof typeof categories]?.map(subcat => (
+               <SelectItem value="all">All Subcategories</SelectItem>
+              {selectedCategory && selectedCategory !== 'all' && categories[selectedCategory as keyof typeof categories]?.map(subcat => (
                 <SelectItem key={subcat} value={subcat}>{subcat}</SelectItem>
               ))}
             </SelectContent>
@@ -127,7 +127,7 @@ export function ProductFilters() {
               <SelectValue placeholder="Any Condition" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Any Condition</SelectItem>
+              <SelectItem value="all">Any Condition</SelectItem>
               {conditions.map(c => (
                  <SelectItem key={c} value={c}>{c}</SelectItem>
               ))}
