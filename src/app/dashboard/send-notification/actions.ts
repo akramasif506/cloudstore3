@@ -42,7 +42,7 @@ export async function sendNotification(
   }
 
   const { target, userId, title, body, link } = validatedFields.data;
-  const { db, adminAuth, messaging } = initializeAdmin();
+  const { db, messaging } = initializeAdmin();
 
   try {
     const fcmTokens: string[] = [];
@@ -54,16 +54,19 @@ export async function sendNotification(
       const tokensSnapshot = await db.ref(`fcm_tokens/${userId}`).once('value');
       if (tokensSnapshot.exists()) {
         const tokensData = tokensSnapshot.val();
+        // The data is an object where keys are push IDs and values are tokens
         fcmTokens.push(...Object.values<string>(tokensData));
       }
     } else {
       // Target is 'all'
       const allTokensSnapshot = await db.ref('fcm_tokens').once('value');
       if (allTokensSnapshot.exists()) {
-        const allTokensData = allTokensSnapshot.val();
-        for (const uid in allTokensData) {
-            const userTokens = allTokensData[uid];
+        const allUsersTokensData = allTokensSnapshot.val();
+        // allUsersTokensData is an object where keys are user IDs
+        for (const uid in allUsersTokensData) {
+            const userTokens = allUsersTokensData[uid];
             if (typeof userTokens === 'object' && userTokens !== null) {
+                // userTokens is an object where keys are push IDs and values are tokens
                 fcmTokens.push(...Object.values<string>(userTokens));
             }
         }
@@ -97,7 +100,7 @@ export async function sendNotification(
 
     return {
       success: true,
-      message: `Notification sent. Successes: ${successes}, Failures: ${failures}.`,
+      message: `Notification sent to ${uniqueTokens.length} device(s). Successes: ${successes}, Failures: ${failures}.`,
     };
   } catch (error) {
     console.error('Error sending notification:', error);
