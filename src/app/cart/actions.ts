@@ -22,10 +22,9 @@ export async function placeOrder(values: {
     contactNumber: string;
 }): Promise<{ success: boolean; orderId?: string; message?: string }> {
   
-  let adminDb;
+  let db;
   try {
-    const { db } = initializeAdmin();
-    adminDb = db;
+    ({ db } = initializeAdmin());
   } catch (error) {
     console.error(error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
@@ -58,7 +57,7 @@ export async function placeOrder(values: {
   };
 
   try {
-    const ordersRef = adminDb.ref(`orders/${orderId}`);
+    const ordersRef = db.ref(`orders/${orderId}`);
     await ordersRef.set(orderData);
     console.log(`Order ${orderId} saved to Firebase.`);
     return { success: true, orderId };

@@ -13,8 +13,8 @@ export function initializeAdmin() {
     throw new Error('Firebase Admin SDK credentials are not defined in environment variables.');
   }
 
-  // A more robust way to get the app instance, preventing "Connection closed" errors.
-  // This gets the existing app if it's initialized, otherwise initializes a new one.
+  // This gets the existing app if it's initialized, or initializes a new one.
+  // This pattern is more robust for serverless environments like Next.js.
   const app = admin.apps.length
     ? admin.app()
     : admin.initializeApp({

@@ -15,10 +15,7 @@ export async function createListing(
 ): Promise<{ success: boolean; message: string; productId?: string; errors?: any }> {
   let adminAuth, db, storage;
   try {
-    const adminApp = initializeAdmin();
-    adminAuth = adminApp.adminAuth;
-    db = adminApp.db;
-    storage = adminApp.storage;
+    ({ adminAuth, db, storage } = initializeAdmin());
   } catch (error) {
     console.error("Firebase Admin Init Error:", error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
