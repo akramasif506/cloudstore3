@@ -8,7 +8,10 @@ export function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center space-x-2 mb-4 md:mb-0">
             <Leaf className="h-6 w-6 text-primary" />
-            <span className="font-bold font-headline text-lg">CloudStore</span>
+            <div>
+                <span className="font-bold font-headline text-lg">CloudStore</span>
+                <p className="text-xs text-muted-foreground -mt-1">A Akram Product</p>
+            </div>
           </div>
           <nav className="flex space-x-6 text-sm text-muted-foreground">
             <Link href="#" className="hover:text-foreground">About</Link>
