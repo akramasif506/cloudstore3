@@ -97,6 +97,7 @@ export function ListingForm() {
   const getCompressedImage = async (): Promise<File | null> => {
       const imageFileList = form.getValues('productImage');
       if (!imageFileList || imageFileList.length === 0) {
+          form.trigger('productImage');
           return null;
       }
       const file = imageFileList[0];
@@ -106,14 +107,15 @@ export function ListingForm() {
           useWebWorker: true,
       };
       try {
-          return await imageCompression(file, options);
+          const compressedFile = await imageCompression(file, options);
+          return compressedFile;
       } catch (error) {
           toast({
               variant: "destructive",
               title: "Image Compression Failed",
-              description: "Could not process the image. Please try a different one.",
+              description: "Could not process the image. Please try a different one or a smaller file.",
           });
-          console.error(error);
+          console.error("Image compression error:", error);
           return null;
       }
   };
@@ -121,15 +123,9 @@ export function ListingForm() {
 
   const handleGenerateDetails = async () => {
     const { initialDescription } = form.getValues();
-    const imageFileList = form.getValues('productImage');
 
-    if (!imageFileList || imageFileList.length === 0 || !initialDescription) {
-      form.trigger(['initialDescription', 'productImage']);
-      toast({
-        variant: "destructive",
-        title: "Missing Information",
-        description: "Please describe your item and upload an image before generating the listing.",
-      });
+    if (!initialDescription) {
+      form.trigger('initialDescription');
       return;
     }
 
@@ -381,7 +377,7 @@ export function ListingForm() {
                         <FormLabel>Condition</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value} disabled={isFormProcessing}>
                         <FormControl>
-                            <SelectTrigger><SelectValue placeholder="Select a condition" /></SelectTrigger>
+                            <SelectTrigger><SelectValue placeholder="Select a condition" /></SelectValue>
                         </FormControl>
                         <SelectContent>
                             {conditions.map(con => (
@@ -403,7 +399,7 @@ export function ListingForm() {
                         <FormLabel>Category</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value} disabled={isFormProcessing}>
                         <FormControl>
-                            <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
+                            <SelectTrigger><SelectValue placeholder="Select a category" /></SelectValue>
                         </FormControl>
                         <SelectContent>
                             {Object.keys(categories).map(cat => (
@@ -423,7 +419,7 @@ export function ListingForm() {
                         <FormLabel>Subcategory</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory || isFormProcessing}>
                         <FormControl>
-                            <SelectTrigger><SelectValue placeholder="Select a subcategory" /></SelectTrigger>
+                            <SelectTrigger><SelectValue placeholder="Select a subcategory" /></SelectValue>
                         </FormControl>
                         <SelectContent>
                             {selectedCategory && categories[selectedCategory as keyof typeof categories]?.map(subcat => (
