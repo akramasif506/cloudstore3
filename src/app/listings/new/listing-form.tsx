@@ -98,6 +98,11 @@ export function ListingForm() {
       const imageFileList = form.getValues('productImage');
       if (!imageFileList || imageFileList.length === 0) {
           form.trigger('productImage');
+          toast({
+              variant: "destructive",
+              title: "Image Missing",
+              description: "Please select an image for your listing.",
+          });
           return null;
       }
       const file = imageFileList[0];
@@ -202,6 +207,14 @@ export function ListingForm() {
       const result = await createListing(user.id, formData);
       
       if (!result.success) {
+        // Handle Zod errors from server
+        if (result.errors) {
+            Object.entries(result.errors).forEach(([key, value]) => {
+                const fieldName = key as FieldPath<ClientListingSchema>;
+                const message = (value as string[])[0];
+                form.setError(fieldName, { type: 'server', message });
+            });
+        }
         throw new Error(result.message || 'An unexpected error occurred during submission.');
       }
       
