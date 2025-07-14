@@ -1,25 +1,39 @@
+
 // src/app/cart/actions.ts
 'use server';
 
 import { z } from 'zod';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
-import type { CartItem } from '@/context/cart-context';
+import type { CartItem, FeeConfig } from '@/context/cart-context';
 
 const placeOrderSchema = z.object({
   userId: z.string().min(1, 'User ID is required.'),
   customerName: z.string().min(1, 'Customer name is required.'),
   items: z.array(z.any()), // Not strictly validating cart items from client
-  total: z.number(),
   shippingAddress: z.string().min(10, 'Shipping address is required.'),
   contactNumber: z.string().min(10, 'A valid contact number is required.'),
 });
+
+async function getFeeConfigServer(): Promise<FeeConfig> {
+    const { db } = initializeAdmin();
+    try {
+        const feesRef = db.ref('site_config/fees');
+        const snapshot = await feesRef.once('value');
+        if (snapshot.exists()) {
+            return snapshot.val();
+        }
+        return { platformFeePercent: 0, handlingFeeFixed: 0 }; // Default if not set
+    } catch (error) {
+        console.error('Error fetching fee config:', error);
+        return { platformFeePercent: 0, handlingFeeFixed: 0 };
+    }
+}
 
 export async function placeOrder(values: {
     userId: string;
     customerName: string;
     items: CartItem[];
-    total: number;
     shippingAddress: string;
     contactNumber: string;
 }): Promise<{ success: boolean; orderId?: string; message?: string }> {
@@ -38,7 +52,16 @@ export async function placeOrder(values: {
       return { success: false, message: 'Invalid order data.' };
   }
 
-  const { userId, customerName, items, total, shippingAddress, contactNumber } = validatedFields.data;
+  const { userId, customerName, items, shippingAddress, contactNumber } = validatedFields.data;
+
+  // --- Recalculate total on the server ---
+  const feeConfig = await getFeeConfigServer();
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const platformFee = subtotal * (feeConfig.platformFeePercent / 100);
+  const handlingFee = feeConfig.handlingFeeFixed;
+  const total = subtotal + platformFee + handlingFee;
+  // ---
+
   const orderId = uuidv4();
 
   const orderData = {
@@ -52,6 +75,9 @@ export async function placeOrder(values: {
         quantity: item.quantity,
         imageUrl: item.imageUrl,
     })),
+    subtotal,
+    platformFee,
+    handlingFee,
     total,
     shippingAddress,
     contactNumber,

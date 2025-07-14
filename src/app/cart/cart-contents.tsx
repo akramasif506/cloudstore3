@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Trash2, Frown, Home, Phone, Loader2, LogIn } from 'lucide-react';
+import { Trash2, Frown, Home, Phone, Loader2, LogIn, Percent, Package } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { useState, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,7 +19,7 @@ import { useRouter } from 'next/navigation';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 export function CartContents() {
-  const { items, removeFromCart, updateQuantity, subtotal, clearCart } = useCart();
+  const { items, removeFromCart, updateQuantity, subtotal, clearCart, platformFee, handlingFee, total } = useCart();
   const { user } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
@@ -52,7 +52,6 @@ export function CartContents() {
         userId: user.id,
         customerName: user.name || 'Valued Customer',
         items,
-        total: subtotal,
         shippingAddress: address,
         contactNumber,
     });
@@ -155,7 +154,7 @@ export function CartContents() {
             <AlertDescription>
               <Button variant="link" asChild className="p-0 h-auto">
                  <Link href="/login?redirect=/cart">Log in</Link>
-              </Button> to use your saved details.
+              </Button> to use your saved details and place an order.
             </AlertDescription>
           </Alert>
         )}
@@ -190,19 +189,27 @@ export function CartContents() {
           <CardHeader>
             <CardTitle>Order Summary</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between">
-              <span>Subtotal</span>
-              <span className="font-semibold">Rs {subtotal.toFixed(2)}</span>
+          <CardContent className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span className="font-medium">Rs {subtotal.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between">
-              <span>Shipping</span>
-              <span className="font-semibold">Free</span>
+             <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground flex items-center gap-1"><Percent className="h-3 w-3" /> Platform Fee</span>
+              <span className="font-medium">Rs {platformFee.toFixed(2)}</span>
             </div>
-            <Separator />
+             <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground flex items-center gap-1"><Package className="h-3 w-3" /> Handling Fee</span>
+              <span className="font-medium">Rs {handlingFee.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Shipping</span>
+              <span className="font-medium text-primary">Free</span>
+            </div>
+            <Separator className="my-2" />
             <div className="flex justify-between text-lg font-bold">
               <span>Total</span>
-              <span>Rs {subtotal.toFixed(2)}</span>
+              <span>Rs {total.toFixed(2)}</span>
             </div>
           </CardContent>
           <CardFooter>

@@ -70,9 +70,17 @@ export interface Order {
     userId: string;
     customerName: string;
     items: OrderItem[];
+    subtotal: number;
+    platformFee: number;
+    handlingFee: number;
     total: number;
     shippingAddress: string;
     contactNumber: string;
     status: 'Pending' | 'Shipped' | 'Delivered' | 'Cancelled';
     createdAt: string;
+}
+
+export interface FeeConfig {
+    platformFeePercent: number;
+    handlingFeeFixed: number;
 }

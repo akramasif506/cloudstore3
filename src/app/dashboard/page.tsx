@@ -1,7 +1,7 @@
 
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Package, ShieldAlert, CheckCircle, ShoppingCart, List, MessageSquare, Star, BookUser, Megaphone } from 'lucide-react';
+import { Users, Package, ShieldAlert, CheckCircle, ShoppingCart, List, MessageSquare, Star, BookUser, Megaphone, Percent } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { CategoryChart } from '@/components/dashboard/category-chart';
 import { RecentProducts } from '@/components/dashboard/recent-products';
@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { RecentOrders } from '@/components/dashboard/recent-orders';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0; // Or 'no-store'
 
 async function getDashboardStats() {
     let db;
@@ -159,6 +160,12 @@ export default async function DashboardPage() {
                     icon={Megaphone}
                     href="/dashboard/broadcast-message"
                     />
+                <StatsCard 
+                    title="Fees & Taxes"
+                    value={"Set Rates"}
+                    icon={Percent}
+                    href="/dashboard/manage-fees"
+                />
             </CardContent>
         </Card>
       </div>

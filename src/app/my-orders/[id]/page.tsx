@@ -5,7 +5,7 @@ import type { Order } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import Image from 'next/image';
-import { Package, Truck, CheckCircle, Frown, PackageOpen, Home, Phone, User as UserIcon, Calendar, ShoppingCart } from 'lucide-react';
+import { Package, Truck, CheckCircle, Frown, PackageOpen, Home, Phone, User as UserIcon, Calendar, ShoppingCart, Percent } from 'lucide-react';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -48,6 +48,13 @@ export default async function OrderDetailPage({ params }: { params: { id: string
     if (!order) {
         notFound();
     }
+    
+    // Set default values for fee fields if they don't exist
+    const subtotal = order.subtotal ?? order.total;
+    const platformFee = order.platformFee ?? 0;
+    const handlingFee = order.handlingFee ?? 0;
+    const total = order.total;
+
 
     return (
         <div className="max-w-4xl mx-auto">
@@ -73,11 +80,28 @@ export default async function OrderDetailPage({ params }: { params: { id: string
 
                         <div>
                             <h3 className="font-semibold text-lg mb-4">Order Summary</h3>
-                            <div className="space-y-2 text-muted-foreground">
-                                <div className="flex justify-between"><span>Subtotal</span><span>Rs {order.total.toFixed(2)}</span></div>
-                                <div className="flex justify-between"><span>Shipping</span><span>Free</span></div>
+                             <div className="space-y-2 text-muted-foreground">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">Subtotal</span>
+                                    <span className="font-medium">Rs {subtotal.toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground flex items-center gap-1"><Percent className="h-3 w-3" /> Platform Fee</span>
+                                    <span className="font-medium">Rs {platformFee.toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground flex items-center gap-1"><Package className="h-3 w-3" /> Handling Fee</span>
+                                    <span className="font-medium">Rs {handlingFee.toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">Shipping</span>
+                                    <span className="font-medium text-primary">Free</span>
+                                </div>
                                 <Separator className="my-2" />
-                                <div className="flex justify-between font-bold text-lg text-foreground"><span>Total</span><span>Rs {order.total.toFixed(2)}</span></div>
+                                <div className="flex justify-between font-bold text-lg text-foreground">
+                                    <span>Total</span>
+                                    <span>Rs {total.toFixed(2)}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
