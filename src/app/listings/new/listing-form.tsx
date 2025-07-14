@@ -73,7 +73,7 @@ export function ListingForm() {
       initialDescription: '',
       productName: '',
       productDescription: '',
-      price: undefined,
+      price: null,
       category: '',
       subcategory: '',
       condition: undefined,
@@ -315,8 +315,12 @@ export function ListingForm() {
                                 className="pl-8"
                                 step="0.01"
                                 {...field}
+                                value={field.value ?? ''}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  field.onChange(value === '' ? null : Number(value));
+                                }}
                                 disabled={isFormProcessing}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
                             />
                             </FormControl>
                         </div>

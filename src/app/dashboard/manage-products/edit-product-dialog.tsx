@@ -67,6 +67,7 @@ export function EditProductDialog({ product, onSuccess, onError }: EditProductDi
             price: product.price,
             category: product.category,
             subcategory: product.subcategory,
+            condition: product.condition || 'Used',
         },
     });
 
@@ -194,7 +195,7 @@ export function EditProductDialog({ product, onSuccess, onError }: EditProductDi
                                         {...field}
                                         onChange={(e) => {
                                         const value = e.target.value;
-                                        field.onChange(value === '' ? undefined : Number(value));
+                                        field.onChange(value === '' ? null : Number(value));
                                         }}
                                         value={field.value ?? ''}
                                     />
