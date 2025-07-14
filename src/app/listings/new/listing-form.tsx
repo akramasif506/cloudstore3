@@ -24,8 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Wand2, RefreshCw, LogIn } from 'lucide-react';
-import { extractListingDetails } from '@/ai/flows/extract-listing-details';
+import { Loader2, LogIn } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { listingSchema } from '@/lib/schemas';
 import { useAuth } from '@/context/auth-context';
@@ -42,7 +41,6 @@ const clientListingSchema = listingSchema.extend({
   productImage: isBrowser
     ? z.instanceof(FileList).refine((files) => files?.length === 1, 'Product image is required.')
     : z.any(),
-  initialDescription: z.string().min(10, "Please describe your item in a bit more detail."),
 });
 
 type ClientListingSchema = z.infer<typeof clientListingSchema>;
@@ -60,9 +58,7 @@ const categories = {
 const conditions = ['New', 'Like New', 'Used'];
 
 export function ListingForm() {
-  const [isGenerating, setIsGenerating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [hasGenerated, setHasGenerated] = useState(false);
   const { toast } = useToast();
   const { user, loading: isAuthLoading } = useAuth();
   const router = useRouter();
@@ -71,7 +67,6 @@ export function ListingForm() {
     resolver: zodResolver(clientListingSchema),
     mode: "onBlur",
     defaultValues: {
-      initialDescription: '',
       productName: '',
       productDescription: '',
       price: null,
@@ -82,98 +77,8 @@ export function ListingForm() {
     },
   });
   
-  const isFormProcessing = isGenerating || isSubmitting;
   const productImageRef = form.register('productImage');
 
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
-  };
-  
-  const getCompressedImage = async (): Promise<File | null> => {
-      const imageFileList = form.getValues('productImage');
-      if (!imageFileList || imageFileList.length === 0) {
-          form.trigger('productImage');
-          toast({
-              variant: "destructive",
-              title: "Image Missing",
-              description: "Please select an image for your listing.",
-          });
-          return null;
-      }
-      const file = imageFileList[0];
-      const options = {
-          maxSizeMB: 1,
-          maxWidthOrHeight: 1920,
-          useWebWorker: true,
-      };
-      try {
-          const compressedFile = await imageCompression(file, options);
-          return compressedFile;
-      } catch (error) {
-          toast({
-              variant: "destructive",
-              title: "Image Compression Failed",
-              description: "Could not process the image. Please try a different one or a smaller file.",
-          });
-          console.error("Image compression error:", error);
-          return null;
-      }
-  };
-
-
-  const handleGenerateDetails = async () => {
-    const { initialDescription } = form.getValues();
-
-    if (!initialDescription) {
-      form.trigger('initialDescription');
-      return;
-    }
-
-    setIsGenerating(true);
-    setHasGenerated(false);
-    
-    const compressedImage = await getCompressedImage();
-    if (!compressedImage) {
-        setIsGenerating(false);
-        return;
-    }
-
-    try {
-      const imageDataUrl = await fileToBase64(compressedImage);
-      const result = await extractListingDetails({
-        userDescription: initialDescription,
-        productImage: imageDataUrl,
-      });
-      
-      form.setValue('productName', result.productName, { shouldValidate: true });
-      form.setValue('productDescription', result.productDescription, { shouldValidate: true });
-      form.setValue('price', result.price, { shouldValidate: true });
-      form.setValue('category', result.category, { shouldValidate: true });
-      form.setValue('subcategory', result.subcategory, { shouldValidate: true });
-      form.setValue('condition', result.condition, { shouldValidate: true });
-
-      setHasGenerated(true);
-      toast({
-        title: "Details Generated!",
-        description: "The AI has created your listing details. Please review them below.",
-      });
-    } catch (error) {
-      console.error("AI generation failed:", error);
-      setHasGenerated(true); // Allow manual entry even if AI fails
-      toast({
-        variant: 'destructive',
-        title: "AI Assistant couldn't generate details.",
-        description: "No problem, please fill in the information manually.",
-      });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
 
   async function onSubmit(values: ClientListingSchema) {
     if (!user) {
@@ -186,13 +91,35 @@ export function ListingForm() {
     }
     
     setIsSubmitting(true);
-    const compressedImageFile = await getCompressedImage();
-
-    if (!compressedImageFile) {
+    
+    const imageFileList = form.getValues('productImage');
+    if (!imageFileList || imageFileList.length === 0) {
+        form.trigger('productImage');
         toast({ variant: 'destructive', title: 'Image Missing', description: 'Please select an image and try again.' });
         setIsSubmitting(false);
         return;
     }
+
+    const imageFile = imageFileList[0];
+    let compressedImageFile;
+    try {
+        const options = {
+            maxSizeMB: 1,
+            maxWidthOrHeight: 1920,
+            useWebWorker: true,
+        };
+        compressedImageFile = await imageCompression(imageFile, options);
+    } catch (error) {
+        toast({
+              variant: "destructive",
+              title: "Image Compression Failed",
+              description: "Could not process the image. Please try a different one or a smaller file.",
+          });
+        console.error("Image compression error:", error);
+        setIsSubmitting(false);
+        return;
+    }
+
 
     const formData = new FormData();
     formData.append('productImage', compressedImageFile, compressedImageFile.name);
@@ -207,7 +134,6 @@ export function ListingForm() {
       const result = await createListing(user.id, formData);
       
       if (!result.success) {
-        // Handle Zod errors from server
         if (result.errors) {
             Object.entries(result.errors).forEach(([key, value]) => {
                 const fieldName = key as FieldPath<ClientListingSchema>;
@@ -274,9 +200,21 @@ export function ListingForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="space-y-4 p-6 border-dashed border-2 rounded-lg bg-muted/30">
-          <h3 className="text-lg font-semibold">1. Describe Your Item</h3>
+        <div className="space-y-6">
           <FormField
+            control={form.control}
+            name="productName"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Listing Title</FormLabel>
+                <FormControl>
+                    <Input placeholder="e.g. Vintage Leather Armchair" {...field} disabled={isSubmitting} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+        <FormField
             control={form.control}
             name="productImage"
             render={({ field }) => (
@@ -287,183 +225,126 @@ export function ListingForm() {
                     type="file" 
                     accept="image/*"
                     {...productImageRef}
-                    disabled={isFormProcessing}
+                    disabled={isSubmitting}
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="initialDescription"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Describe your item, its condition, and price</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="e.g. I'm selling a slightly used brown leather armchair. It's in great condition, just a small scuff on the left arm. Asking for around 8000 Rs."
-                    rows={4}
-                    {...field}
-                    disabled={isFormProcessing}
-                  />
-                </FormControl>
-                 <FormDescription>
-                    Be as descriptive as possible. Our AI will use this to generate the listing.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-           <Button
-              type="button"
-              onClick={handleGenerateDetails}
-              disabled={isFormProcessing}
-              size="lg"
-            >
-              {isGenerating ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Wand2 className="mr-2 h-4 w-4" />
-              )}
-              Generate Listing Details
-            </Button>
-        </div>
 
-        {hasGenerated && (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">2. Review and Submit</h3>
-                <Button type="button" variant="ghost" size="sm" onClick={() => setHasGenerated(false)} disabled={isFormProcessing}>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Start Over
-                </Button>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="price"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Price</FormLabel>
+                    <div className="relative">
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <span className="text-gray-500 sm:text-sm">Rs</span>
+                        </div>
+                        <FormControl>
+                        <Input
+                            type="number"
+                            className="pl-8"
+                            step="0.01"
+                            placeholder="0.00"
+                            {...field}
+                            value={field.value ?? ''}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              field.onChange(value === '' ? null : Number(value));
+                            }}
+                            disabled={isSubmitting}
+                        />
+                        </FormControl>
+                    </div>
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
             <FormField
                 control={form.control}
-                name="productName"
+                name="condition"
                 render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Listing Title</FormLabel>
+                <FormItem>
+                    <FormLabel>Condition</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
                     <FormControl>
-                        <Input {...field} disabled={isFormProcessing} />
+                        <SelectTrigger><SelectValue placeholder="Select a condition" /></SelectValue>
                     </FormControl>
+                    <SelectContent>
+                        {conditions.map(con => (
+                        <SelectItem key={con} value={con}>{con}</SelectItem>
+                        ))}
+                    </SelectContent>
+                    </Select>
                     <FormMessage />
-                    </FormItem>
+                </FormItem>
                 )}
-                />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <FormField
-                    control={form.control}
-                    name="price"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Price</FormLabel>
-                        <div className="relative">
-                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                            <span className="text-gray-500 sm:text-sm">Rs</span>
-                            </div>
-                            <FormControl>
-                            <Input
-                                type="number"
-                                className="pl-8"
-                                step="0.01"
-                                {...field}
-                                value={field.value ?? ''}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  field.onChange(value === '' ? null : Number(value));
-                                }}
-                                disabled={isFormProcessing}
-                            />
-                            </FormControl>
-                        </div>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="condition"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Condition</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value} disabled={isFormProcessing}>
-                        <FormControl>
-                            <SelectTrigger><SelectValue placeholder="Select a condition" /></SelectValue>
-                        </FormControl>
-                        <SelectContent>
-                            {conditions.map(con => (
-                            <SelectItem key={con} value={con}>{con}</SelectItem>
-                            ))}
-                        </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                    control={form.control}
-                    name="category"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Category</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value} disabled={isFormProcessing}>
-                        <FormControl>
-                            <SelectTrigger><SelectValue placeholder="Select a category" /></SelectValue>
-                        </FormControl>
-                        <SelectContent>
-                            {Object.keys(categories).map(cat => (
-                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                            ))}
-                        </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="subcategory"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Subcategory</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory || isFormProcessing}>
-                        <FormControl>
-                            <SelectTrigger><SelectValue placeholder="Select a subcategory" /></SelectValue>
-                        </FormControl>
-                        <SelectContent>
-                            {selectedCategory && categories[selectedCategory as keyof typeof categories]?.map(subcat => (
-                            <SelectItem key={subcat} value={subcat}>{subcat}</SelectItem>
-                            ))}
-                        </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-            </div>
-             <FormField
-                control={form.control}
-                name="productDescription"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                        <Textarea rows={6} {...field} disabled={isFormProcessing} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-          <Button type="submit" size="lg" className="w-full md:w-auto" disabled={isFormProcessing}>
-            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            {isSubmitting ? 'Submitting for Review...' : 'Submit for Review'}
-          </Button>
+            />
         </div>
-        )}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
+                    <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select a category" /></SelectValue>
+                    </FormControl>
+                    <SelectContent>
+                        {Object.keys(categories).map(cat => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        ))}
+                    </SelectContent>
+                    </Select>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="subcategory"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Subcategory</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory || isSubmitting}>
+                    <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select a subcategory" /></SelectValue>
+                    </FormControl>
+                    <SelectContent>
+                        {selectedCategory && categories[selectedCategory as keyof typeof categories]?.map(subcat => (
+                        <SelectItem key={subcat} value={subcat}>{subcat}</SelectItem>
+                        ))}
+                    </SelectContent>
+                    </Select>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+        </div>
+          <FormField
+            control={form.control}
+            name="productDescription"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                    <Textarea placeholder="Describe your item in detail..." rows={6} {...field} disabled={isSubmitting} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+        <Button type="submit" size="lg" className="w-full md:w-auto" disabled={isSubmitting}>
+          {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          {isSubmitting ? 'Submitting for Review...' : 'Submit for Review'}
+        </Button>
+      </div>
       </form>
     </Form>
   );
