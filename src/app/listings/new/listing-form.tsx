@@ -132,9 +132,8 @@ export function ListingForm() {
       console.error("AI generation failed:", error);
       setHasGenerated(true); // Allow manual entry even if AI fails
       toast({
-        variant: "destructive",
-        title: "AI Assistant Error",
-        description: "Could not generate details. Please fill in the information manually.",
+        title: "AI Assistant couldn't generate details.",
+        description: "No problem, please fill in the information manually.",
       });
     } finally {
       setIsGenerating(false);
@@ -235,7 +234,7 @@ export function ListingForm() {
               <FormItem>
                 <FormLabel>Product Image</FormLabel>
                 <FormControl>
-                  <Input type="file" accept="image/*" {...productImageRef} disabled={isFormProcessing} />
+                  <Input type="file" accept="image/*" capture="environment" {...productImageRef} disabled={isFormProcessing} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

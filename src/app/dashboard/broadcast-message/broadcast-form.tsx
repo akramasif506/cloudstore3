@@ -30,11 +30,12 @@ const broadcastSchema = z.object({
 });
 
 interface BroadcastFormProps {
-    currentMessage: { message: string; link: string | null; } | null
+    currentMessage: { id: number; message: string; link: string | null; } | null
 }
 
-export function BroadcastForm({ currentMessage }: BroadcastFormProps) {
+export function BroadcastForm({ currentMessage: initialMessage }: BroadcastFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentMessage, setCurrentMessage] = useState(initialMessage);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof broadcastSchema>>({
@@ -48,9 +49,14 @@ export function BroadcastForm({ currentMessage }: BroadcastFormProps) {
   async function onSubmit(values: z.infer<typeof broadcastSchema>) {
     setIsSubmitting(true);
     const result = await setBroadcastMessage(values);
-    setIsSubmitting(false);
-
     if (result.success) {
+      // Manually create a new object for state update
+      const newBroadcastData = {
+          id: new Date().getTime(),
+          message: values.message,
+          link: values.link || null
+      };
+      setCurrentMessage(newBroadcastData);
       toast({
         title: "Broadcast Set!",
         description: result.message,
@@ -62,6 +68,7 @@ export function BroadcastForm({ currentMessage }: BroadcastFormProps) {
         description: result.message,
       });
     }
+    setIsSubmitting(false);
   }
 
   async function handleClear() {
@@ -71,6 +78,7 @@ export function BroadcastForm({ currentMessage }: BroadcastFormProps) {
 
     if (result.success) {
       form.reset({ message: '', link: '' });
+      setCurrentMessage(null);
       toast({
         title: "Broadcast Cleared!",
         description: result.message,
@@ -131,7 +139,7 @@ export function BroadcastForm({ currentMessage }: BroadcastFormProps) {
         <div className="flex gap-4">
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Set Broadcast
+            {currentMessage ? 'Update Broadcast' : 'Set Broadcast'}
           </Button>
           {currentMessage && (
              <Button type="button" variant="destructive" onClick={handleClear} disabled={isSubmitting}>

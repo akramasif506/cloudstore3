@@ -1,11 +1,14 @@
+
 // src/app/my-orders/[id]/page.tsx
 import { notFound } from 'next/navigation';
 import type { Order } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import Image from 'next/image';
-import { Package, Truck, CheckCircle, Frown, PackageOpen, Home, Phone, User as UserIcon, Calendar } from 'lucide-react';
+import { Package, Truck, CheckCircle, Frown, PackageOpen, Home, Phone, User as UserIcon, Calendar, ShoppingCart } from 'lucide-react';
 import { initializeAdmin } from '@/lib/firebase-admin';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 async function getOrder(id: string): Promise<Order | null> {
     let db;
@@ -102,6 +105,14 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                         </div>
                     </div>
                 </CardContent>
+                 <CardFooter className="bg-muted/30 p-6 flex justify-center">
+                    <Button asChild>
+                        <Link href="/">
+                            <ShoppingCart className="mr-2 h-4 w-4" />
+                            Continue Shopping
+                        </Link>
+                    </Button>
+                </CardFooter>
             </Card>
         </div>
     );

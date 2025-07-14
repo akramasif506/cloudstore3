@@ -44,8 +44,7 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
   
   const headersList = headers();
   const host = headersList.get('host') || 'localhost:3000';
-  // Always use https for shareable links to ensure they are trusted.
-  const protocol = 'https';
+  const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
   const productUrl = `${protocol}://${host}/listings/${product.id}`;
 
 

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Trash2, Frown, Home, Phone, Loader2 } from 'lucide-react';
+import { Trash2, Frown, Home, Phone, Loader2, LogIn } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { useState, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { placeOrder } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 export function CartContents() {
   const { items, removeFromCart, updateQuantity, subtotal, clearCart } = useCart();
@@ -147,6 +148,17 @@ export function CartContents() {
       </div>
 
       <div className="lg:col-span-1 sticky top-24 space-y-6">
+        {!user && (
+          <Alert>
+            <LogIn className="h-4 w-4" />
+            <AlertTitle>You're not logged in!</AlertTitle>
+            <AlertDescription>
+              <Button variant="link" asChild className="p-0 h-auto">
+                 <Link href="/login?redirect=/cart">Log in</Link>
+              </Button> to use your saved details.
+            </AlertDescription>
+          </Alert>
+        )}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Home className="w-5 h-5" /> Shipping Information</CardTitle>

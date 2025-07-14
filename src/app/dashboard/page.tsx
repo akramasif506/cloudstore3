@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { RecentOrders } from '@/components/dashboard/recent-orders';
 
+export const dynamic = 'force-dynamic';
 
 async function getDashboardStats() {
     let db;
