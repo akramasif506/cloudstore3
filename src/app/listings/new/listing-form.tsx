@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Sparkles, Frown, LogIn, Wand2, RefreshCw } from 'lucide-react';
+import { Loader2, Wand2, RefreshCw, LogIn } from 'lucide-react';
 import { extractListingDetails } from '@/ai/flows/extract-listing-details';
 import { useToast } from "@/hooks/use-toast";
 import { listingSchema } from '@/lib/schemas';
