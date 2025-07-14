@@ -7,10 +7,13 @@ import { Leaf } from 'lucide-react';
 
 export default function LoginPage() {
   return (
-    <div className="w-full lg:grid lg:min-h-[calc(100vh-10rem)] lg:grid-cols-2">
+    <div className="w-full lg:grid lg:min-h-[calc(100vh-10rem)] lg:grid-cols-1">
       <div className="flex items-center justify-center py-12">
         <div className="mx-auto grid w-[350px] gap-6">
-          <div className="grid gap-2">
+          <div className="grid gap-2 text-center">
+             <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-primary/10 mb-4">
+                <Leaf className="h-8 w-8 text-primary" />
+            </div>
             <h1 className="text-3xl font-bold font-headline">Login</h1>
             <p className="text-balance text-muted-foreground">
               Enter your email below to login to your account
@@ -23,25 +26,6 @@ export default function LoginPage() {
               Sign up
             </Link>
           </div>
-        </div>
-      </div>
-      <div className="hidden bg-muted lg:block">
-        <div className="relative h-full w-full">
-            <Image
-                src="https://placehold.co/1200x1200.png"
-                alt="A collection of stylish secondhand items"
-                fill
-                className="object-cover"
-                data-ai-hint="lifestyle background"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background to-background/20" />
-            <div className="absolute bottom-8 left-8 text-foreground">
-                <div className="flex items-center space-x-2 mb-2">
-                    <Leaf className="h-8 w-8 text-primary" />
-                    <span className="font-bold font-headline text-2xl">CloudStore</span>
-                </div>
-                <p className="text-lg">Rediscover treasures and give items a new story.</p>
-            </div>
         </div>
       </div>
     </div>

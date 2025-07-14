@@ -165,7 +165,7 @@ export function ListingForm() {
       const result = await createListing(user.id, formData);
       
       if (!result.success) {
-        throw new Error(result.message || 'An unknown error occurred during submission.');
+        throw new Error(result.message || 'An unexpected error occurred during submission.');
       }
       
       toast({
@@ -234,7 +234,7 @@ export function ListingForm() {
               <FormItem>
                 <FormLabel>Product Image</FormLabel>
                 <FormControl>
-                  <Input type="file" accept="image/*" capture="environment" {...productImageRef} disabled={isFormProcessing} />
+                  <Input type="file" accept="image/*" {...productImageRef} disabled={isFormProcessing} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

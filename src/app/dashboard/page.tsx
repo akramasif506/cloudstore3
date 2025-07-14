@@ -130,7 +130,7 @@ export default async function DashboardPage() {
                     title="Total Products" 
                     value={totalProducts} 
                     icon={Package}
-                    href="/"
+                    href="/dashboard/manage-products"
                     />
                 <StatsCard 
                     title="Users" 
