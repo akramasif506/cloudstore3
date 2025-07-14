@@ -1,3 +1,4 @@
+
 // src/app/listings/new/actions.ts
 'use server';
 
@@ -26,15 +27,8 @@ export async function createListing(
     return { success: false, message: `Server configuration error: ${errorMessage}` };
   }
 
-  const rawPrice = formData.get('price');
-  const formValues = {
-    productName: formData.get('productName'),
-    productDescription: formData.get('productDescription'),
-    price: rawPrice !== null ? Number(rawPrice) : undefined, // Ensure price is a number for validation
-    category: formData.get('category'),
-    subcategory: formData.get('subcategory'),
-    condition: formData.get('condition'),
-  };
+  // Create an object from the form data to be validated by Zod
+  const formValues = Object.fromEntries(formData.entries());
   
   const validatedFields = listingSchema.safeParse(formValues);
 
