@@ -33,6 +33,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import Link from 'next/link';
 import { createListing } from './actions';
 import { useRouter } from 'next/navigation';
+import imageCompression from 'browser-image-compression';
 
 
 const isBrowser = typeof window !== 'undefined';
@@ -62,6 +63,7 @@ export function ListingForm() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
+  const [compressedImageFile, setCompressedImageFile] = useState<File | null>(null);
   const { toast } = useToast();
   const { user, loading: isAuthLoading } = useAuth();
   const router = useRouter();
@@ -92,11 +94,37 @@ export function ListingForm() {
     });
   };
 
+  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const options = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+    };
+
+    try {
+        const compressedFile = await imageCompression(file, options);
+        setCompressedImageFile(compressedFile);
+        
+        // Update the form with the original file list for validation purposes
+        form.setValue('productImage', event.target.files);
+
+    } catch (error) {
+        toast({
+            variant: "destructive",
+            title: "Image Compression Failed",
+            description: "Could not process the image. Please try a different one.",
+        });
+        console.error(error);
+    }
+  };
+
   const handleGenerateDetails = async () => {
-    const { initialDescription, productImage } = form.getValues();
+    const { initialDescription } = form.getValues();
     
-    // Improved check: Ensure productImage exists and has a file.
-    if (!productImage || productImage.length === 0 || !initialDescription) {
+    if (!compressedImageFile || !initialDescription) {
       form.trigger(['initialDescription', 'productImage']);
       toast({
         variant: "destructive",
@@ -105,12 +133,11 @@ export function ListingForm() {
       });
       return;
     }
-    const imageFile = productImage[0];
 
     setIsGenerating(true);
     setHasGenerated(false);
     try {
-      const imageDataUrl = await fileToBase64(imageFile);
+      const imageDataUrl = await fileToBase64(compressedImageFile);
       const result = await extractListingDetails({
         userDescription: initialDescription,
         productImage: imageDataUrl,
@@ -132,6 +159,7 @@ export function ListingForm() {
       console.error("AI generation failed:", error);
       setHasGenerated(true); // Allow manual entry even if AI fails
       toast({
+        variant: 'destructive',
         title: "AI Assistant couldn't generate details.",
         description: "No problem, please fill in the information manually.",
       });
@@ -149,11 +177,16 @@ export function ListingForm() {
       });
       return;
     }
+    
+    if (!compressedImageFile) {
+        toast({ variant: 'destructive', title: 'Image Missing', description: 'Please upload an image.' });
+        return;
+    }
 
     setIsSubmitting(true);
 
     const formData = new FormData();
-    formData.append('productImage', values.productImage[0]);
+    formData.append('productImage', compressedImageFile, compressedImageFile.name);
     formData.append('productName', values.productName);
     formData.append('productDescription', values.productDescription);
     formData.append('price', String(values.price));
@@ -187,7 +220,6 @@ export function ListingForm() {
   };
   
   const selectedCategory = form.watch('category');
-  const productImageRef = form.register("productImage");
 
 
   if (isAuthLoading) {
@@ -234,7 +266,11 @@ export function ListingForm() {
               <FormItem>
                 <FormLabel>Product Image</FormLabel>
                 <FormControl>
-                  <Input type="file" accept="image/*" {...productImageRef} disabled={isFormProcessing} />
+                  <Input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleImageChange}
+                    disabled={isFormProcessing} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
