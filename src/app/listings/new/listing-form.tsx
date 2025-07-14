@@ -276,9 +276,10 @@ export function ListingForm() {
                 <FormControl>
                   <Input 
                     type="file" 
-                    accept="image/*" 
+                    accept="image/*"
                     {...productImageRef}
-                    disabled={isFormProcessing} />
+                    disabled={isFormProcessing}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
