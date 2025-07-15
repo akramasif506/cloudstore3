@@ -1,4 +1,3 @@
-
 // src/lib/auth.ts
 import { initializeAdmin } from '@/lib/firebase-admin';
 import type { User as AppUser } from '@/lib/types';
@@ -24,6 +23,7 @@ export async function getCurrentUser(): Promise<AppUser | null> {
     decodedIdToken = await adminAuth.verifySessionCookie(session, true);
   } catch (error) {
     // Session cookie is invalid or expired.
+    console.error("Session verification failed:", error);
     return null;
   }
   

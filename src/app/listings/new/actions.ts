@@ -1,4 +1,3 @@
-
 // src/app/listings/new/actions.ts
 'use server';
 
@@ -7,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { revalidatePath } from 'next/cache';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { listingSchema } from '@/lib/schemas';
+import { getCurrentUser } from '@/lib/auth';
 
 // Server-side schema doesn't include the file, only the text fields.
 const serverListingSchema = listingSchema.pick({
@@ -19,14 +19,14 @@ const serverListingSchema = listingSchema.pick({
 });
 
 export async function createListing(
-  userId: string,
   formData: FormData
 ): Promise<{ success: boolean; message: string; productId?: string; errors?: any }> {
   
-  // This check is essential for security.
-  if (!userId) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) {
      return { success: false, message: `Authorization failed. Please log in and try again.` };
   }
+  const userId = currentUser.id;
 
   let db, storage;
   try {
@@ -37,8 +37,16 @@ export async function createListing(
     return { success: false, message: `Server configuration error: ${errorMessage}` };
   }
 
-  // Create an object from the form data to be validated by Zod
-  const formValues = Object.fromEntries(formData.entries());
+  // Create a plain object from form data for validation.
+  // Crucially, convert price to a number for Zod coercion to work correctly.
+  const formValues = {
+    productName: formData.get('productName'),
+    productDescription: formData.get('productDescription'),
+    price: Number(formData.get('price')),
+    category: formData.get('category'),
+    subcategory: formData.get('subcategory'),
+    condition: formData.get('condition'),
+  };
   
   const validatedFields = serverListingSchema.safeParse(formValues);
 
@@ -61,13 +69,8 @@ export async function createListing(
   }
 
   try {
-    // Fetch seller details from the database using the provided and verified userId
-    const userRef = db.ref(`users/${userId}`);
-    const userSnapshot = await userRef.once('value');
-    if (!userSnapshot.exists()) {
-        return { success: false, message: 'Seller profile not found.' };
-    }
-    const seller = userSnapshot.val();
+    // The seller details are from the currently authenticated user (currentUser).
+    const seller = currentUser;
 
     const imageBuffer = Buffer.from(await imageFile.arrayBuffer());
     const imageFileName = `${uuidv4()}.${imageFile.name.split('.').pop()}`;
@@ -96,7 +99,7 @@ export async function createListing(
       imageUrl,
       reviews: [],
       seller: {
-        id: userId,
+        id: seller.id,
         name: seller.name || 'Unknown User',
         contactNumber: seller.mobileNumber || ''
       },

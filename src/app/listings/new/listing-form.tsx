@@ -124,13 +124,15 @@ export function ListingForm() {
     const formData = new FormData();
     formData.append('productName', values.productName);
     formData.append('productDescription', values.productDescription);
-    formData.append('price', values.price!.toString());
+    if (values.price !== null) {
+      formData.append('price', values.price!.toString());
+    }
     formData.append('category', values.category);
     formData.append('subcategory', values.subcategory);
     formData.append('condition', values.condition);
     formData.append('productImage', compressedFile, compressedFile.name);
 
-    const result = await createListing(user.id, formData);
+    const result = await createListing(formData);
 
     setIsSubmitting(false);
 
