@@ -47,13 +47,13 @@ const categories = {
 
 const conditions = ['New', 'Like New', 'Used'];
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 const formSchema = listingSchema.extend({
     productImage: z.any()
         .refine((files) => files?.length == 1, "An image of your product is required.")
-        .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, `Max file size is 10MB.`)
+        .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
         .refine(
           (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
           "Only .jpg, .jpeg, .png and .webp formats are supported."
@@ -91,7 +91,6 @@ export function ListingForm() {
       return;
     }
 
-    let compressedFile;
     try {
         setSubmissionStep('compressing');
         const imageFile = values.productImage[0];
@@ -100,38 +99,35 @@ export function ListingForm() {
             maxWidthOrHeight: 1920,
             useWebWorker: true,
         }
-        compressedFile = await imageCompression(imageFile, options);
-    } catch (error) {
-        toast({ variant: "destructive", title: "Image Compression Failed", description: "There was a problem processing your image. Please try a different photo." });
-        setSubmissionStep('idle');
-        return;
-    }
+        const compressedFile = await imageCompression(imageFile, options);
 
-    let imageUrl = '';
-    try {
         setSubmissionStep('uploading');
-        imageUrl = await uploadImageAndGetUrl(compressedFile, user.id);
+        const imageUrl = await uploadImageAndGetUrl(compressedFile, user.id);
+    
+        setSubmissionStep('saving');
+        const result = await createListing({
+            ...values,
+            price: values.price!, // Zod ensures it's not null here
+            imageUrl,
+        });
+
+        if (result.success && result.productId) {
+          toast({ title: 'Listing Submitted!', description: 'Your item is now pending review.' });
+          router.push(`/my-listings`);
+        } else {
+          // This will handle specific server-side validation errors if they are returned
+          throw new Error(result.message || 'An unknown error occurred on the server.');
+        }
+
     } catch (error) {
-        toast({ variant: "destructive", title: "Image Upload Failed", description: "There was a problem uploading your image. Please try again." });
+        console.error("Submission failed:", error);
+        toast({
+            variant: "destructive",
+            title: "Submission Failed",
+            description: "An error occurred. Please try again with a different image.",
+        });
+    } finally {
         setSubmissionStep('idle');
-        return;
-    }
-    
-    setSubmissionStep('saving');
-    
-    const result = await createListing({
-        ...values,
-        price: values.price!, // Zod ensures it's not null here
-        imageUrl,
-    });
-
-    setSubmissionStep('idle');
-
-    if (result.success && result.productId) {
-      toast({ title: 'Listing Submitted!', description: 'Your item is now pending review.' });
-      router.push(`/my-listings`);
-    } else {
-      toast({ variant: 'destructive', title: 'Submission Failed', description: result.message || 'An unknown issue occurred.' });
     }
   }
 
@@ -209,7 +205,7 @@ export function ListingForm() {
                     />
                 </div>
               </FormControl>
-              <FormDescription>Max file size: 10MB. Accepted formats: JPG, PNG, WEBP. Large images will be compressed automatically.</FormDescription>
+              <FormDescription>Max file size: 5MB. Accepted formats: JPG, PNG, WEBP.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
