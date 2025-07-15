@@ -8,6 +8,16 @@ import { revalidatePath } from 'next/cache';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { listingSchema } from '@/lib/schemas';
 
+// Server-side schema doesn't include the file, only the text fields.
+const serverListingSchema = listingSchema.pick({
+    productName: true,
+    productDescription: true,
+    price: true,
+    category: true,
+    subcategory: true,
+    condition: true,
+});
+
 export async function createListing(
   userId: string,
   formData: FormData
@@ -30,12 +40,13 @@ export async function createListing(
   // Create an object from the form data to be validated by Zod
   const formValues = Object.fromEntries(formData.entries());
   
-  const validatedFields = listingSchema.safeParse(formValues);
+  const validatedFields = serverListingSchema.safeParse(formValues);
 
   if (!validatedFields.success) {
+    console.error("Server-side validation failed:", validatedFields.error.flatten());
     return {
       success: false,
-      message: 'Invalid form data.',
+      message: 'Invalid form data received on server.',
       errors: validatedFields.error.flatten().fieldErrors,
     };
   }
