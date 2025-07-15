@@ -32,6 +32,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { createListing } from './actions';
 import { listingSchema } from '@/lib/schemas';
 import Image from 'next/image';
+import imageCompression from 'browser-image-compression';
 
 const categories = {
   'Furniture': ['Chairs', 'Tables', 'Shelving', 'Beds'],
@@ -48,7 +49,7 @@ const conditions = ['New', 'Like New', 'Used'];
 const formSchema = listingSchema.extend({
     productImage: z.any()
         .refine((files) => files?.length == 1, "An image of your product is required.")
-        .refine((files) => files?.[0]?.size <= 5000000, `Max file size is 5MB.`)
+        .refine((files) => files?.[0]?.size <= 10000000, `Max file size is 10MB.`) // Increased limit before compression
         .refine(
           (files) => ["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(files?.[0]?.type),
           "Only .jpg, .jpeg, .png and .webp formats are supported."
@@ -91,6 +92,35 @@ export function ListingForm() {
     }
     setIsSubmitting(true);
 
+    const imageFile = values.productImage[0];
+    let compressedFile = imageFile;
+
+    const options = {
+      maxSizeMB: 2,          // Max size in MB
+      maxWidthOrHeight: 1920, // Max width or height
+      useWebWorker: true,
+    };
+
+    try {
+      console.log(`Original image size: ${(imageFile.size / 1024 / 1024).toFixed(2)} MB`);
+      toast({
+        title: 'Compressing image...',
+        description: 'Please wait while we optimize your photo for upload.',
+      });
+      compressedFile = await imageCompression(imageFile, options);
+      console.log(`Compressed image size: ${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`);
+    } catch (error) {
+      console.error('Image compression failed:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Image Compression Failed',
+        description: 'Could not process the image. Please try a different one.',
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+
     const formData = new FormData();
     formData.append('productName', values.productName);
     formData.append('productDescription', values.productDescription);
@@ -98,7 +128,7 @@ export function ListingForm() {
     formData.append('category', values.category);
     formData.append('subcategory', values.subcategory);
     formData.append('condition', values.condition);
-    formData.append('productImage', values.productImage[0]);
+    formData.append('productImage', compressedFile, compressedFile.name);
 
     const result = await createListing(user.id, formData);
 
@@ -184,7 +214,7 @@ export function ListingForm() {
                     />
                 </div>
               </FormControl>
-              <FormDescription>Max file size: 5MB. Supported formats: JPG, PNG, WEBP.</FormDescription>
+              <FormDescription>Max file size: 10MB. Images will be compressed automatically.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
