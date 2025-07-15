@@ -36,8 +36,6 @@ export async function createListing(
     return { success: false, message: `Server configuration error: ${errorMessage}` };
   }
 
-  // Create a plain object from form data for validation.
-  // Crucially, convert price to a number for Zod coercion to work correctly.
   const formValues = {
     productName: formData.get('productName'),
     productDescription: formData.get('productDescription'),
@@ -50,7 +48,6 @@ export async function createListing(
   const validatedFields = serverListingSchema.safeParse(formValues);
 
   if (!validatedFields.success) {
-    console.error("Server-side validation failed:", validatedFields.error.flatten());
     return {
       success: false,
       message: 'Invalid form data received on server.',
@@ -68,18 +65,26 @@ export async function createListing(
   }
 
   try {
-    const imageBuffer = Buffer.from(await imageFile.arrayBuffer());
     const imageFileName = `${uuidv4()}.${imageFile.name.split('.').pop()}`;
     const bucket = storage.bucket();
     const file = bucket.file(`product-images/${imageFileName}`);
-
-    await file.save(imageBuffer, {
-      metadata: { contentType: imageFile.type },
+    
+    // --- Use a stream to upload the file to prevent timeouts ---
+    const fileStream = file.createWriteStream({
+        metadata: { contentType: imageFile.type },
     });
+
+    await new Promise((resolve, reject) => {
+        const nodeStream = imageFile.stream();
+        nodeStream.pipe(fileStream)
+            .on('finish', resolve)
+            .on('error', reject);
+    });
+    // --- End of stream logic ---
 
     const [imageUrl] = await file.getSignedUrl({
       action: 'read',
-      expires: '03-09-2491', // A far-future expiration date
+      expires: '03-09-2491',
     });
 
     const productId = uuidv4();
@@ -108,7 +113,6 @@ export async function createListing(
 
     revalidatePath('/my-listings');
     revalidatePath('/dashboard/pending-products');
-
 
     return { success: true, message: "Listing submitted successfully!", productId: productId };
   } catch (error) {
