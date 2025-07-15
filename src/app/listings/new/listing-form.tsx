@@ -2,12 +2,11 @@
 "use client";
 
 import { useState } from 'react';
-import { useForm, type FieldPath } from 'react-hook-form';
+import { useForm, type FieldPath, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
-  Form,
   FormControl,
   FormDescription,
   FormField,
@@ -198,7 +197,7 @@ export function ListingForm() {
   }
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="space-y-6">
           <FormField
@@ -346,6 +345,6 @@ export function ListingForm() {
         </Button>
       </div>
       </form>
-    </Form>
+    </FormProvider>
   );
 }
