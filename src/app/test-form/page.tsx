@@ -16,6 +16,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState } from 'react';
+import { Loader2 } from 'lucide-react';
+import { testUpload } from './actions';
 
 const testSchema = z.object({
   testField: z.string().min(2, 'This field is required.'),
@@ -30,6 +33,7 @@ const testSchema = z.object({
 
 export default function TestFormPage() {
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof testSchema>>({
     resolver: zodResolver(testSchema),
@@ -41,12 +45,30 @@ export default function TestFormPage() {
 
   const imageRef = form.register("imageFile");
 
-  function onSubmit(values: z.infer<typeof testSchema>) {
-    const imageName = values.imageFile[0]?.name || 'no file';
-    toast({
-      title: "Test Successful!",
-      description: `You submitted: ${values.testField} and the image: ${imageName}`,
-    });
+  async function onSubmit(values: z.infer<typeof testSchema>) {
+    setIsSubmitting(true);
+    
+    const formData = new FormData();
+    formData.append('testField', values.testField);
+    formData.append('imageFile', values.imageFile[0]);
+
+    const result = await testUpload(formData);
+
+    if (result.success) {
+        toast({
+            title: "Upload Successful!",
+            description: result.message,
+        });
+        form.reset();
+    } else {
+        toast({
+            variant: "destructive",
+            title: "Upload Failed",
+            description: result.message,
+        });
+    }
+
+    setIsSubmitting(false);
   }
 
   return (
@@ -55,7 +77,7 @@ export default function TestFormPage() {
         <CardHeader>
           <CardTitle>Test Form</CardTitle>
           <CardDescription>
-            This is a minimal form to test component rendering and file uploads.
+            This form tests real file uploads to Firebase Storage.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -89,7 +111,10 @@ export default function TestFormPage() {
                 )}
                />
 
-              <Button type="submit">Submit Test</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Submit & Upload
+              </Button>
             </form>
           </Form>
         </CardContent>
