@@ -82,7 +82,7 @@ export default function TestFormPage() {
                     <FormItem>
                         <FormLabel>Image</FormLabel>
                         <FormControl>
-                            <Input type="file" accept="image/*" capture="environment" {...imageRef} />
+                            <Input type="file" accept="image/*" {...imageRef} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
