@@ -26,13 +26,14 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Loader2, Frown, Image as ImageIcon, UploadCloud } from 'lucide-react';
+import { Loader2, Frown, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { createListing } from './actions';
 import { listingSchema } from '@/lib/schemas';
 import Image from 'next/image';
 import { uploadImageAndGetUrl } from '@/lib/storage';
+import imageCompression from 'browser-image-compression';
 
 const categories = {
   'Furniture': ['Chairs', 'Tables', 'Shelving', 'Beds'],
@@ -46,13 +47,13 @@ const categories = {
 
 const conditions = ['New', 'Like New', 'Used'];
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 const formSchema = listingSchema.extend({
     productImage: z.any()
         .refine((files) => files?.length == 1, "An image of your product is required.")
-        .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
+        .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, `Max file size is 10MB.`)
         .refine(
           (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
           "Only .jpg, .jpeg, .png and .webp formats are supported."
@@ -64,8 +65,7 @@ export function ListingForm() {
   const { toast } = useToast();
   const router = useRouter();
   const { user } = useAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
+  const [submissionStep, setSubmissionStep] = useState<'idle' | 'compressing' | 'uploading' | 'saving'>('idle');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -91,19 +91,33 @@ export function ListingForm() {
       return;
     }
 
-    setIsUploading(true);
+    let compressedFile;
+    try {
+        setSubmissionStep('compressing');
+        const imageFile = values.productImage[0];
+        const options = {
+            maxSizeMB: 1,
+            maxWidthOrHeight: 1920,
+            useWebWorker: true,
+        }
+        compressedFile = await imageCompression(imageFile, options);
+    } catch (error) {
+        toast({ variant: "destructive", title: "Image Compression Failed", description: "There was a problem processing your image. Please try a different photo." });
+        setSubmissionStep('idle');
+        return;
+    }
+
     let imageUrl = '';
     try {
-      const imageFile = values.productImage[0];
-      imageUrl = await uploadImageAndGetUrl(imageFile, user.id);
+        setSubmissionStep('uploading');
+        imageUrl = await uploadImageAndGetUrl(compressedFile, user.id);
     } catch (error) {
-      toast({ variant: "destructive", title: "Image Upload Failed", description: "There was a problem uploading your image. Please try again." });
-      setIsUploading(false);
-      return;
+        toast({ variant: "destructive", title: "Image Upload Failed", description: "There was a problem uploading your image. Please try again." });
+        setSubmissionStep('idle');
+        return;
     }
     
-    setIsUploading(false);
-    setIsSubmitting(true);
+    setSubmissionStep('saving');
     
     const result = await createListing({
         ...values,
@@ -111,7 +125,7 @@ export function ListingForm() {
         imageUrl,
     });
 
-    setIsSubmitting(false);
+    setSubmissionStep('idle');
 
     if (result.success && result.productId) {
       toast({ title: 'Listing Submitted!', description: 'Your item is now pending review.' });
@@ -152,10 +166,11 @@ export function ListingForm() {
     );
   }
 
-  const isProcessing = isUploading || isSubmitting;
+  const isProcessing = submissionStep !== 'idle';
   let buttonText = 'Submit Listing for Review';
-  if (isUploading) buttonText = 'Uploading image...';
-  if (isSubmitting) buttonText = 'Saving listing...';
+  if (submissionStep === 'compressing') buttonText = 'Compressing image...';
+  if (submissionStep === 'uploading') buttonText = 'Uploading image...';
+  if (submissionStep === 'saving') buttonText = 'Saving listing...';
 
   return (
     <Form {...form}>
@@ -194,7 +209,7 @@ export function ListingForm() {
                     />
                 </div>
               </FormControl>
-              <FormDescription>Max file size: 5MB. Accepted formats: JPG, PNG, WEBP.</FormDescription>
+              <FormDescription>Max file size: 10MB. Accepted formats: JPG, PNG, WEBP. Large images will be compressed automatically.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -339,3 +354,5 @@ export function ListingForm() {
     </Form>
   );
 }
+
+    
