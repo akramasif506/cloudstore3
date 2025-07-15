@@ -19,10 +19,6 @@ const serverListingSchema = listingSchema.pick({
     condition: true,
 });
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-
-
 export async function createListing(
   formData: FormData
 ): Promise<{ success: boolean; message: string; productId?: string; errors?: any }> {
@@ -69,31 +65,12 @@ export async function createListing(
     };
   }
 
-  // --- Server-side image validation ---
-  if (imageFile.size > MAX_FILE_SIZE) {
-    return {
-      success: false,
-      message: 'File size exceeds the 5MB limit.',
-      errors: { productImage: ['File is too large. Maximum size is 5MB.'] }
-    }
-  }
-
-  if (!ACCEPTED_IMAGE_TYPES.includes(imageFile.type)) {
-     return {
-      success: false,
-      message: 'Invalid file type.',
-      errors: { productImage: ['Only .jpg, .jpeg, .png and .webp formats are supported.'] }
-    }
-  }
-  // --- End of validation ---
-
-
   try {
     const imageFileName = `${uuidv4()}.${imageFile.name.split('.').pop()}`;
     const bucket = storage.bucket();
     const file = bucket.file(`product-images/${imageFileName}`);
     
-    // --- Use a stream to upload the file to prevent timeouts ---
+    // Use a stream to upload the file to prevent timeouts
     const fileStream = file.createWriteStream({
         metadata: { contentType: imageFile.type },
     });
@@ -104,7 +81,6 @@ export async function createListing(
             .on('finish', resolve)
             .on('error', reject);
     });
-    // --- End of stream logic ---
 
     const [imageUrl] = await file.getSignedUrl({
       action: 'read',
