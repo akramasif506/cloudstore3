@@ -58,6 +58,8 @@ export function ListingForm() {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isCompressing, setIsCompressing] = useState(false);
+  const [compressedFile, setCompressedFile] = useState<File | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -85,41 +87,17 @@ export function ListingForm() {
       });
       return;
     }
-    setIsSubmitting(true);
 
-    const imageFile = values.productImage[0];
-    if (!imageFile) {
+    if (!compressedFile) {
         toast({
             variant: 'destructive',
-            title: 'Image Missing',
-            description: 'Please select an image to upload.',
+            title: 'Image Not Ready',
+            description: 'Please wait for the image to finish processing or select a valid image.',
         });
-        setIsSubmitting(false);
         return;
     }
 
-    let compressedFile: File;
-    try {
-      toast({
-        title: 'Processing image...',
-        description: 'Please wait while we optimize your photo.',
-      });
-      const options = {
-        maxSizeMB: 2,
-        maxWidthOrHeight: 1920,
-        useWebWorker: true,
-      };
-      compressedFile = await imageCompression(imageFile, options);
-    } catch (error) {
-      console.error('Image compression failed:', error);
-      toast({
-        variant: "destructive",
-        title: "Image Problem",
-        description: "Could not process image. Please try another photo.",
-      });
-      setIsSubmitting(false);
-      return;
-    }
+    setIsSubmitting(true);
 
     const formData = new FormData();
     formData.append('productName', values.productName);
@@ -151,16 +129,43 @@ export function ListingForm() {
     }
   }
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    } else {
+    if (!file) {
       setImagePreview(null);
+      setCompressedFile(null);
+      return;
+    }
+
+    // Show preview immediately
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Start compression
+    setIsCompressing(true);
+    setCompressedFile(null);
+
+    try {
+      const options = {
+        maxSizeMB: 2,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+      };
+      const processedFile = await imageCompression(file, options);
+      setCompressedFile(processedFile);
+    } catch (error) {
+      console.error('Image compression failed:', error);
+      toast({
+        variant: "destructive",
+        title: "Image Problem",
+        description: "Could not process image. Please try another photo.",
+      });
+      setImagePreview(null); // Clear preview on failure
+    } finally {
+      setIsCompressing(false);
     }
   };
 
@@ -181,6 +186,9 @@ export function ListingForm() {
       </Card>
     );
   }
+
+  const isSubmitDisabled = isSubmitting || isCompressing;
+  const submitButtonText = isCompressing ? "Processing image..." : isSubmitting ? "Submitting..." : "Submit Listing for Review";
 
   return (
     <Form {...form}>
@@ -203,6 +211,11 @@ export function ListingForm() {
                                     <span>Click or tap to upload an image</span>
                                 </>
                             )}
+                             {isCompressing && (
+                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg">
+                                    <Loader2 className="h-8 w-8 animate-spin text-white" />
+                                </div>
+                            )}
                         </div>
                     </label>
                     <Input 
@@ -215,7 +228,7 @@ export function ListingForm() {
                             field.onChange(e.target.files);
                             handleImageChange(e);
                         }}
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isCompressing}
                     />
                 </div>
               </FormControl>
@@ -232,7 +245,7 @@ export function ListingForm() {
             <FormItem>
               <FormLabel>Listing Title</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Vintage Leather Armchair" {...field} disabled={isSubmitting}/>
+                <Input placeholder="e.g. Vintage Leather Armchair" {...field} disabled={isSubmitDisabled}/>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -246,7 +259,7 @@ export function ListingForm() {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea placeholder="Describe your item in detail, including its condition, age, and any flaws." rows={6} {...field} disabled={isSubmitting}/>
+                <Textarea placeholder="Describe your item in detail, including its condition, age, and any flaws." rows={6} {...field} disabled={isSubmitDisabled}/>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -266,7 +279,7 @@ export function ListingForm() {
                     form.setValue('subcategory', '');
                   }}
                   defaultValue={field.value}
-                  disabled={isSubmitting}
+                  disabled={isSubmitDisabled}
                 >
                   <FormControl>
                     <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
@@ -287,7 +300,7 @@ export function ListingForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Subcategory</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory || isSubmitting}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory || isSubmitDisabled}>
                   <FormControl>
                     <SelectTrigger><SelectValue placeholder="Select a subcategory" /></SelectTrigger>
                   </FormControl>
@@ -326,7 +339,7 @@ export function ListingForm() {
                         field.onChange(value === '' ? null : Number(value));
                       }}
                       value={field.value ?? ''}
-                      disabled={isSubmitting}
+                      disabled={isSubmitDisabled}
                     />
                   </FormControl>
                 </div>
@@ -340,7 +353,7 @@ export function ListingForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Condition</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
+                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitDisabled}>
                   <FormControl>
                     <SelectTrigger><SelectValue placeholder="Select a condition" /></SelectTrigger>
                   </FormControl>
@@ -356,11 +369,13 @@ export function ListingForm() {
           />
         </div>
         
-        <Button type="submit" disabled={isSubmitting} size="lg">
-          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Submit Listing for Review
+        <Button type="submit" disabled={isSubmitDisabled} size="lg">
+          {isSubmitDisabled && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {submitButtonText}
         </Button>
       </form>
     </Form>
   );
 }
+
+    
