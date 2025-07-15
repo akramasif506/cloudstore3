@@ -32,7 +32,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { createListing } from './actions';
 import { listingSchema } from '@/lib/schemas';
 import Image from 'next/image';
-import imageCompression from 'browser-image-compression';
 
 const categories = {
   'Furniture': ['Chairs', 'Tables', 'Shelving', 'Beds'],
@@ -46,9 +45,17 @@ const categories = {
 
 const conditions = ['New', 'Like New', 'Used'];
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
 const formSchema = listingSchema.extend({
     productImage: z.any()
-        .refine((files) => files?.length == 1, "An image of your product is required."),
+        .refine((files) => files?.length == 1, "An image of your product is required.")
+        .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
+        .refine(
+          (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
+          "Only .jpg, .jpeg, .png and .webp formats are supported."
+        ),
 });
 
 
@@ -58,8 +65,6 @@ export function ListingForm() {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isCompressing, setIsCompressing] = useState(false);
-  const [compressedFile, setCompressedFile] = useState<File | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -88,15 +93,6 @@ export function ListingForm() {
       return;
     }
 
-    if (!compressedFile) {
-        toast({
-            variant: 'destructive',
-            title: 'Image Not Ready',
-            description: 'Please wait for the image to finish processing or select a valid image.',
-        });
-        return;
-    }
-
     setIsSubmitting(true);
 
     const formData = new FormData();
@@ -108,7 +104,7 @@ export function ListingForm() {
     formData.append('category', values.category);
     formData.append('subcategory', values.subcategory);
     formData.append('condition', values.condition);
-    formData.append('productImage', compressedFile, compressedFile.name);
+    formData.append('productImage', values.productImage[0]);
 
     const result = await createListing(formData);
 
@@ -129,43 +125,16 @@ export function ListingForm() {
     }
   }
 
-  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) {
-      setImagePreview(null);
-      setCompressedFile(null);
-      return;
-    }
-
-    // Show preview immediately
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-
-    // Start compression
-    setIsCompressing(true);
-    setCompressedFile(null);
-
-    try {
-      const options = {
-        maxSizeMB: 2,
-        maxWidthOrHeight: 1920,
-        useWebWorker: true,
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
       };
-      const processedFile = await imageCompression(file, options);
-      setCompressedFile(processedFile);
-    } catch (error) {
-      console.error('Image compression failed:', error);
-      toast({
-        variant: "destructive",
-        title: "Image Problem",
-        description: "Could not process image. Please try another photo.",
-      });
-      setImagePreview(null); // Clear preview on failure
-    } finally {
-      setIsCompressing(false);
+      reader.readAsDataURL(file);
+    } else {
+      setImagePreview(null);
     }
   };
 
@@ -186,9 +155,6 @@ export function ListingForm() {
       </Card>
     );
   }
-
-  const isSubmitDisabled = isSubmitting || isCompressing;
-  const submitButtonText = isCompressing ? "Processing image..." : isSubmitting ? "Submitting..." : "Submit Listing for Review";
 
   return (
     <Form {...form}>
@@ -211,28 +177,23 @@ export function ListingForm() {
                                     <span>Click or tap to upload an image</span>
                                 </>
                             )}
-                             {isCompressing && (
-                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg">
-                                    <Loader2 className="h-8 w-8 animate-spin text-white" />
-                                </div>
-                            )}
                         </div>
                     </label>
                     <Input 
                         type="file" 
                         id="productImage"
                         className="sr-only"
-                        accept="image/png, image/jpeg, image/webp" 
+                        accept={ACCEPTED_IMAGE_TYPES.join(',')} 
                         {...productImageRef}
                         onChange={(e) => {
                             field.onChange(e.target.files);
                             handleImageChange(e);
                         }}
-                        disabled={isSubmitting || isCompressing}
+                        disabled={isSubmitting}
                     />
                 </div>
               </FormControl>
-              <FormDescription>High-quality images will be compressed automatically.</FormDescription>
+              <FormDescription>Max file size: 5MB. Accepted formats: JPG, PNG, WEBP.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -245,7 +206,7 @@ export function ListingForm() {
             <FormItem>
               <FormLabel>Listing Title</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Vintage Leather Armchair" {...field} disabled={isSubmitDisabled}/>
+                <Input placeholder="e.g. Vintage Leather Armchair" {...field} disabled={isSubmitting}/>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -259,7 +220,7 @@ export function ListingForm() {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea placeholder="Describe your item in detail, including its condition, age, and any flaws." rows={6} {...field} disabled={isSubmitDisabled}/>
+                <Textarea placeholder="Describe your item in detail, including its condition, age, and any flaws." rows={6} {...field} disabled={isSubmitting}/>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -279,7 +240,7 @@ export function ListingForm() {
                     form.setValue('subcategory', '');
                   }}
                   defaultValue={field.value}
-                  disabled={isSubmitDisabled}
+                  disabled={isSubmitting}
                 >
                   <FormControl>
                     <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
@@ -300,7 +261,7 @@ export function ListingForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Subcategory</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory || isSubmitDisabled}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory || isSubmitting}>
                   <FormControl>
                     <SelectTrigger><SelectValue placeholder="Select a subcategory" /></SelectTrigger>
                   </FormControl>
@@ -339,7 +300,7 @@ export function ListingForm() {
                         field.onChange(value === '' ? null : Number(value));
                       }}
                       value={field.value ?? ''}
-                      disabled={isSubmitDisabled}
+                      disabled={isSubmitting}
                     />
                   </FormControl>
                 </div>
@@ -353,7 +314,7 @@ export function ListingForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Condition</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitDisabled}>
+                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
                   <FormControl>
                     <SelectTrigger><SelectValue placeholder="Select a condition" /></SelectTrigger>
                   </FormControl>
@@ -369,9 +330,9 @@ export function ListingForm() {
           />
         </div>
         
-        <Button type="submit" disabled={isSubmitDisabled} size="lg">
-          {isSubmitDisabled && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {submitButtonText}
+        <Button type="submit" disabled={isSubmitting} size="lg">
+          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Submit Listing for Review
         </Button>
       </form>
     </Form>
