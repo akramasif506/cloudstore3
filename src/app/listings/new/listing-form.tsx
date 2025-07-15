@@ -48,12 +48,7 @@ const conditions = ['New', 'Like New', 'Used'];
 
 const formSchema = listingSchema.extend({
     productImage: z.any()
-        .refine((files) => files?.length == 1, "An image of your product is required.")
-        .refine((files) => files?.[0]?.size <= 10000000, `Max file size is 10MB.`) // Increased limit before compression
-        .refine(
-          (files) => ["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(files?.[0]?.type),
-          "Only .jpg, .jpeg, .png and .webp formats are supported."
-        ),
+        .refine((files) => files?.length == 1, "An image of your product is required."),
 });
 
 
@@ -95,14 +90,25 @@ export function ListingForm() {
     const imageFile = values.productImage[0];
     let compressedFile = imageFile;
 
+    if (!imageFile) {
+        toast({
+            variant: 'destructive',
+            title: 'Image Missing',
+            description: 'Please select an image to upload.',
+        });
+        setIsSubmitting(false);
+        return;
+    }
+
     const options = {
-      maxSizeMB: 2,          // Max size in MB
-      maxWidthOrHeight: 1920, // Max width or height
+      maxSizeMB: 2,
+      maxWidthOrHeight: 1920,
       useWebWorker: true,
     };
 
     try {
       console.log(`Original image size: ${(imageFile.size / 1024 / 1024).toFixed(2)} MB`);
+      console.log('Image file object:', imageFile);
       toast({
         title: 'Compressing image...',
         description: 'Please wait while we optimize your photo for upload.',
@@ -219,7 +225,7 @@ export function ListingForm() {
                     />
                 </div>
               </FormControl>
-              <FormDescription>Max file size: 10MB. Images will be compressed automatically.</FormDescription>
+              <FormDescription>High-quality images will be compressed automatically.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
