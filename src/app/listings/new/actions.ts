@@ -1,3 +1,4 @@
+
 // src/app/listings/new/actions.ts
 'use server';
 
@@ -17,6 +18,10 @@ const serverListingSchema = listingSchema.pick({
     subcategory: true,
     condition: true,
 });
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
 
 export async function createListing(
   formData: FormData
@@ -63,6 +68,25 @@ export async function createListing(
       errors: { productImage: ['Product image is required.'] },
     };
   }
+
+  // --- Server-side image validation ---
+  if (imageFile.size > MAX_FILE_SIZE) {
+    return {
+      success: false,
+      message: 'File size exceeds the 5MB limit.',
+      errors: { productImage: ['File is too large. Maximum size is 5MB.'] }
+    }
+  }
+
+  if (!ACCEPTED_IMAGE_TYPES.includes(imageFile.type)) {
+     return {
+      success: false,
+      message: 'Invalid file type.',
+      errors: { productImage: ['Only .jpg, .jpeg, .png and .webp formats are supported.'] }
+    }
+  }
+  // --- End of validation ---
+
 
   try {
     const imageFileName = `${uuidv4()}.${imageFile.name.split('.').pop()}`;
