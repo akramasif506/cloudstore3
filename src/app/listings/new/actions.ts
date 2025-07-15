@@ -26,8 +26,7 @@ export async function createListing(
   if (!currentUser) {
      return { success: false, message: `Authorization failed. Please log in and try again.` };
   }
-  const userId = currentUser.id;
-
+  
   let db, storage;
   try {
     ({ db, storage } = initializeAdmin());
@@ -69,9 +68,6 @@ export async function createListing(
   }
 
   try {
-    // The seller details are from the currently authenticated user (currentUser).
-    const seller = currentUser;
-
     const imageBuffer = Buffer.from(await imageFile.arrayBuffer());
     const imageFileName = `${uuidv4()}.${imageFile.name.split('.').pop()}`;
     const bucket = storage.bucket();
@@ -99,9 +95,9 @@ export async function createListing(
       imageUrl,
       reviews: [],
       seller: {
-        id: seller.id,
-        name: seller.name || 'Unknown User',
-        contactNumber: seller.mobileNumber || ''
+        id: currentUser.id,
+        name: currentUser.name || 'Unknown User',
+        contactNumber: currentUser.mobileNumber || ''
       },
       createdAt: new Date().toISOString(),
       status: 'pending_review',

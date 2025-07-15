@@ -69,7 +69,7 @@ export function ListingForm() {
     defaultValues: {
       productName: '',
       productDescription: '',
-      price: undefined,
+      price: null,
       category: '',
       subcategory: '',
       condition: 'Used',
@@ -211,7 +211,10 @@ export function ListingForm() {
                         className="sr-only"
                         accept="image/png, image/jpeg, image/webp" 
                         {...productImageRef}
-                        onChange={handleImageChange}
+                        onChange={(e) => {
+                            field.onChange(e.target.files);
+                            handleImageChange(e);
+                        }}
                         disabled={isSubmitting}
                     />
                 </div>
