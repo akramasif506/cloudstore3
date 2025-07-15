@@ -115,7 +115,7 @@ export function ListingForm() {
           toast({ title: 'Listing Submitted!', description: 'Your item is now pending review.' });
           router.push(`/my-listings`);
         } else {
-          // This will handle specific server-side validation errors if they are returned
+          // This will handle specific server-side validation errors if they are returned.
           throw new Error(result.message || 'An unknown error occurred on the server.');
         }
 
@@ -124,7 +124,7 @@ export function ListingForm() {
         toast({
             variant: "destructive",
             title: "Submission Failed",
-            description: "An error occurred. Please try again with a different image.",
+            description: "Please try again with a different image.",
         });
     } finally {
         setSubmissionStep('idle');
