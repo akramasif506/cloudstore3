@@ -19,6 +19,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 const testSchema = z.object({
   testField: z.string().min(2, 'This field is required.'),
+  imageFile: z.any()
+    .refine((files) => files?.length == 1, "Image is required.")
+    .refine((files) => files?.[0]?.size <= 5000000, `Max file size is 5MB.`)
+    .refine(
+      (files) => ["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(files?.[0]?.type),
+      ".jpg, .jpeg, .png and .webp files are accepted."
+    ),
 });
 
 export default function TestFormPage() {
@@ -28,13 +35,17 @@ export default function TestFormPage() {
     resolver: zodResolver(testSchema),
     defaultValues: {
       testField: '',
+      imageFile: undefined,
     },
   });
 
+  const imageRef = form.register("imageFile");
+
   function onSubmit(values: z.infer<typeof testSchema>) {
+    const imageName = values.imageFile[0]?.name || 'no file';
     toast({
       title: "Test Successful!",
-      description: `You submitted: ${values.testField}`,
+      description: `You submitted: ${values.testField} and the image: ${imageName}`,
     });
   }
 
@@ -44,7 +55,7 @@ export default function TestFormPage() {
         <CardHeader>
           <CardTitle>Test Form</CardTitle>
           <CardDescription>
-            This is a minimal form to test component rendering.
+            This is a minimal form to test component rendering and file uploads.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -63,6 +74,21 @@ export default function TestFormPage() {
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="imageFile"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Image</FormLabel>
+                        <FormControl>
+                            <Input type="file" accept="image/*" {...imageRef} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+               />
+
               <Button type="submit">Submit Test</Button>
             </form>
           </Form>
