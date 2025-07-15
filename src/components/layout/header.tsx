@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Leaf, User, LogOut, LayoutDashboard, DollarSign, Package, LogIn, UserPlus, ShoppingCart, FilePlus2, Settings, ShoppingBag, MessageSquare, Menu, Home, Tag } from 'lucide-react';
+import { Leaf, User, LogOut, LayoutDashboard, DollarSign, Package, LogIn, UserPlus, ShoppingCart, FilePlus2, Settings, ShoppingBag, MessageSquare, Menu, Home, Tag, TestTube } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -47,6 +47,9 @@ export function Header() {
               <DropdownMenuItem asChild>
                 <Link href="/listings/new"><Tag className="mr-2 h-4 w-4" />Sell</Link>
               </DropdownMenuItem>
+               <DropdownMenuItem asChild>
+                <Link href="/test-form"><TestTube className="mr-2 h-4 w-4" />Test Form</Link>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               {!user && (
                 <>
@@ -77,6 +80,9 @@ export function Header() {
                 </Link>
                 <Link href="/listings/new" className="transition-colors hover:text-foreground/80 text-foreground">
                     Sell
+                </Link>
+                 <Link href="/test-form" className="transition-colors hover:text-foreground/80 text-foreground">
+                    Test Form
                 </Link>
             </nav>
         </div>
