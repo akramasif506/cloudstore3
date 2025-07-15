@@ -26,12 +26,13 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Loader2, Frown, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Frown, Image as ImageIcon, UploadCloud } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { createListing } from './actions';
 import { listingSchema } from '@/lib/schemas';
 import Image from 'next/image';
+import { uploadImageAndGetUrl } from '@/lib/storage';
 
 const categories = {
   'Furniture': ['Chairs', 'Tables', 'Shelving', 'Beds'],
@@ -64,6 +65,7 @@ export function ListingForm() {
   const router = useRouter();
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -85,43 +87,37 @@ export function ListingForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
-      toast({
-        variant: 'destructive',
-        title: 'Authentication Issue',
-        description: 'You must be logged in to create a listing.',
-      });
+      toast({ variant: 'destructive', title: 'Authentication Issue', description: 'You must be logged in to create a listing.' });
       return;
     }
 
-    setIsSubmitting(true);
-
-    const formData = new FormData();
-    formData.append('productName', values.productName);
-    formData.append('productDescription', values.productDescription);
-    if (values.price !== null) {
-      formData.append('price', values.price!.toString());
+    setIsUploading(true);
+    let imageUrl = '';
+    try {
+      const imageFile = values.productImage[0];
+      imageUrl = await uploadImageAndGetUrl(imageFile, user.id);
+    } catch (error) {
+      toast({ variant: "destructive", title: "Image Upload Failed", description: "There was a problem uploading your image. Please try again." });
+      setIsUploading(false);
+      return;
     }
-    formData.append('category', values.category);
-    formData.append('subcategory', values.subcategory);
-    formData.append('condition', values.condition);
-    formData.append('productImage', values.productImage[0]);
-
-    const result = await createListing(formData);
+    
+    setIsUploading(false);
+    setIsSubmitting(true);
+    
+    const result = await createListing({
+        ...values,
+        price: values.price!, // Zod ensures it's not null here
+        imageUrl,
+    });
 
     setIsSubmitting(false);
 
     if (result.success && result.productId) {
-      toast({
-        title: 'Listing Submitted!',
-        description: 'Your item is now pending review.',
-      });
+      toast({ title: 'Listing Submitted!', description: 'Your item is now pending review.' });
       router.push(`/my-listings`);
     } else {
-      toast({
-        variant: 'destructive',
-        title: 'Submission Failed',
-        description: result.message || 'An unknown issue occurred.',
-      });
+      toast({ variant: 'destructive', title: 'Submission Failed', description: result.message || 'An unknown issue occurred.' });
     }
   }
 
@@ -156,6 +152,11 @@ export function ListingForm() {
     );
   }
 
+  const isProcessing = isUploading || isSubmitting;
+  let buttonText = 'Submit Listing for Review';
+  if (isUploading) buttonText = 'Uploading image...';
+  if (isSubmitting) buttonText = 'Saving listing...';
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -189,7 +190,7 @@ export function ListingForm() {
                             field.onChange(e.target.files);
                             handleImageChange(e);
                         }}
-                        disabled={isSubmitting}
+                        disabled={isProcessing}
                     />
                 </div>
               </FormControl>
@@ -206,7 +207,7 @@ export function ListingForm() {
             <FormItem>
               <FormLabel>Listing Title</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Vintage Leather Armchair" {...field} disabled={isSubmitting}/>
+                <Input placeholder="e.g. Vintage Leather Armchair" {...field} disabled={isProcessing}/>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -220,7 +221,7 @@ export function ListingForm() {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea placeholder="Describe your item in detail, including its condition, age, and any flaws." rows={6} {...field} disabled={isSubmitting}/>
+                <Textarea placeholder="Describe your item in detail, including its condition, age, and any flaws." rows={6} {...field} disabled={isProcessing}/>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -240,7 +241,7 @@ export function ListingForm() {
                     form.setValue('subcategory', '');
                   }}
                   defaultValue={field.value}
-                  disabled={isSubmitting}
+                  disabled={isProcessing}
                 >
                   <FormControl>
                     <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
@@ -261,7 +262,7 @@ export function ListingForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Subcategory</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory || isSubmitting}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory || isProcessing}>
                   <FormControl>
                     <SelectTrigger><SelectValue placeholder="Select a subcategory" /></SelectTrigger>
                   </FormControl>
@@ -300,7 +301,7 @@ export function ListingForm() {
                         field.onChange(value === '' ? null : Number(value));
                       }}
                       value={field.value ?? ''}
-                      disabled={isSubmitting}
+                      disabled={isProcessing}
                     />
                   </FormControl>
                 </div>
@@ -314,7 +315,7 @@ export function ListingForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Condition</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
+                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isProcessing}>
                   <FormControl>
                     <SelectTrigger><SelectValue placeholder="Select a condition" /></SelectTrigger>
                   </FormControl>
@@ -330,9 +331,9 @@ export function ListingForm() {
           />
         </div>
         
-        <Button type="submit" disabled={isSubmitting} size="lg">
-          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Submit Listing for Review
+        <Button type="submit" disabled={isProcessing} size="lg">
+          {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {buttonText}
         </Button>
       </form>
     </Form>

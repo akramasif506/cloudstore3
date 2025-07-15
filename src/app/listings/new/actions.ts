@@ -9,18 +9,17 @@ import { initializeAdmin } from '@/lib/firebase-admin';
 import { listingSchema } from '@/lib/schemas';
 import { getCurrentUser } from '@/lib/auth';
 
-// Server-side schema doesn't include the file, only the text fields.
-const serverListingSchema = listingSchema.pick({
-    productName: true,
-    productDescription: true,
-    price: true,
-    category: true,
-    subcategory: true,
-    condition: true,
+// This is the shape of the data the server action now expects.
+// It does NOT include the productImage file, only the final URL.
+const serverListingSchema = listingSchema.extend({
+    imageUrl: z.string().url(),
+    price: z.coerce.number().positive('Price must be a positive number.'),
 });
 
+type ServerListingData = z.infer<typeof serverListingSchema>;
+
 export async function createListing(
-  formData: FormData
+  values: ServerListingData
 ): Promise<{ success: boolean; message: string; productId?: string; errors?: any }> {
   
   const currentUser = await getCurrentUser();
@@ -28,25 +27,16 @@ export async function createListing(
      return { success: false, message: `Authorization failed. Please log in and try again.` };
   }
   
-  let db, storage;
+  let db;
   try {
-    ({ db, storage } = initializeAdmin());
+    ({ db } = initializeAdmin());
   } catch (error) {
     console.error("Firebase Admin Init Error:", error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
     return { success: false, message: `Server configuration error: ${errorMessage}` };
   }
-
-  const formValues = {
-    productName: formData.get('productName'),
-    productDescription: formData.get('productDescription'),
-    price: Number(formData.get('price')),
-    category: formData.get('category'),
-    subcategory: formData.get('subcategory'),
-    condition: formData.get('condition'),
-  };
   
-  const validatedFields = serverListingSchema.safeParse(formValues);
+  const validatedFields = serverListingSchema.safeParse(values);
 
   if (!validatedFields.success) {
     return {
@@ -56,48 +46,16 @@ export async function createListing(
     };
   }
 
-  const imageFile = formData.get('productImage') as File | null;
-  if (!imageFile || imageFile.size === 0) {
-    return {
-      success: false,
-      message: 'Product image is required.',
-      errors: { productImage: ['Product image is required.'] },
-    };
-  }
-
   try {
-    const imageFileName = `${uuidv4()}.${imageFile.name.split('.').pop()}`;
-    const bucket = storage.bucket();
-    const file = bucket.file(`product-images/${imageFileName}`);
-    
-    // Use a stream to upload the file to prevent timeouts
-    const fileStream = file.createWriteStream({
-        metadata: { contentType: imageFile.type },
-    });
-
-    await new Promise((resolve, reject) => {
-        const nodeStream = imageFile.stream();
-        nodeStream.pipe(fileStream)
-            .on('finish', resolve)
-            .on('error', reject);
-    });
-
-    const [imageUrl] = await file.getSignedUrl({
-      action: 'read',
-      expires: '03-09-2491',
-    });
-
     const productId = uuidv4();
+
+    const { productName, productDescription, ...restOfData } = validatedFields.data;
 
     const newProductData = {
       id: productId,
-      name: validatedFields.data.productName,
-      description: validatedFields.data.productDescription,
-      price: validatedFields.data.price,
-      category: validatedFields.data.category,
-      subcategory: validatedFields.data.subcategory,
-      condition: validatedFields.data.condition,
-      imageUrl,
+      name: productName,
+      description: productDescription,
+      ...restOfData,
       reviews: [],
       seller: {
         id: currentUser.id,
