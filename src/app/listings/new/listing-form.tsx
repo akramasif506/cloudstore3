@@ -80,7 +80,7 @@ export function ListingForm() {
     if (!user) {
       toast({
         variant: 'destructive',
-        title: 'Authentication Error',
+        title: 'Authentication Issue',
         description: 'You must be logged in to create a listing.',
       });
       return;
@@ -88,8 +88,6 @@ export function ListingForm() {
     setIsSubmitting(true);
 
     const imageFile = values.productImage[0];
-    let compressedFile = imageFile;
-
     if (!imageFile) {
         toast({
             variant: 'destructive',
@@ -100,31 +98,28 @@ export function ListingForm() {
         return;
     }
 
-    const options = {
-      maxSizeMB: 2,
-      maxWidthOrHeight: 1920,
-      useWebWorker: true,
-    };
-
+    let compressedFile: File;
     try {
-      console.log(`Original image size: ${(imageFile.size / 1024 / 1024).toFixed(2)} MB`);
       toast({
-        title: 'Compressing image...',
-        description: 'Please wait while we optimize your photo for upload.',
+        title: 'Processing image...',
+        description: 'Please wait while we optimize your photo.',
       });
+      const options = {
+        maxSizeMB: 2,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+      };
       compressedFile = await imageCompression(imageFile, options);
-      console.log(`Compressed image size: ${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`);
     } catch (error) {
       console.error('Image compression failed:', error);
       toast({
-        variant: 'destructive',
-        title: 'Image Processing Failed',
-        description: 'There was an issue with the image. Please try a different photo or ensure the file size is not too large.',
+        variant: "destructive",
+        title: "Image Problem",
+        description: "Could not process image. Please try another photo.",
       });
       setIsSubmitting(false);
       return;
     }
-
 
     const formData = new FormData();
     formData.append('productName', values.productName);
@@ -151,7 +146,7 @@ export function ListingForm() {
       toast({
         variant: 'destructive',
         title: 'Submission Failed',
-        description: result.message || 'An unknown error occurred.',
+        description: result.message || 'An unknown issue occurred.',
       });
     }
   }
