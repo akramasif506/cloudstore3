@@ -108,7 +108,6 @@ export function ListingForm() {
 
     try {
       console.log(`Original image size: ${(imageFile.size / 1024 / 1024).toFixed(2)} MB`);
-      console.log('Image file object:', imageFile);
       toast({
         title: 'Compressing image...',
         description: 'Please wait while we optimize your photo for upload.',
@@ -119,8 +118,8 @@ export function ListingForm() {
       console.error('Image compression failed:', error);
       toast({
         variant: 'destructive',
-        title: 'Image Compression Failed',
-        description: 'Could not process the image. Please try a different one.',
+        title: 'Image Processing Failed',
+        description: 'There was an issue with the image. Please try a different photo or ensure the file size is not too large.',
       });
       setIsSubmitting(false);
       return;
