@@ -122,7 +122,6 @@ export function ListingForm() {
     } catch (error) {
         console.error("Submission failed:", error);
         toast({
-            variant: "destructive",
             title: "Submission Failed",
             description: "Please try again with a different image.",
         });
@@ -350,3 +349,5 @@ export function ListingForm() {
     </Form>
   );
 }
+
+    
