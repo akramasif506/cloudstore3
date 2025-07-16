@@ -65,7 +65,7 @@ export function ListingForm() {
   const { toast } = useToast();
   const router = useRouter();
   const { user } = useAuth();
-  const [submissionStep, setSubmissionStep] = useState<'idle' | 'compressing' | 'uploading' | 'saving'>('idle');
+  const [submissionStep, setSubmissionStep] = useState<'idle' | 'processing' | 'uploading' | 'saving'>('idle');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -87,12 +87,12 @@ export function ListingForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
-      toast({ variant: 'destructive', title: 'Authentication Issue', description: 'You must be logged in to create a listing.' });
+      toast({ title: 'Authentication Issue', description: 'You must be logged in to create a listing.' });
       return;
     }
 
     try {
-        setSubmissionStep('compressing');
+        setSubmissionStep('processing');
         const imageFile = values.productImage[0];
         const options = {
             maxSizeMB: 1,
@@ -163,7 +163,7 @@ export function ListingForm() {
 
   const isProcessing = submissionStep !== 'idle';
   let buttonText = 'Submit Listing for Review';
-  if (submissionStep === 'compressing') buttonText = 'Compressing image...';
+  if (submissionStep === 'processing') buttonText = 'Processing image...';
   if (submissionStep === 'uploading') buttonText = 'Uploading image...';
   if (submissionStep === 'saving') buttonText = 'Saving listing...';
 
@@ -349,5 +349,3 @@ export function ListingForm() {
     </Form>
   );
 }
-
-    
