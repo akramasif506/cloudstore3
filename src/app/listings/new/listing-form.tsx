@@ -92,7 +92,7 @@ export function ListingForm() {
       toast({ title: 'Authentication Issue', description: 'You must be logged in to create a listing.' });
       return;
     }
-    // This is the crucial check. The form can't be submitted if the compressed file isn't ready.
+    
     if (!compressedImageFile) {
         toast({
             title: 'Image not ready',
@@ -107,9 +107,6 @@ export function ListingForm() {
     
         setSubmissionStep('saving');
         
-        // This is the correct data to send to the server.
-        // It uses the form values, but EXCLUDES the productImage field,
-        // and includes the final imageUrl from storage.
         const serverData = {
           productName: values.productName,
           productDescription: values.productDescription,
@@ -142,11 +139,15 @@ export function ListingForm() {
 
   const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    
+    // Clear previous state on new file selection
+    setCompressedImageFile(null);
+    setImagePreview(null);
+    setImageProcessingState('idle');
+
     if (file) {
-      // Clear previous compressed file and reset state
-      setCompressedImageFile(null);
+      // Start processing
       setImageProcessingState('processing');
-      setImagePreview(URL.createObjectURL(file));
 
       try {
         const options = {
@@ -155,13 +156,18 @@ export function ListingForm() {
             useWebWorker: true,
         };
         const compressedFile = await imageCompression(file, options);
+        
+        // Store the compressed file
         setCompressedImageFile(compressedFile);
+        
+        // Create the preview URL from the compressed file itself
+        setImagePreview(URL.createObjectURL(compressedFile));
+        
         setImageProcessingState('done');
+
       } catch (error) {
         console.error("Image compression failed:", error);
-        setImageProcessingState('idle');
-        setImagePreview(null);
-        setCompressedImageFile(null);
+        setImageProcessingState('idle'); // Reset on error
         // Do NOT reset the form here, just the image field's value for the input
         event.target.value = '';
         toast({
@@ -171,10 +177,6 @@ export function ListingForm() {
         });
       }
 
-    } else {
-      setImagePreview(null);
-      setImageProcessingState('idle');
-      setCompressedImageFile(null);
     }
   };
 
@@ -197,7 +199,6 @@ export function ListingForm() {
   }
 
   const isSubmitting = submissionStep !== 'idle';
-  // The submit button is only ready when an image has been successfully processed.
   const isImageReady = imageProcessingState === 'done';
   let buttonText = 'Submit Listing for Review';
   if (submissionStep === 'uploading') buttonText = 'Uploading image...';
