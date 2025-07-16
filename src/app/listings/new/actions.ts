@@ -49,6 +49,7 @@ export async function createListing(
   try {
     const productId = uuidv4();
 
+    // Destructure using the correct field names from the schema
     const { productName, productDescription, ...restOfData } = validatedFields.data;
 
     const newProductData = {
@@ -63,12 +64,13 @@ export async function createListing(
         contactNumber: currentUser.mobileNumber || ''
       },
       createdAt: new Date().toISOString(),
-      status: 'pending_review',
+      status: 'pending_review', // Listings should always be pending review
     };
 
     const productRef = db.ref(`products/${productId}`);
     await productRef.set(newProductData);
 
+    // Revalidate paths to show the new listing in relevant places
     revalidatePath('/my-listings');
     revalidatePath('/dashboard/pending-products');
 

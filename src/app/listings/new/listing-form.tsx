@@ -163,7 +163,7 @@ export function ListingForm() {
     setImagePreview(null);
     setCompressedImageFile(null);
     setImageProcessingState('idle');
-    form.setValue('productImage', null, { shouldValidate: true });
+    form.setValue('productImage', null); // Do not validate yet
 
     if (file) {
       // Immediately start processing
@@ -177,8 +177,10 @@ export function ListingForm() {
         };
         const compressedFile = await imageCompression(file, options);
         
-        // Update the form with the new, compressed file
-        form.setValue('productImage', [compressedFile], { shouldValidate: true });
+        // Update the form with a FileList-like object for validation
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(compressedFile);
+        form.setValue('productImage', dataTransfer.files, { shouldValidate: true });
         
         // Store the compressed file separately for direct use
         setCompressedImageFile(compressedFile);
@@ -269,10 +271,7 @@ export function ListingForm() {
                         className="sr-only"
                         accept={ACCEPTED_IMAGE_TYPES.join(',')} 
                         {...productImageRef}
-                        onChange={(e) => {
-                            // field.onChange(e.target.files) is managed by react-hook-form's ref
-                            handleImageChange(e);
-                        }}
+                        onChange={handleImageChange}
                         disabled={isSubmitting || imageProcessingState === 'processing'}
                     />
                 </div>
