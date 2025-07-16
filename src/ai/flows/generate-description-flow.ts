@@ -33,9 +33,15 @@ const prompt = ai.definePrompt({
   name: 'generateDescriptionPrompt',
   input: { schema: GenerateDescriptionInputSchema },
   output: { schema: GenerateDescriptionOutputSchema },
-  prompt: `You are an expert copywriter for an online marketplace specializing in secondhand goods. Your task is to write a compelling, friendly, and descriptive product description.
+  prompt: `You are an expert copywriter for an online marketplace, helping a user sell their secondhand item.
+Your goal is to write a short, appealing description (about 2-3 sentences) that will attract buyers.
 
-Use the provided product information to craft a description that highlights the item's best features, potential uses, and unique character. Be honest but appealing. If a photo is provided, use it as the primary source of information for visual details.
+Based on the provided information, write a description that:
+1.  Is friendly and inviting.
+2.  Directly highlights the key features, quality, and visual appeal of the item. Use the photo as the primary source for visual details.
+3.  Encourages a potential buyer by suggesting a use or benefit.
+
+Do not mention price or the specific item condition (e.g., "Used"), as those are in separate fields.
 
 Product Information:
 - Title: {{{productName}}}
@@ -47,9 +53,7 @@ Product Information:
 {{/if}}
 {{#if photoDataUri}}
 - Photo: {{media url=photoDataUri}}
-{{/if}}
-
-Generate a description of about 3-4 sentences. Start with an engaging hook and end with a call to action or a suggestion for its new home. Do not include price or condition, as those are in separate fields.`,
+{{/if}}`,
 });
 
 const generateDescriptionFlow = ai.defineFlow(
