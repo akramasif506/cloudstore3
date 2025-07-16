@@ -93,7 +93,6 @@ export function ListingForm() {
     }
     
     const imageFile = values.productImage[0];
-
     if (!imageFile) {
         toast({
             variant: "destructive",
@@ -103,36 +102,47 @@ export function ListingForm() {
         return;
     }
 
+    let imageUrl = '';
     try {
         setSubmissionStep('uploading');
-        const imageUrl = await uploadImageAndGetUrl(imageFile, user.id);
-    
-        setSubmissionStep('saving');
-        
-        const serverData = {
-          productName: values.productName,
-          productDescription: values.productDescription,
-          price: values.price!,
-          category: values.category,
-          subcategory: values.subcategory,
-          condition: values.condition,
-          imageUrl: imageUrl,
-        };
-
-        const result = await createListing(serverData);
-
-        if (result.success && result.productId) {
-          toast({ title: 'Listing Submitted!', description: 'Your item is now pending review.' });
-          router.push(`/my-listings`);
-        } else {
-          throw new Error(result.message || 'An unknown error occurred on the server.');
-        }
-
+        imageUrl = await uploadImageAndGetUrl(imageFile, user.id);
     } catch (error) {
-        console.error("Submission failed:", error);
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
         toast({
-            title: "Submission Failed",
-            description: "An unexpected error occurred. Please try again with a different image.",
+            variant: 'destructive',
+            title: 'Image Upload Failed',
+            description: `Could not upload the image. Please try again. Error: ${errorMessage}`,
+        });
+        setSubmissionStep('idle');
+        return;
+    }
+
+    try {
+      setSubmissionStep('saving');
+      const serverData = {
+        productName: values.productName,
+        productDescription: values.productDescription,
+        price: values.price!,
+        category: values.category,
+        subcategory: values.subcategory,
+        condition: values.condition,
+        imageUrl: imageUrl,
+      };
+
+      const result = await createListing(serverData);
+
+      if (result.success && result.productId) {
+        toast({ title: 'Listing Submitted!', description: 'Your item is now pending review.' });
+        router.push(`/my-listings`);
+      } else {
+        throw new Error(result.message || 'An unknown server error occurred.');
+      }
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+        toast({
+            variant: 'destructive',
+            title: 'Failed to Save Listing',
+            description: `Your details could not be saved. Please try again. Error: ${errorMessage}`,
         });
     } finally {
         setSubmissionStep('idle');
@@ -142,11 +152,13 @@ export function ListingForm() {
   const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     
+    // Clear previous state on new file selection
     setImagePreview(null);
     setImageProcessingState('idle');
     form.setValue('productImage', null, { shouldValidate: true });
 
     if (file) {
+      // Immediately start processing
       setImageProcessingState('processing');
 
       try {
@@ -157,10 +169,13 @@ export function ListingForm() {
         };
         const compressedFile = await imageCompression(file, options);
         
+        // Update the form with the new, compressed file
         form.setValue('productImage', [compressedFile], { shouldValidate: true });
         
+        // Create a preview URL from the compressed file and update state
         setImagePreview(URL.createObjectURL(compressedFile));
         
+        // Mark processing as done
         setImageProcessingState('done');
 
       } catch (error) {
@@ -173,7 +188,6 @@ export function ListingForm() {
             description: "There was a problem processing your image. Please try a different one.",
         });
       }
-
     }
   };
 
@@ -244,7 +258,7 @@ export function ListingForm() {
                         accept={ACCEPTED_IMAGE_TYPES.join(',')} 
                         {...productImageRef}
                         onChange={(e) => {
-                            field.onChange(e.target.files);
+                            // field.onChange(e.target.files) is managed by react-hook-form's ref
                             handleImageChange(e);
                         }}
                         disabled={isSubmitting || imageProcessingState === 'processing'}
