@@ -26,7 +26,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Loader2, Frown, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Frown, Image as ImageIcon, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { createListing } from './actions';
@@ -65,8 +65,10 @@ export function ListingForm() {
   const { toast } = useToast();
   const router = useRouter();
   const { user } = useAuth();
-  const [submissionStep, setSubmissionStep] = useState<'idle' | 'processing' | 'uploading' | 'saving'>('idle');
+  const [submissionStep, setSubmissionStep] = useState<'idle' | 'uploading' | 'saving'>('idle');
+  const [imageProcessingState, setImageProcessingState] = useState<'idle' | 'processing' | 'done'>('idle');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [compressedImageFile, setCompressedImageFile] = useState<File | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -90,19 +92,14 @@ export function ListingForm() {
       toast({ title: 'Authentication Issue', description: 'You must be logged in to create a listing.' });
       return;
     }
+    if (!compressedImageFile) {
+        toast({ title: 'Image not ready', description: 'Please wait for the image to finish processing.' });
+        return;
+    }
 
     try {
-        setSubmissionStep('processing');
-        const imageFile = values.productImage[0];
-        const options = {
-            maxSizeMB: 1,
-            maxWidthOrHeight: 1920,
-            useWebWorker: true,
-        }
-        const compressedFile = await imageCompression(imageFile, options);
-
         setSubmissionStep('uploading');
-        const imageUrl = await uploadImageAndGetUrl(compressedFile, user.id);
+        const imageUrl = await uploadImageAndGetUrl(compressedImageFile, user.id);
     
         setSubmissionStep('saving');
         const result = await createListing({
@@ -122,23 +119,46 @@ export function ListingForm() {
         console.error("Submission failed:", error);
         toast({
             title: "Submission Failed",
-            description: "Please try again with a different image.",
+            description: "An unexpected error occurred. Please try again.",
         });
     } finally {
         setSubmissionStep('idle');
     }
   }
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      // Clear previous compressed file and reset state
+      setCompressedImageFile(null);
+      setImageProcessingState('processing');
+      setImagePreview(URL.createObjectURL(file));
+
+      try {
+        const options = {
+            maxSizeMB: 1,
+            maxWidthOrHeight: 1920,
+            useWebWorker: true,
+        };
+        const compressedFile = await imageCompression(file, options);
+        setCompressedImageFile(compressedFile);
+        setImageProcessingState('done');
+      } catch (error) {
+        console.error("Image compression failed:", error);
+        setImageProcessingState('idle');
+        setImagePreview(null);
+        setCompressedImageFile(null);
+        toast({
+            variant: "destructive",
+            title: "Image Error",
+            description: "There was a problem processing your image. Please try a different one.",
+        });
+      }
+
     } else {
       setImagePreview(null);
+      setImageProcessingState('idle');
+      setCompressedImageFile(null);
     }
   };
 
@@ -160,9 +180,9 @@ export function ListingForm() {
     );
   }
 
-  const isProcessing = submissionStep !== 'idle';
+  const isSubmitting = submissionStep !== 'idle';
+  const isImageReady = imageProcessingState === 'done';
   let buttonText = 'Submit Listing for Review';
-  if (submissionStep === 'processing') buttonText = 'Processing image...';
   if (submissionStep === 'uploading') buttonText = 'Uploading image...';
   if (submissionStep === 'saving') buttonText = 'Saving listing...';
 
@@ -180,7 +200,20 @@ export function ListingForm() {
                     <label htmlFor="productImage" className="cursor-pointer">
                         <div className="relative w-full aspect-video border-2 border-dashed rounded-lg flex flex-col justify-center items-center text-muted-foreground hover:border-primary hover:text-primary transition-colors">
                             {imagePreview ? (
-                                <Image src={imagePreview} alt="Product preview" fill className="object-cover rounded-lg" />
+                                <>
+                                    <Image src={imagePreview} alt="Product preview" fill className="object-cover rounded-lg" />
+                                    {imageProcessingState === 'processing' && (
+                                        <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white">
+                                            <Loader2 className="h-8 w-8 animate-spin mb-2" />
+                                            <span>Processing...</span>
+                                        </div>
+                                    )}
+                                    {imageProcessingState === 'done' && (
+                                         <div className="absolute top-2 right-2 bg-green-600 text-white rounded-full p-1">
+                                            <CheckCircle className="h-5 w-5" />
+                                        </div>
+                                    )}
+                                </>
                             ) : (
                                 <>
                                     <ImageIcon className="h-12 w-12 mb-2" />
@@ -199,7 +232,7 @@ export function ListingForm() {
                             field.onChange(e.target.files);
                             handleImageChange(e);
                         }}
-                        disabled={isProcessing}
+                        disabled={isSubmitting || imageProcessingState === 'processing'}
                     />
                 </div>
               </FormControl>
@@ -216,7 +249,7 @@ export function ListingForm() {
             <FormItem>
               <FormLabel>Listing Title</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Vintage Leather Armchair" {...field} disabled={isProcessing}/>
+                <Input placeholder="e.g. Vintage Leather Armchair" {...field} disabled={isSubmitting}/>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -230,7 +263,7 @@ export function ListingForm() {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea placeholder="Describe your item in detail, including its condition, age, and any flaws." rows={6} {...field} disabled={isProcessing}/>
+                <Textarea placeholder="Describe your item in detail, including its condition, age, and any flaws." rows={6} {...field} disabled={isSubmitting}/>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -250,7 +283,7 @@ export function ListingForm() {
                     form.setValue('subcategory', '');
                   }}
                   defaultValue={field.value}
-                  disabled={isProcessing}
+                  disabled={isSubmitting}
                 >
                   <FormControl>
                     <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
@@ -271,7 +304,7 @@ export function ListingForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Subcategory</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory || isProcessing}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory || isSubmitting}>
                   <FormControl>
                     <SelectTrigger><SelectValue placeholder="Select a subcategory" /></SelectTrigger>
                   </FormControl>
@@ -310,7 +343,7 @@ export function ListingForm() {
                         field.onChange(value === '' ? null : Number(value));
                       }}
                       value={field.value ?? ''}
-                      disabled={isProcessing}
+                      disabled={isSubmitting}
                     />
                   </FormControl>
                 </div>
@@ -324,7 +357,7 @@ export function ListingForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Condition</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isProcessing}>
+                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
                   <FormControl>
                     <SelectTrigger><SelectValue placeholder="Select a condition" /></SelectTrigger>
                   </FormControl>
@@ -340,8 +373,8 @@ export function ListingForm() {
           />
         </div>
         
-        <Button type="submit" disabled={isProcessing} size="lg">
-          {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <Button type="submit" disabled={isSubmitting || !isImageReady} size="lg">
+          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {buttonText}
         </Button>
       </form>
