@@ -103,20 +103,18 @@ export function ListingForm() {
     }
 
     let imageUrl = '';
-    let imageUploadFailed = false;
+    
     try {
         setSubmissionStep('uploading');
         imageUrl = await uploadImageAndGetUrl(compressedImageFile, user.id);
     } catch (error) {
-        imageUploadFailed = true;
-        imageUrl = 'https://placehold.co/800x600.png'; // Fallback placeholder
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
         toast({
-            variant: 'destructive',
             title: 'Image Upload Failed',
-            description: `Submitting with a placeholder. An admin will contact you to finalize the image. Error: ${errorMessage}`,
-            duration: 8000,
+            description: "There was a problem uploading your image. Please try a different one.",
         });
+        setSubmissionStep('idle');
+        return; // Halt the submission
     }
 
     try {
@@ -136,9 +134,7 @@ export function ListingForm() {
       if (result.success && result.productId) {
         toast({ 
             title: 'Listing Submitted!', 
-            description: imageUploadFailed 
-                ? 'Your item is pending review. An admin will contact you about the image.' 
-                : 'Your item is now pending review.' 
+            description: 'Your item is now pending review.'
         });
         router.push(`/my-listings`);
       } else {
@@ -159,14 +155,12 @@ export function ListingForm() {
   const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     
-    // Clear previous state on new file selection
     setImagePreview(null);
     setCompressedImageFile(null);
     setImageProcessingState('idle');
-    form.setValue('productImage', null); // Do not validate yet
+    form.setValue('productImage', null);
 
     if (file) {
-      // Immediately start processing
       setImageProcessingState('processing');
 
       try {
@@ -177,27 +171,20 @@ export function ListingForm() {
         };
         const compressedFile = await imageCompression(file, options);
         
-        // Update the form with a FileList-like object for validation
         const dataTransfer = new DataTransfer();
         dataTransfer.items.add(compressedFile);
         form.setValue('productImage', dataTransfer.files, { shouldValidate: true });
         
-        // Store the compressed file separately for direct use
         setCompressedImageFile(compressedFile);
-        
-        // Create a preview URL from the compressed file and update state
         setImagePreview(URL.createObjectURL(compressedFile));
-        
-        // Mark processing as done
         setImageProcessingState('done');
 
       } catch (error) {
         console.error("Image compression failed:", error);
         setImageProcessingState('idle'); 
         setCompressedImageFile(null);
-        form.resetField('productImage');
+        form.setValue('productImage', null, { shouldValidate: true });
         toast({
-            variant: "destructive",
             title: "Image Error",
             description: "There was a problem processing your image. Please try a different one.",
         });
@@ -259,8 +246,17 @@ export function ListingForm() {
                                 </>
                             ) : (
                                 <>
-                                    <ImageIcon className="h-12 w-12 mb-2" />
-                                    <span>Click or tap to upload an image</span>
+                                    {imageProcessingState === 'processing' ? (
+                                      <div className="flex flex-col items-center justify-center text-white">
+                                          <Loader2 className="h-8 w-8 animate-spin mb-2 text-primary" />
+                                          <span className="text-muted-foreground">Processing...</span>
+                                      </div>
+                                    ) : (
+                                      <>
+                                          <ImageIcon className="h-12 w-12 mb-2" />
+                                          <span>Click or tap to upload an image</span>
+                                      </>
+                                    )}
                                 </>
                             )}
                         </div>
