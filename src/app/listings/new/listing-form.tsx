@@ -47,28 +47,21 @@ const categories = {
 
 const conditions = ['New', 'Like New', 'Used'];
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB limit for pre-compression check
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
-const formSchema = listingSchema.extend({
-    productImage: z.any()
-        .refine((files) => files?.length == 1, "An image of your product is required.")
-        .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
-        .refine(
-          (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
-          "Only .jpg, .jpeg, .png and .webp formats are supported."
-        ),
-});
-
+// Zod schema only validates text fields now. Image validation is handled separately.
+const formSchema = listingSchema;
 
 export function ListingForm() {
   const { toast } = useToast();
   const router = useRouter();
   const { user } = useAuth();
   const [submissionStep, setSubmissionStep] = useState<'idle' | 'saving_draft' | 'uploading_image' | 'finalizing'>('idle');
-  const [imageProcessingState, setImageProcessingState] = useState<'idle' | 'processing' | 'done'>('idle');
+  const [imageProcessingState, setImageProcessingState] = useState<'idle' | 'validating' | 'processing' | 'done' | 'error'>('idle');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [compressedImageFile, setCompressedImageFile] = useState<File | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -79,30 +72,25 @@ export function ListingForm() {
       category: '',
       subcategory: '',
       condition: 'Used',
-      productImage: undefined,
     },
   });
 
-  const productImageRef = form.register("productImage");
   const selectedCategory = form.watch('category');
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!user || !compressedImageFile) {
-      toast({ variant: "destructive", title: 'Missing Information', description: 'Please ensure you are logged in and have selected an image.' });
+    if (!user) {
+      toast({ variant: "destructive", title: 'Not Logged In', description: 'Please log in to create a listing.' });
+      return;
+    }
+    if (!compressedImageFile) {
+      toast({ variant: "destructive", title: 'Image Required', description: 'Please select an image for your listing.' });
       return;
     }
 
     // Step 1: Save the draft with text data
     setSubmissionStep('saving_draft');
-    const draftResult = await createListingDraft({
-      productName: values.productName,
-      productDescription: values.productDescription,
-      price: values.price,
-      category: values.category,
-      subcategory: values.subcategory,
-      condition: values.condition,
-    });
+    const draftResult = await createListingDraft(values);
 
     if (!draftResult.success || !draftResult.productId) {
       toast({ variant: "destructive", title: 'Failed to Save Draft', description: draftResult.message || "Could not save your listing details." });
@@ -120,7 +108,7 @@ export function ListingForm() {
       imageUrl = await uploadImageAndGetUrl(compressedImageFile, user.id);
     } catch (uploadError) {
       toast({
-        variant: "default",
+        variant: "default", // Softer error
         title: "Image Upload Failed",
         description: "Your listing draft is saved. You can add the image later from 'My Listings'.",
         duration: 8000
@@ -151,40 +139,52 @@ export function ListingForm() {
   const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     
-    // Clear previous image states without resetting the whole form
+    // Reset previous image states
     setImagePreview(null);
     setCompressedImageFile(null);
-    setImageProcessingState('idle');
-    form.setValue('productImage', null);
+    setImageError(null);
+    setImageProcessingState('validating');
 
-    if (file) {
-      setImageProcessingState('processing');
+    if (!file) {
+      setImageProcessingState('idle');
+      return;
+    }
 
-      try {
-        const options = {
-            maxSizeMB: 1,
-            maxWidthOrHeight: 1920,
-            useWebWorker: true,
-        };
-        const compressedFile = await imageCompression(file, options);
-        
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(compressedFile);
-        form.setValue('productImage', dataTransfer.files, { shouldValidate: true });
-        
-        setCompressedImageFile(compressedFile);
-        setImagePreview(URL.createObjectURL(compressedFile));
-        setImageProcessingState('done');
+    // Manual validation before compression
+    if (file.size > MAX_FILE_SIZE) {
+        setImageError(`File size is too large (max ${MAX_FILE_SIZE / 1024 / 1024}MB).`);
+        setImageProcessingState('error');
+        return;
+    }
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+        setImageError('Invalid file type. Please use JPG, PNG, or WEBP.');
+        setImageProcessingState('error');
+        return;
+    }
 
-      } catch (error) {
-        console.error("Image compression failed:", error);
-        toast({
-            variant: "default", // Softer, non-destructive color
+    setImageProcessingState('processing');
+
+    try {
+      const options = {
+          maxSizeMB: 1, // Compress to a smaller size
+          maxWidthOrHeight: 1920,
+          useWebWorker: true,
+      };
+      const compressedFile = await imageCompression(file, options);
+      
+      setCompressedImageFile(compressedFile);
+      setImagePreview(URL.createObjectURL(compressedFile));
+      setImageProcessingState('done');
+
+    } catch (error) {
+      console.error("Image compression failed:", error);
+      setImageError("Image processing failed. Please try a different image.");
+      setImageProcessingState('error');
+      toast({
+            variant: "default",
             title: "Image Processing Failed",
             description: "Please try selecting a different image. Standard formats like JPG and PNG work best.",
-        });
-        setImageProcessingState('idle');
-      }
+      });
     }
   };
 
@@ -216,64 +216,57 @@ export function ListingForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="productImage"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Product Image</FormLabel>
-              <FormControl>
-                 <div className="w-full">
-                    <label htmlFor="productImage" className="cursor-pointer">
-                        <div className="relative w-full aspect-video border-2 border-dashed rounded-lg flex flex-col justify-center items-center text-muted-foreground hover:border-primary hover:text-primary transition-colors">
-                            {imagePreview ? (
-                                <>
-                                    <Image src={imagePreview} alt="Product preview" fill className="object-cover rounded-lg" />
-                                    {imageProcessingState === 'processing' && (
-                                        <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white">
-                                            <Loader2 className="h-8 w-8 animate-spin mb-2" />
-                                            <span>Processing...</span>
-                                        </div>
-                                    )}
-                                    {imageProcessingState === 'done' && (
-                                         <div className="absolute top-2 right-2 bg-green-600 text-white rounded-full p-1">
-                                            <CheckCircle className="h-5 w-5" />
-                                        </div>
-                                    )}
-                                </>
-                            ) : (
-                                <>
-                                    {imageProcessingState === 'processing' ? (
-                                      <div className="flex flex-col items-center justify-center">
-                                          <Loader2 className="h-8 w-8 animate-spin mb-2 text-primary" />
-                                          <span className="text-muted-foreground">Processing...</span>
-                                      </div>
-                                    ) : (
-                                      <>
-                                          <ImageIcon className="h-12 w-12 mb-2" />
-                                          <span>Click or tap to upload an image</span>
-                                      </>
-                                    )}
-                                </>
-                            )}
-                        </div>
-                    </label>
-                    <Input 
-                        type="file" 
-                        id="productImage"
-                        className="sr-only"
-                        accept={ACCEPTED_IMAGE_TYPES.join(',')} 
-                        {...productImageRef}
-                        onChange={handleImageChange}
-                        disabled={isSubmitting || imageProcessingState === 'processing'}
-                    />
-                </div>
-              </FormControl>
-              <FormDescription>Max file size: 5MB. Accepted formats: JPG, PNG, WEBP.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <FormItem>
+          <FormLabel>Product Image</FormLabel>
+          <FormControl>
+              <div className="w-full">
+                <label htmlFor="productImage" className="cursor-pointer">
+                    <div className="relative w-full aspect-video border-2 border-dashed rounded-lg flex flex-col justify-center items-center text-muted-foreground hover:border-primary hover:text-primary transition-colors">
+                        {imagePreview ? (
+                            <>
+                                <Image src={imagePreview} alt="Product preview" fill className="object-cover rounded-lg" />
+                                {imageProcessingState === 'processing' && (
+                                    <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white">
+                                        <Loader2 className="h-8 w-8 animate-spin mb-2" />
+                                        <span>Processing...</span>
+                                    </div>
+                                )}
+                                {imageProcessingState === 'done' && (
+                                      <div className="absolute top-2 right-2 bg-green-600 text-white rounded-full p-1">
+                                        <CheckCircle className="h-5 w-5" />
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                             <>
+                                {imageProcessingState === 'processing' || imageProcessingState === 'validating' ? (
+                                  <div className="flex flex-col items-center justify-center">
+                                      <Loader2 className="h-8 w-8 animate-spin mb-2 text-primary" />
+                                      <span className="text-muted-foreground">{imageProcessingState === 'processing' ? 'Compressing...' : 'Validating...'}</span>
+                                  </div>
+                                ) : (
+                                  <>
+                                      <ImageIcon className="h-12 w-12 mb-2" />
+                                      <span>Click or tap to upload an image</span>
+                                  </>
+                                )}
+                            </>
+                        )}
+                    </div>
+                </label>
+                <Input 
+                    type="file" 
+                    id="productImage"
+                    className="sr-only"
+                    accept={ACCEPTED_IMAGE_TYPES.join(',')} 
+                    onChange={handleImageChange}
+                    disabled={isSubmitting || imageProcessingState === 'processing'}
+                />
+            </div>
+          </FormControl>
+          <FormDescription>Max file size: 10MB. Accepted formats: JPG, PNG, WEBP.</FormDescription>
+          {imageError && <p className="text-sm font-medium text-destructive">{imageError}</p>}
+        </FormItem>
         
         <FormField
           control={form.control}
