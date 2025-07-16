@@ -68,7 +68,6 @@ export function ListingForm() {
   const [submissionStep, setSubmissionStep] = useState<'idle' | 'uploading' | 'saving'>('idle');
   const [imageProcessingState, setImageProcessingState] = useState<'idle' | 'processing' | 'done'>('idle');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [compressedImageFile, setCompressedImageFile] = useState<File | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -93,8 +92,11 @@ export function ListingForm() {
       return;
     }
     
-    if (!compressedImageFile) {
+    const imageFile = values.productImage[0];
+
+    if (!imageFile) {
         toast({
+            variant: "destructive",
             title: 'Image not ready',
             description: 'Please wait for the image to finish processing or select a valid image.'
         });
@@ -103,7 +105,7 @@ export function ListingForm() {
 
     try {
         setSubmissionStep('uploading');
-        const imageUrl = await uploadImageAndGetUrl(compressedImageFile, user.id);
+        const imageUrl = await uploadImageAndGetUrl(imageFile, user.id);
     
         setSubmissionStep('saving');
         
@@ -129,7 +131,6 @@ export function ListingForm() {
     } catch (error) {
         console.error("Submission failed:", error);
         toast({
-            variant: "destructive",
             title: "Submission Failed",
             description: "An unexpected error occurred. Please try again with a different image.",
         });
@@ -142,7 +143,6 @@ export function ListingForm() {
     const file = event.target.files?.[0];
     
     // Clear previous state on new file selection
-    setCompressedImageFile(null);
     setImagePreview(null);
     setImageProcessingState('idle');
 
@@ -158,8 +158,9 @@ export function ListingForm() {
         };
         const compressedFile = await imageCompression(file, options);
         
-        // Store the compressed file
-        setCompressedImageFile(compressedFile);
+        // ** THE FIX IS HERE **
+        // Update the form's internal state with the compressed file
+        form.setValue('productImage', [compressedFile], { shouldValidate: true });
         
         // Create the preview URL from the compressed file itself
         setImagePreview(URL.createObjectURL(compressedFile));
@@ -170,7 +171,7 @@ export function ListingForm() {
         console.error("Image compression failed:", error);
         setImageProcessingState('idle'); // Reset on error
         // Do NOT reset the form here, just the image field's value for the input
-        event.target.value = '';
+        form.resetField('productImage');
         toast({
             variant: "destructive",
             title: "Image Error",
@@ -248,7 +249,9 @@ export function ListingForm() {
                         accept={ACCEPTED_IMAGE_TYPES.join(',')} 
                         {...productImageRef}
                         onChange={(e) => {
+                            // Let RHF handle the file list
                             field.onChange(e.target.files);
+                            // Then trigger our compression logic
                             handleImageChange(e);
                         }}
                         disabled={isSubmitting || imageProcessingState === 'processing'}
