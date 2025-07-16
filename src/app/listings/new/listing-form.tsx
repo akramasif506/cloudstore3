@@ -119,7 +119,7 @@ export function ListingForm() {
         console.error("Submission failed:", error);
         toast({
             title: "Submission Failed",
-            description: "An unexpected error occurred. Please try again.",
+            description: "An unexpected error occurred. Please try again with a different image.",
         });
     } finally {
         setSubmissionStep('idle');
