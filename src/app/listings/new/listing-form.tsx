@@ -50,6 +50,16 @@ const conditions = ['New', 'Like New', 'Used'];
 
 const formSchema = listingSchema;
 
+// Helper function to convert a File object to a Base64 Data URI
+const fileToDataUri = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
 export function ListingForm() {
   const { toast } = useToast();
   const router = useRouter();
@@ -163,6 +173,7 @@ export function ListingForm() {
 
   const handleGenerateDescription = async () => {
     const { productName, category, subcategory } = form.getValues();
+    const basePayload = { productName, category, subcategory };
 
     if (!productName) {
         toast({
@@ -175,7 +186,17 @@ export function ListingForm() {
 
     setIsGeneratingDescription(true);
     try {
-        const result = await generateDescription({ productName, category, subcategory });
+        let photoDataUri: string | undefined = undefined;
+        if (compressedImageFile) {
+            try {
+                photoDataUri = await fileToDataUri(compressedImageFile);
+            } catch (e) {
+                console.warn("Could not convert image to data URI for AI generation, falling back to text-only.");
+            }
+        }
+        
+        const result = await generateDescription({ ...basePayload, photoDataUri });
+
         if (result && result.description) {
             form.setValue('productDescription', result.description);
             toast({
@@ -185,8 +206,9 @@ export function ListingForm() {
         } else {
             throw new Error('No description was returned.');
         }
+
     } catch (error) {
-        toast({
+         toast({
             variant: 'destructive',
             title: 'Failed to Generate Description',
             description: 'The AI assistant could not generate a description. Please try again.'
@@ -284,7 +306,7 @@ export function ListingForm() {
                     variant="ghost" 
                     size="sm" 
                     onClick={handleGenerateDescription}
-                    disabled={isGeneratingDescription}
+                    disabled={isGeneratingDescription || !compressedImageFile}
                 >
                     {isGeneratingDescription ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
