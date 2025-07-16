@@ -26,7 +26,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Loader2, Frown, Image as ImageIcon, CheckCircle } from 'lucide-react';
+import { Loader2, Frown, Image as ImageIcon, CheckCircle, Sparkles } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { createListingDraft, finalizeListing } from './actions';
@@ -34,6 +34,7 @@ import { listingSchema } from '@/lib/schemas';
 import Image from 'next/image';
 import { uploadImageAndGetUrl } from '@/lib/storage';
 import imageCompression from 'browser-image-compression';
+import { generateDescription } from '@/ai/flows/generate-description-flow';
 
 const categories = {
   'Furniture': ['Chairs', 'Tables', 'Shelving', 'Beds'],
@@ -47,10 +48,6 @@ const categories = {
 
 const conditions = ['New', 'Like New', 'Used'];
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB limit for pre-compression check
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-
-// Zod schema only validates text fields now. Image validation is handled separately.
 const formSchema = listingSchema;
 
 export function ListingForm() {
@@ -58,7 +55,7 @@ export function ListingForm() {
   const router = useRouter();
   const { user } = useAuth();
   const [submissionStep, setSubmissionStep] = useState<'idle' | 'saving_draft' | 'uploading_image' | 'finalizing'>('idle');
-  const [imageProcessingState, setImageProcessingState] = useState<'idle' | 'validating' | 'processing' | 'done' | 'error'>('idle');
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [compressedImageFile, setCompressedImageFile] = useState<File | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
@@ -88,7 +85,6 @@ export function ListingForm() {
       return;
     }
 
-    // Step 1: Save the draft with text data
     setSubmissionStep('saving_draft');
     const draftResult = await createListingDraft(values);
 
@@ -101,23 +97,21 @@ export function ListingForm() {
     toast({ title: 'Draft Saved!', description: 'Now uploading your image...' });
     const productId = draftResult.productId;
 
-    // Step 2: Upload the image
     setSubmissionStep('uploading_image');
     let imageUrl = '';
     try {
       imageUrl = await uploadImageAndGetUrl(compressedImageFile, user.id);
     } catch (uploadError) {
       toast({
-        variant: "default", // Softer error
+        variant: "default",
         title: "Image Upload Failed",
         description: "Your listing draft is saved. You can add the image later from 'My Listings'.",
         duration: 8000
       });
-      router.push(`/my-listings`); // Redirect user to their listings page
-      return; // Stop the process here
+      router.push(`/my-listings`); 
+      return;
     }
 
-    // Step 3: Finalize the listing with the image URL
     setSubmissionStep('finalizing');
     const finalizeResult = await finalizeListing(productId, imageUrl);
 
@@ -139,34 +133,15 @@ export function ListingForm() {
   const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     
-    // Reset previous image states
     setImagePreview(null);
     setCompressedImageFile(null);
     setImageError(null);
-    setImageProcessingState('validating');
 
-    if (!file) {
-      setImageProcessingState('idle');
-      return;
-    }
-
-    // Manual validation before compression
-    if (file.size > MAX_FILE_SIZE) {
-        setImageError(`File size is too large (max ${MAX_FILE_SIZE / 1024 / 1024}MB).`);
-        setImageProcessingState('error');
-        return;
-    }
-    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-        setImageError('Invalid file type. Please use JPG, PNG, or WEBP.');
-        setImageProcessingState('error');
-        return;
-    }
-
-    setImageProcessingState('processing');
+    if (!file) return;
 
     try {
       const options = {
-          maxSizeMB: 1, // Compress to a smaller size
+          maxSizeMB: 1,
           maxWidthOrHeight: 1920,
           useWebWorker: true,
       };
@@ -174,17 +149,50 @@ export function ListingForm() {
       
       setCompressedImageFile(compressedFile);
       setImagePreview(URL.createObjectURL(compressedFile));
-      setImageProcessingState('done');
 
     } catch (error) {
       console.error("Image compression failed:", error);
       setImageError("Image processing failed. Please try a different image.");
-      setImageProcessingState('error');
       toast({
             variant: "default",
             title: "Image Processing Failed",
             description: "Please try selecting a different image. Standard formats like JPG and PNG work best.",
       });
+    }
+  };
+
+  const handleGenerateDescription = async () => {
+    const { productName, category, subcategory } = form.getValues();
+
+    if (!productName) {
+        toast({
+            variant: 'destructive',
+            title: 'Title is missing',
+            description: 'Please enter a listing title first.'
+        });
+        return;
+    }
+
+    setIsGeneratingDescription(true);
+    try {
+        const result = await generateDescription({ productName, category, subcategory });
+        if (result && result.description) {
+            form.setValue('productDescription', result.description);
+            toast({
+                title: 'Description Generated!',
+                description: 'The AI-powered description has been added.'
+            });
+        } else {
+            throw new Error('No description was returned.');
+        }
+    } catch (error) {
+        toast({
+            variant: 'destructive',
+            title: 'Failed to Generate Description',
+            description: 'The AI assistant could not generate a description. Please try again.'
+        });
+    } finally {
+        setIsGeneratingDescription(false);
     }
   };
 
@@ -207,7 +215,6 @@ export function ListingForm() {
   }
 
   const isSubmitting = submissionStep !== 'idle';
-  const isImageReady = imageProcessingState === 'done' && compressedImageFile !== null;
   let buttonText = 'Submit Listing';
   if (submissionStep === 'saving_draft') buttonText = 'Saving details...';
   if (submissionStep === 'uploading_image') buttonText = 'Uploading image...';
@@ -225,31 +232,14 @@ export function ListingForm() {
                         {imagePreview ? (
                             <>
                                 <Image src={imagePreview} alt="Product preview" fill className="object-cover rounded-lg" />
-                                {imageProcessingState === 'processing' && (
-                                    <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white">
-                                        <Loader2 className="h-8 w-8 animate-spin mb-2" />
-                                        <span>Processing...</span>
-                                    </div>
-                                )}
-                                {imageProcessingState === 'done' && (
-                                      <div className="absolute top-2 right-2 bg-green-600 text-white rounded-full p-1">
-                                        <CheckCircle className="h-5 w-5" />
-                                    </div>
-                                )}
+                                <div className="absolute top-2 right-2 bg-green-600 text-white rounded-full p-1">
+                                    <CheckCircle className="h-5 w-5" />
+                                </div>
                             </>
                         ) : (
                              <>
-                                {imageProcessingState === 'processing' || imageProcessingState === 'validating' ? (
-                                  <div className="flex flex-col items-center justify-center">
-                                      <Loader2 className="h-8 w-8 animate-spin mb-2 text-primary" />
-                                      <span className="text-muted-foreground">{imageProcessingState === 'processing' ? 'Compressing...' : 'Validating...'}</span>
-                                  </div>
-                                ) : (
-                                  <>
-                                      <ImageIcon className="h-12 w-12 mb-2" />
-                                      <span>Click or tap to upload an image</span>
-                                  </>
-                                )}
+                                <ImageIcon className="h-12 w-12 mb-2" />
+                                <span>Click or tap to upload an image</span>
                             </>
                         )}
                     </div>
@@ -258,9 +248,9 @@ export function ListingForm() {
                     type="file" 
                     id="productImage"
                     className="sr-only"
-                    accept={ACCEPTED_IMAGE_TYPES.join(',')} 
+                    accept="image/*"
                     onChange={handleImageChange}
-                    disabled={isSubmitting || imageProcessingState === 'processing'}
+                    disabled={isSubmitting}
                 />
             </div>
           </FormControl>
@@ -287,7 +277,23 @@ export function ListingForm() {
           name="productDescription"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <div className="flex justify-between items-center">
+                <FormLabel>Description</FormLabel>
+                <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleGenerateDescription}
+                    disabled={isGeneratingDescription}
+                >
+                    {isGeneratingDescription ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <Sparkles className="mr-2 h-4 w-4 text-accent" />
+                    )}
+                    Generate with AI
+                </Button>
+              </div>
               <FormControl>
                 <Textarea placeholder="Describe your item in detail, including its condition, age, and any flaws." rows={6} {...field} disabled={isSubmitting}/>
               </FormControl>
@@ -399,7 +405,7 @@ export function ListingForm() {
           />
         </div>
         
-        <Button type="submit" disabled={isSubmitting || !isImageReady} size="lg">
+        <Button type="submit" disabled={isSubmitting || !compressedImageFile} size="lg">
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {buttonText}
         </Button>
