@@ -39,7 +39,7 @@ export interface Product {
   imageUrl: string;
   condition?: Condition;
   reviews: Review[];
-  status: 'active' | 'pending_review' | 'rejected' | 'sold';
+  status: 'active' | 'pending_review' | 'rejected' | 'sold' | 'pending_image';
   createdAt: string;
   seller: {
     id: string;

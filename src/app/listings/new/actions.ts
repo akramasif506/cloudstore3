@@ -1,4 +1,3 @@
-
 // src/app/listings/new/actions.ts
 'use server';
 
@@ -8,76 +7,90 @@ import { revalidatePath } from 'next/cache';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { listingSchema } from '@/lib/schemas';
 import { getCurrentUser } from '@/lib/auth';
+import { ref, set, update } from 'firebase/database';
 
-// This is the shape of the data the server action now expects.
-// It does NOT include the productImage file, only the final URL.
-const serverListingSchema = listingSchema.extend({
-    imageUrl: z.string().url(),
-    price: z.coerce.number().positive('Price must be a positive number.'),
-});
-
-type ServerListingData = z.infer<typeof serverListingSchema>;
-
-export async function createListing(
-  values: ServerListingData
+/**
+ * Action 1: Creates a new product listing as a draft without an image.
+ * This is the first step in the new two-step submission process.
+ */
+export async function createListingDraft(
+  values: z.infer<typeof listingSchema>
 ): Promise<{ success: boolean; message: string; productId?: string; errors?: any }> {
-  
   const currentUser = await getCurrentUser();
   if (!currentUser) {
-     return { success: false, message: `Authorization failed. Please log in and try again.` };
+    return { success: false, message: 'Authorization failed. Please log in and try again.' };
   }
-  
-  let db;
-  try {
-    ({ db } = initializeAdmin());
-  } catch (error) {
-    console.error("Firebase Admin Init Error:", error);
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
-    return { success: false, message: `Server configuration error: ${errorMessage}` };
-  }
-  
-  const validatedFields = serverListingSchema.safeParse(values);
+
+  const { db } = initializeAdmin();
+  const validatedFields = listingSchema.safeParse(values);
 
   if (!validatedFields.success) {
     return {
       success: false,
-      message: 'Invalid form data received on server.',
+      message: 'Invalid form data.',
       errors: validatedFields.error.flatten().fieldErrors,
     };
   }
 
   try {
     const productId = uuidv4();
-
-    // Destructure using the correct field names from the schema
     const { productName, productDescription, ...restOfData } = validatedFields.data;
 
     const newProductData = {
       id: productId,
       name: productName,
       description: productDescription,
-      ...restOfData,
+      price: restOfData.price!,
+      category: restOfData.category,
+      subcategory: restOfData.subcategory,
+      condition: restOfData.condition,
+      imageUrl: '', // Intentionally blank for now
       reviews: [],
       seller: {
         id: currentUser.id,
         name: currentUser.name || 'Unknown User',
-        contactNumber: currentUser.mobileNumber || ''
+        contactNumber: currentUser.mobileNumber || '',
       },
       createdAt: new Date().toISOString(),
-      status: 'pending_review', // Listings should always be pending review
+      status: 'pending_image' as const, // New status for draft
     };
 
-    const productRef = db.ref(`products/${productId}`);
-    await productRef.set(newProductData);
+    const productRef = ref(db, `products/${productId}`);
+    await set(productRef, newProductData);
 
-    // Revalidate paths to show the new listing in relevant places
-    revalidatePath('/my-listings');
-    revalidatePath('/dashboard/pending-products');
-
-    return { success: true, message: "Listing submitted successfully!", productId: productId };
+    return { success: true, message: 'Draft saved successfully!', productId: productId };
   } catch (error) {
-    console.error('Error creating listing in server action:', error);
+    console.error('Error creating listing draft:', error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
-    return { success: false, message: `Failed to create listing: ${errorMessage}` };
+    return { success: false, message: `Failed to save draft: ${errorMessage}` };
   }
+}
+
+/**
+ * Action 2: Updates an existing product with the image URL and sets its status for review.
+ * This is the second step in the submission process.
+ */
+export async function finalizeListing(
+    productId: string,
+    imageUrl: string,
+): Promise<{ success: boolean; message: string; }> {
+    const { db } = initializeAdmin();
+    
+    try {
+        const productRef = ref(db, `products/${productId}`);
+        await update(productRef, {
+            imageUrl: imageUrl,
+            status: 'pending_review'
+        });
+
+        // Revalidate paths to show the new listing in relevant places
+        revalidatePath('/my-listings');
+        revalidatePath('/dashboard/pending-products');
+
+        return { success: true, message: 'Listing submitted successfully!' };
+    } catch (error) {
+        console.error('Error finalizing listing:', error);
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+        return { success: false, message: `Failed to finalize listing: ${errorMessage}` };
+    }
 }

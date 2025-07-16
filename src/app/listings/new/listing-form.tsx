@@ -29,7 +29,7 @@ import { useState } from 'react';
 import { Loader2, Frown, Image as ImageIcon, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { createListing } from './actions';
+import { createListingDraft, finalizeListing } from './actions';
 import { listingSchema } from '@/lib/schemas';
 import Image from 'next/image';
 import { uploadImageAndGetUrl } from '@/lib/storage';
@@ -65,7 +65,7 @@ export function ListingForm() {
   const { toast } = useToast();
   const router = useRouter();
   const { user } = useAuth();
-  const [submissionStep, setSubmissionStep] = useState<'idle' | 'uploading' | 'saving'>('idle');
+  const [submissionStep, setSubmissionStep] = useState<'idle' | 'saving_draft' | 'uploading_image' | 'finalizing'>('idle');
   const [imageProcessingState, setImageProcessingState] = useState<'idle' | 'processing' | 'done'>('idle');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [compressedImageFile, setCompressedImageFile] = useState<File | null>(null);
@@ -88,73 +88,70 @@ export function ListingForm() {
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!user) {
-      toast({ title: 'Authentication Issue', description: 'You must be logged in to create a listing.' });
+    if (!user || !compressedImageFile) {
+      toast({ variant: "destructive", title: 'Missing Information', description: 'Please ensure you are logged in and have selected an image.' });
+      return;
+    }
+
+    // Step 1: Save the draft with text data
+    setSubmissionStep('saving_draft');
+    const draftResult = await createListingDraft({
+      productName: values.productName,
+      productDescription: values.productDescription,
+      price: values.price,
+      category: values.category,
+      subcategory: values.subcategory,
+      condition: values.condition,
+    });
+
+    if (!draftResult.success || !draftResult.productId) {
+      toast({ variant: "destructive", title: 'Failed to Save Draft', description: draftResult.message || "Could not save your listing details." });
+      setSubmissionStep('idle');
       return;
     }
     
-    if (!compressedImageFile) {
-        toast({
-            variant: "destructive",
-            title: 'Image not ready',
-            description: 'Please wait for the image to finish processing or select a valid image.'
-        });
-        return;
-    }
+    toast({ title: 'Draft Saved!', description: 'Now uploading your image...' });
+    const productId = draftResult.productId;
 
+    // Step 2: Upload the image
+    setSubmissionStep('uploading_image');
     let imageUrl = '';
+    try {
+      imageUrl = await uploadImageAndGetUrl(compressedImageFile, user.id);
+    } catch (uploadError) {
+      toast({
+        variant: "default",
+        title: "Image Upload Failed",
+        description: "Your listing draft is saved. You can add the image later from 'My Listings'.",
+        duration: 8000
+      });
+      router.push(`/my-listings`); // Redirect user to their listings page
+      return; // Stop the process here
+    }
+
+    // Step 3: Finalize the listing with the image URL
+    setSubmissionStep('finalizing');
+    const finalizeResult = await finalizeListing(productId, imageUrl);
+
+    if (finalizeResult.success) {
+      toast({ title: 'Listing Submitted!', description: 'Your item is now pending review.' });
+      router.push(`/my-listings`);
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Finalization Failed',
+        description: `Your draft was saved, but we couldn't attach the image. Please edit the listing later. Error: ${finalizeResult.message}`
+      });
+       router.push(`/my-listings`);
+    }
     
-    try {
-        setSubmissionStep('uploading');
-        imageUrl = await uploadImageAndGetUrl(compressedImageFile, user.id);
-    } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-        toast({
-            title: 'Image Upload Failed',
-            description: "There was a problem uploading your image. Please try a different one.",
-        });
-        setSubmissionStep('idle');
-        return; // Halt the submission
-    }
-
-    try {
-      setSubmissionStep('saving');
-      const serverData = {
-        productName: values.productName,
-        productDescription: values.productDescription,
-        price: values.price!,
-        category: values.category,
-        subcategory: values.subcategory,
-        condition: values.condition,
-        imageUrl: imageUrl,
-      };
-
-      const result = await createListing(serverData);
-
-      if (result.success && result.productId) {
-        toast({ 
-            title: 'Listing Submitted!', 
-            description: 'Your item is now pending review.'
-        });
-        router.push(`/my-listings`);
-      } else {
-        throw new Error(result.message || 'An unknown server error occurred.');
-      }
-    } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-        toast({
-            variant: 'destructive',
-            title: 'Failed to Save Listing',
-            description: `Your details could not be saved. Please try again. Error: ${errorMessage}`,
-        });
-    } finally {
-        setSubmissionStep('idle');
-    }
+    setSubmissionStep('idle');
   }
 
   const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     
+    // Clear previous image states without resetting the whole form
     setImagePreview(null);
     setCompressedImageFile(null);
     setImageProcessingState('idle');
@@ -181,13 +178,12 @@ export function ListingForm() {
 
       } catch (error) {
         console.error("Image compression failed:", error);
-        setImageProcessingState('idle'); 
-        setCompressedImageFile(null);
-        form.setValue('productImage', null, { shouldValidate: true });
         toast({
-            title: "Image Error",
-            description: "There was a problem processing your image. Please try a different one.",
+            variant: "default", // Softer, non-destructive color
+            title: "Image Processing Failed",
+            description: "Please try selecting a different image. Standard formats like JPG and PNG work best.",
         });
+        setImageProcessingState('idle');
       }
     }
   };
@@ -212,9 +208,10 @@ export function ListingForm() {
 
   const isSubmitting = submissionStep !== 'idle';
   const isImageReady = imageProcessingState === 'done' && compressedImageFile !== null;
-  let buttonText = 'Submit Listing for Review';
-  if (submissionStep === 'uploading') buttonText = 'Uploading image...';
-  if (submissionStep === 'saving') buttonText = 'Saving listing...';
+  let buttonText = 'Submit Listing';
+  if (submissionStep === 'saving_draft') buttonText = 'Saving details...';
+  if (submissionStep === 'uploading_image') buttonText = 'Uploading image...';
+  if (submissionStep === 'finalizing') buttonText = 'Finalizing...';
 
   return (
     <Form {...form}>
