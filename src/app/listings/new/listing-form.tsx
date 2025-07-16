@@ -115,7 +115,6 @@ export function ListingForm() {
           toast({ title: 'Listing Submitted!', description: 'Your item is now pending review.' });
           router.push(`/my-listings`);
         } else {
-          // This will handle specific server-side validation errors if they are returned.
           throw new Error(result.message || 'An unknown error occurred on the server.');
         }
 
