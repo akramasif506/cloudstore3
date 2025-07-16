@@ -103,15 +103,24 @@ export function ListingForm() {
 
     try {
         setSubmissionStep('uploading');
-        // CRITICAL FIX: Use the 'compressedImageFile' from state, NOT the one from the form 'values' object.
         const imageUrl = await uploadImageAndGetUrl(compressedImageFile, user.id);
     
         setSubmissionStep('saving');
-        const result = await createListing({
-            ...values,
-            price: values.price!, // Zod ensures it's not null here
-            imageUrl, // Pass the URL from the successful upload.
-        });
+        
+        // This is the correct data to send to the server.
+        // It uses the form values, but EXCLUDES the productImage field,
+        // and includes the final imageUrl from storage.
+        const serverData = {
+          productName: values.productName,
+          productDescription: values.productDescription,
+          price: values.price!,
+          category: values.category,
+          subcategory: values.subcategory,
+          condition: values.condition,
+          imageUrl: imageUrl,
+        };
+
+        const result = await createListing(serverData);
 
         if (result.success && result.productId) {
           toast({ title: 'Listing Submitted!', description: 'Your item is now pending review.' });
@@ -153,7 +162,8 @@ export function ListingForm() {
         setImageProcessingState('idle');
         setImagePreview(null);
         setCompressedImageFile(null);
-        form.resetField("productImage");
+        // Do NOT reset the form here, just the image field's value for the input
+        event.target.value = '';
         toast({
             variant: "destructive",
             title: "Image Error",
