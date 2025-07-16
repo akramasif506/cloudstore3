@@ -142,12 +142,11 @@ export function ListingForm() {
   const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     
-    // Clear previous state on new file selection
     setImagePreview(null);
     setImageProcessingState('idle');
+    form.setValue('productImage', null, { shouldValidate: true });
 
     if (file) {
-      // Start processing
       setImageProcessingState('processing');
 
       try {
@@ -158,19 +157,15 @@ export function ListingForm() {
         };
         const compressedFile = await imageCompression(file, options);
         
-        // ** THE FIX IS HERE **
-        // Update the form's internal state with the compressed file
         form.setValue('productImage', [compressedFile], { shouldValidate: true });
         
-        // Create the preview URL from the compressed file itself
         setImagePreview(URL.createObjectURL(compressedFile));
         
         setImageProcessingState('done');
 
       } catch (error) {
         console.error("Image compression failed:", error);
-        setImageProcessingState('idle'); // Reset on error
-        // Do NOT reset the form here, just the image field's value for the input
+        setImageProcessingState('idle'); 
         form.resetField('productImage');
         toast({
             variant: "destructive",
@@ -249,9 +244,7 @@ export function ListingForm() {
                         accept={ACCEPTED_IMAGE_TYPES.join(',')} 
                         {...productImageRef}
                         onChange={(e) => {
-                            // Let RHF handle the file list
                             field.onChange(e.target.files);
-                            // Then trigger our compression logic
                             handleImageChange(e);
                         }}
                         disabled={isSubmitting || imageProcessingState === 'processing'}
