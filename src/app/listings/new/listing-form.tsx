@@ -92,20 +92,25 @@ export function ListingForm() {
       toast({ title: 'Authentication Issue', description: 'You must be logged in to create a listing.' });
       return;
     }
+    // This is the crucial check. The form can't be submitted if the compressed file isn't ready.
     if (!compressedImageFile) {
-        toast({ title: 'Image not ready', description: 'Please wait for the image to finish processing.' });
+        toast({
+            title: 'Image not ready',
+            description: 'Please wait for the image to finish processing or select a valid image.'
+        });
         return;
     }
 
     try {
         setSubmissionStep('uploading');
+        // CRITICAL FIX: Use the 'compressedImageFile' from state, NOT the one from the form 'values' object.
         const imageUrl = await uploadImageAndGetUrl(compressedImageFile, user.id);
     
         setSubmissionStep('saving');
         const result = await createListing({
             ...values,
             price: values.price!, // Zod ensures it's not null here
-            imageUrl,
+            imageUrl, // Pass the URL from the successful upload.
         });
 
         if (result.success && result.productId) {
@@ -148,6 +153,7 @@ export function ListingForm() {
         setImageProcessingState('idle');
         setImagePreview(null);
         setCompressedImageFile(null);
+        form.resetField("productImage");
         toast({
             variant: "destructive",
             title: "Image Error",
@@ -181,6 +187,7 @@ export function ListingForm() {
   }
 
   const isSubmitting = submissionStep !== 'idle';
+  // The submit button is only ready when an image has been successfully processed.
   const isImageReady = imageProcessingState === 'done';
   let buttonText = 'Submit Listing for Review';
   if (submissionStep === 'uploading') buttonText = 'Uploading image...';
