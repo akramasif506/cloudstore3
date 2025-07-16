@@ -68,6 +68,7 @@ export function ListingForm() {
   const [submissionStep, setSubmissionStep] = useState<'idle' | 'uploading' | 'saving'>('idle');
   const [imageProcessingState, setImageProcessingState] = useState<'idle' | 'processing' | 'done'>('idle');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [compressedImageFile, setCompressedImageFile] = useState<File | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -92,8 +93,7 @@ export function ListingForm() {
       return;
     }
     
-    const imageFile = values.productImage[0];
-    if (!imageFile) {
+    if (!compressedImageFile) {
         toast({
             variant: "destructive",
             title: 'Image not ready',
@@ -103,18 +103,20 @@ export function ListingForm() {
     }
 
     let imageUrl = '';
+    let imageUploadFailed = false;
     try {
         setSubmissionStep('uploading');
-        imageUrl = await uploadImageAndGetUrl(imageFile, user.id);
+        imageUrl = await uploadImageAndGetUrl(compressedImageFile, user.id);
     } catch (error) {
+        imageUploadFailed = true;
+        imageUrl = 'https://placehold.co/800x600.png'; // Fallback placeholder
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
         toast({
             variant: 'destructive',
             title: 'Image Upload Failed',
-            description: `Could not upload the image. Please try again. Error: ${errorMessage}`,
+            description: `Submitting with a placeholder. An admin will contact you to finalize the image. Error: ${errorMessage}`,
+            duration: 8000,
         });
-        setSubmissionStep('idle');
-        return;
     }
 
     try {
@@ -132,7 +134,12 @@ export function ListingForm() {
       const result = await createListing(serverData);
 
       if (result.success && result.productId) {
-        toast({ title: 'Listing Submitted!', description: 'Your item is now pending review.' });
+        toast({ 
+            title: 'Listing Submitted!', 
+            description: imageUploadFailed 
+                ? 'Your item is pending review. An admin will contact you about the image.' 
+                : 'Your item is now pending review.' 
+        });
         router.push(`/my-listings`);
       } else {
         throw new Error(result.message || 'An unknown server error occurred.');
@@ -154,6 +161,7 @@ export function ListingForm() {
     
     // Clear previous state on new file selection
     setImagePreview(null);
+    setCompressedImageFile(null);
     setImageProcessingState('idle');
     form.setValue('productImage', null, { shouldValidate: true });
 
@@ -172,6 +180,9 @@ export function ListingForm() {
         // Update the form with the new, compressed file
         form.setValue('productImage', [compressedFile], { shouldValidate: true });
         
+        // Store the compressed file separately for direct use
+        setCompressedImageFile(compressedFile);
+        
         // Create a preview URL from the compressed file and update state
         setImagePreview(URL.createObjectURL(compressedFile));
         
@@ -181,6 +192,7 @@ export function ListingForm() {
       } catch (error) {
         console.error("Image compression failed:", error);
         setImageProcessingState('idle'); 
+        setCompressedImageFile(null);
         form.resetField('productImage');
         toast({
             variant: "destructive",
@@ -210,7 +222,7 @@ export function ListingForm() {
   }
 
   const isSubmitting = submissionStep !== 'idle';
-  const isImageReady = imageProcessingState === 'done';
+  const isImageReady = imageProcessingState === 'done' && compressedImageFile !== null;
   let buttonText = 'Submit Listing for Review';
   if (submissionStep === 'uploading') buttonText = 'Uploading image...';
   if (submissionStep === 'saving') buttonText = 'Saving listing...';
