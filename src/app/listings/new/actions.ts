@@ -40,7 +40,7 @@ export async function createListingDraft(
       id: productId,
       name: productName,
       description: productDescription,
-      price: restOfData.price!,
+      price: restOfData.price,
       category: restOfData.category,
       subcategory: restOfData.subcategory,
       condition: restOfData.condition,

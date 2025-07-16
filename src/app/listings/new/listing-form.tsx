@@ -75,7 +75,7 @@ export function ListingForm() {
     defaultValues: {
       productName: '',
       productDescription: '',
-      price: null,
+      price: undefined,
       category: '',
       subcategory: '',
       condition: 'Used',
@@ -244,7 +244,7 @@ export function ListingForm() {
                             ) : (
                                 <>
                                     {imageProcessingState === 'processing' ? (
-                                      <div className="flex flex-col items-center justify-center text-white">
+                                      <div className="flex flex-col items-center justify-center">
                                           <Loader2 className="h-8 w-8 animate-spin mb-2 text-primary" />
                                           <span className="text-muted-foreground">Processing...</span>
                                       </div>
@@ -373,7 +373,7 @@ export function ListingForm() {
                       {...field}
                       onChange={(e) => {
                         const value = e.target.value;
-                        field.onChange(value === '' ? null : Number(value));
+                        field.onChange(value === '' ? undefined : Number(value));
                       }}
                       value={field.value ?? ''}
                       disabled={isSubmitting}
