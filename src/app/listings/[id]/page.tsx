@@ -6,13 +6,16 @@ import { notFound } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Star, Tag, User, Building, ShieldCheck, Phone } from 'lucide-react';
+import { Star, Tag, User, Building, ShieldCheck, Phone, Undo2 } from 'lucide-react';
 import { CustomerFeedback } from '@/components/products/customer-feedback';
 import type { Product } from '@/lib/types';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { AddToCartButtons } from './add-to-cart-buttons';
 import { ShareButtons } from './share-buttons';
 import { headers } from 'next/headers';
+import { getReturnPolicy } from '@/app/dashboard/manage-returns/actions';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
 
 
 async function getProduct(id: string): Promise<Product | null> {
@@ -42,8 +45,9 @@ async function getProduct(id: string): Promise<Product | null> {
 }
 
 
-export default async function ListingDetailPage({ params }: { params: { id: string } }) {
+export default async function ListingDetailPage({ params }: { params: { id:string } }) {
   const product = await getProduct(params.id);
+  const returnPolicy = await getReturnPolicy();
 
   if (!product || (product.status !== 'active' && product.status !== 'pending_review')) {
     notFound();
@@ -115,6 +119,29 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
                     <AddToCartButtons product={product} />
                 </CardContent>
             </Card>
+             {returnPolicy?.isEnabled && (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-4">
+                    <Undo2 className="h-8 w-8 text-primary" />
+                    <div>
+                      <h3 className="font-semibold">{returnPolicy.returnWindowDays}-Day Returns</h3>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                           <Button variant="link" className="text-sm p-0 h-auto">View Policy</Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-80">
+                           <div className="prose prose-sm dark:prose-invert">
+                                <h4>Return Policy</h4>
+                                <p>{returnPolicy.policyText}</p>
+                           </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             <ShareButtons productName={product.name} productUrl={productUrl} />
         </div>
       </div>
