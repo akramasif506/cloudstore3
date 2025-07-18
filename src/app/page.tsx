@@ -70,11 +70,9 @@ export default async function Home({
   const maxPrice = Number(searchParams?.maxPrice);
   const sortBy = searchParams?.sortBy || 'newest';
 
-  // A specific search or subcategory filter will trigger the flat grid view.
   const useFlatGrid = !!(searchQuery || selectedSubcategory);
 
   let productsToShow = allProducts.filter(product => {
-    // Exclude the featured product from the main grid if it exists
     if (featuredProductInfo?.productId === product.id) {
         return false;
     }
@@ -91,7 +89,6 @@ export default async function Home({
     return searchMatch && categoryMatch && subcategoryMatch && conditionMatch && priceMatch;
   });
 
-  // Sort products
   productsToShow.sort((a, b) => {
     switch (sortBy) {
       case 'price-asc':

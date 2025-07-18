@@ -39,11 +39,16 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
   ]);
 
   useEffect(() => {
-    // When category changes, reset subcategory if it's not valid for the new category
-    if (selectedCategory !== 'all' && !categories[selectedCategory as keyof typeof categories]?.includes(selectedSubcategory)) {
-      setSelectedSubcategory('all');
-    }
-  }, [selectedCategory, selectedSubcategory, categories]);
+    // This effect syncs the component's state with the URL's search parameters.
+    // This is useful for when the user uses the back/forward browser buttons.
+    setSelectedCategory(searchParams.get('category') || 'all');
+    setSelectedSubcategory(searchParams.get('subcategory') || 'all');
+    setSelectedCondition(searchParams.get('condition') || 'all');
+    setPriceRange([
+        Number(searchParams.get('minPrice')) || 0,
+        Number(searchParams.get('maxPrice')) || MAX_PRICE
+    ]);
+  }, [searchParams]);
 
   const handleApplyFilters = () => {
     const params = new URLSearchParams(searchParams);
@@ -76,7 +81,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
 
   const handleCategoryChange = (value: string) => {
     setSelectedCategory(value);
-    // Reset subcategory when category changes
+    // When category changes, reset subcategory to prevent invalid combinations
     setSelectedSubcategory('all');
   };
 
