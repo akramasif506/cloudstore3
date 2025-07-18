@@ -4,8 +4,8 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, PackageOpen, CheckCircle, Truck, Frown, Loader2, Undo2 } from 'lucide-react';
-import type { Order } from '@/lib/types';
+import { DollarSign, PackageOpen, CheckCircle, Truck, Frown, Loader2, Undo2, Ban } from 'lucide-react';
+import type { Order, ReturnStatus } from '@/lib/types';
 import Link from 'next/link';
 import { useAuth } from '@/context/auth-context';
 import { useRouter } from 'next/navigation';
@@ -14,6 +14,7 @@ import { getMyOrders } from './actions';
 import { getReturnPolicy } from '../dashboard/manage-returns/actions';
 import type { ReturnPolicy } from '../dashboard/manage-returns/actions';
 import { useToast } from '@/hooks/use-toast';
+import { RequestReturnDialog } from './request-return-dialog';
 
 function StatusBadge({ status }: { status: Order['status'] }) {
     const baseClasses = "flex items-center gap-2 text-sm font-medium px-3 py-1 rounded-full w-fit";
@@ -32,7 +33,29 @@ function StatusBadge({ status }: { status: Order['status'] }) {
     return null;
 }
 
+function ReturnStatusBadge({ status }: { status: ReturnStatus }) {
+    const baseClasses = "flex items-center gap-2 text-xs font-medium px-2 py-0.5 rounded-full w-fit";
+     if (status === 'Return Requested') {
+        return <div className={`${baseClasses} bg-amber-100 text-amber-800`}><Undo2 className="h-3 w-3" />Requested</div>;
+    }
+    if (status === 'Return Approved') {
+        return <div className={`${baseClasses} bg-green-100 text-green-800`}><CheckCircle className="h-3 w-3" />Approved</div>;
+    }
+    if (status === 'Return Rejected') {
+        return <div className={`${baseClasses} bg-red-100 text-red-800`}><Ban className="h-3 w-3" />Rejected</div>;
+    }
+    if (status === 'Returned') {
+        return <div className={`${baseClasses} bg-blue-100 text-blue-800`}><Truck className="h-3 w-3" />Returned</div>;
+    }
+    return null;
+}
+
+
 function isReturnable(order: Order, policy: ReturnPolicy): boolean {
+    // Cannot return if a return has already been requested/processed.
+    if (order.returnStatus) {
+        return false;
+    }
     if (!policy.isEnabled || order.status !== 'Delivered') {
         return false;
     }
@@ -40,8 +63,6 @@ function isReturnable(order: Order, policy: ReturnPolicy): boolean {
     if (policy.returnWindowDays === 0) {
         return true;
     }
-    // TODO: This assumes the `createdAt` timestamp is close to the delivery date.
-    // For a more accurate implementation, a `deliveredAt` timestamp would be needed.
     const orderDate = new Date(order.createdAt);
     const returnDeadline = new Date(orderDate);
     returnDeadline.setDate(orderDate.getDate() + policy.returnWindowDays);
@@ -55,7 +76,6 @@ export function MyOrdersClient() {
     const [returnPolicy, setReturnPolicy] = useState<ReturnPolicy | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
-    const { toast } = useToast();
 
     useEffect(() => {
         async function loadData() {
@@ -109,6 +129,11 @@ export function MyOrdersClient() {
             </Card>
         );
     }
+    
+    const handleReturnSuccess = (orderId: string) => {
+        setOrders(prevOrders => prevOrders.map(o => o.id === orderId ? {...o, returnStatus: 'Return Requested'} : o));
+    }
+
 
     return (
         <div>
@@ -141,12 +166,15 @@ export function MyOrdersClient() {
                     {orders.map(order => (
                         <Card key={order.id} className="transition-shadow hover:shadow-md">
                             <CardHeader>
-                                <div className="flex justify-between items-start">
+                                <div className="flex justify-between items-start flex-wrap gap-2">
                                     <Link href={`/my-orders/${order.id}`} className="block">
                                         <CardTitle className="text-lg">Order #{order.id.substring(0, 8).toUpperCase()}</CardTitle>
                                         <CardDescription>Placed on {new Date(order.createdAt).toLocaleDateString()}</CardDescription>
                                     </Link>
-                                    <StatusBadge status={order.status} />
+                                    <div className="flex items-center gap-2">
+                                        {order.returnStatus && <ReturnStatusBadge status={order.returnStatus} />}
+                                        <StatusBadge status={order.status} />
+                                    </div>
                                 </div>
                             </CardHeader>
                              <CardContent>
@@ -157,13 +185,7 @@ export function MyOrdersClient() {
                             </CardContent>
                              {returnPolicy && isReturnable(order, returnPolicy) && (
                                 <CardFooter className="bg-muted/30">
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => toast({ title: "Feature Coming Soon!", description: "The ability to request returns is currently under development."})}
-                                    >
-                                        <Undo2 className="mr-2 h-4 w-4" />
-                                        Request Return
-                                    </Button>
+                                   <RequestReturnDialog orderId={order.id} onSuccess={() => handleReturnSuccess(order.id)} />
                                 </CardFooter>
                             )}
                         </Card>

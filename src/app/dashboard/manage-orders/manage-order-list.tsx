@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState } from 'react';
@@ -21,7 +22,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { updateOrderStatus } from './actions';
-import { CheckCircle, MoreHorizontal, Loader2, PackageOpen, Truck, Frown, Eye, ChevronDown, ChevronRight, User, Phone, Undo2 } from 'lucide-react';
+import { CheckCircle, MoreHorizontal, Loader2, PackageOpen, Truck, Frown, Eye, ChevronDown, ChevronRight, User, Phone, Undo2, Ban } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -162,17 +163,23 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
                                     <div>
                                         <h4 className="font-semibold mb-2">Return Information</h4>
                                         <div className="bg-background p-3 rounded-md text-sm">
-                                            <p className="text-muted-foreground">
-                                                This section is for managing customer returns. The functionality is under development.
-                                            </p>
-                                            <Separator className="my-3"/>
                                             <div className="flex justify-between items-center">
-                                                <span className="font-medium">Status: Not Requested</span>
-                                                <Button size="sm" variant="outline" disabled>
-                                                    <Undo2 className="mr-2 h-4 w-4"/>
-                                                    Process Return
+                                                <div className="flex items-center gap-2 font-medium">
+                                                    {order.returnStatus === 'Return Requested' && <Undo2 className="h-4 w-4 text-amber-600" />}
+                                                    {order.returnStatus === 'Return Approved' && <CheckCircle className="h-4 w-4 text-green-600" />}
+                                                    {order.returnStatus === 'Return Rejected' && <Ban className="h-4 w-4 text-red-600" />}
+                                                    <span>Status: {order.returnStatus || 'Not Requested'}</span>
+                                                </div>
+                                                <Button size="sm" variant="outline" asChild>
+                                                    <Link href="/dashboard/manage-returns">
+                                                        Manage Returns
+                                                    </Link>
                                                 </Button>
                                             </div>
+                                            <Separator className="my-3"/>
+                                            <p className="text-muted-foreground">
+                                                You can approve or reject return requests from the 'Manage Returns' dashboard page.
+                                            </p>
                                         </div>
                                    </div>
                                </div>

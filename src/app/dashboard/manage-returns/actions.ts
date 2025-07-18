@@ -1,9 +1,11 @@
 
+
 'use server';
 
 import { z } from 'zod';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
+import type { Order, ReturnRequest, ReturnStatus } from '@/lib/types';
 
 export interface ReturnPolicy {
   isEnabled: boolean;
@@ -18,6 +20,7 @@ const policySchema = z.object({
 });
 
 const POLICY_PATH = 'site_config/return_policy';
+const RETURN_REQUESTS_PATH = 'return_requests';
 
 export async function getReturnPolicy(): Promise<ReturnPolicy> {
     const { db } = initializeAdmin();
@@ -52,12 +55,62 @@ export async function setReturnPolicy(
     const policyRef = db.ref(POLICY_PATH);
     await policyRef.set(validatedFields.data);
 
-    // Revalidate relevant pages if needed in the future
-    // revalidatePath('/my-orders');
+    revalidatePath('/my-orders');
 
     return { success: true, message: 'Return policy has been updated.' };
   } catch (error) {
     console.error('Error setting return policy:', error);
     return { success: false, message: 'Failed to set return policy.' };
   }
+}
+
+export async function getAllReturnRequests(): Promise<ReturnRequest[]> {
+    const { db } = initializeAdmin();
+    try {
+        const requestsRef = db.ref(RETURN_REQUESTS_PATH);
+        const snapshot = await requestsRef.orderByChild('requestedAt').once('value');
+        if (snapshot.exists()) {
+            const data = snapshot.val();
+            return Object.values(data).reverse(); // Newest first
+        }
+        return [];
+    } catch (error) {
+        console.error('Error fetching return requests:', error);
+        return [];
+    }
+}
+
+export async function updateReturnStatus(
+    requestId: string,
+    orderId: string,
+    userId: string,
+    newStatus: 'Approved' | 'Rejected'
+): Promise<{ success: boolean; message: string }> {
+    const { db } = initializeAdmin();
+    const returnStatusMap: Record<typeof newStatus, ReturnStatus> = {
+        'Approved': 'Return Approved',
+        'Rejected': 'Return Rejected',
+    };
+    
+    try {
+        const returnRequestRef = db.ref(`${RETURN_REQUESTS_PATH}/${requestId}`);
+        const orderRef = db.ref(`orders/${userId}/${orderId}`);
+        const globalOrderRef = db.ref(`all_orders/${orderId}`);
+
+        // Update status on the return request itself
+        await returnRequestRef.update({ status: newStatus });
+        
+        // Update status on the user's order and the global order
+        const orderUpdate = { returnStatus: returnStatusMap[newStatus] };
+        await orderRef.update(orderUpdate);
+        await globalOrderRef.update(orderUpdate);
+
+        revalidatePath('/dashboard/manage-returns');
+        revalidatePath('/my-orders');
+        
+        return { success: true, message: `Return request has been ${newStatus.toLowerCase()}.` };
+    } catch (error) {
+        console.error('Error updating return status:', error);
+        return { success: false, message: 'Failed to update return status.' };
+    }
 }

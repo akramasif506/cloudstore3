@@ -60,6 +60,8 @@ export interface OrderItem {
     seller?: ProductSeller;
 }
 
+export type ReturnStatus = 'Return Requested' | 'Return Approved' | 'Return Rejected' | 'Returned';
+
 export interface Order {
     id:string;
     userId: string;
@@ -73,7 +75,20 @@ export interface Order {
     contactNumber: string;
     status: 'Pending' | 'Shipped' | 'Delivered' | 'Cancelled';
     createdAt: string;
+    returnStatus?: ReturnStatus;
+    returnRequestId?: string;
 }
+
+export interface ReturnRequest {
+    id: string;
+    orderId: string;
+    userId: string;
+    reason: string;
+    requestedAt: string;
+    status: 'Pending' | 'Approved' | 'Rejected';
+    order: Order; // Embed order snapshot for easy access
+}
+
 
 export interface FeeConfig {
     platformFeePercent: number;
