@@ -118,29 +118,21 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
              <Card>
                 <CardHeader>
                     <CardTitle className="text-xl flex items-center gap-2">
+                        <User className="w-5 h-5" />
                         Sold by
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent>
                      <div className="flex items-center gap-4">
                         <Avatar className="h-12 w-12">
-                            {/* Assuming seller might have a profile image one day */}
-                            <AvatarImage src="" alt={product.seller.name} data-ai-hint="seller avatar" />
-                            <AvatarFallback>{product.seller.name.charAt(0).toUpperCase()}</AvatarFallback>
+                            <AvatarImage src="https://placehold.co/100x100.png" alt="CloudStore" data-ai-hint="store logo" />
+                            <AvatarFallback>CS</AvatarFallback>
                         </Avatar>
                         <div>
-                            <p className="font-semibold text-lg">{product.seller.name}</p>
-                            {product.seller.contactNumber && (
-                                <p className="text-sm text-muted-foreground flex items-center gap-1">
-                                    <Phone className="h-3 w-3" />
-                                    {product.seller.contactNumber}
-                                </p>
-                            )}
+                            <p className="font-semibold text-lg">CloudStore</p>
+                            <p className="text-sm text-muted-foreground">Verified Seller</p>
                         </div>
                     </div>
-                     <Link href="/contact" className="w-full">
-                        <span className="inline-block w-full text-center py-2 px-4 border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md text-sm font-medium">Contact Seller</span>
-                     </Link>
                 </CardContent>
             </Card>
             <ShareButtons productName={product.name} productUrl={productUrl} />

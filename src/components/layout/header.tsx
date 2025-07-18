@@ -45,7 +45,7 @@ export function Header() {
                 <Link href="/"><Home className="mr-2 h-4 w-4" />Home</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/listings/new"><Tag className="mr-2 h-4 w-4" />Sell</Link>
+                <Link href="/my-listings"><Tag className="mr-2 h-4 w-4" />Sell</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               {!user && (
@@ -75,8 +75,8 @@ export function Header() {
                 <Link href="/" className="transition-colors hover:text-foreground/80 text-foreground">
                     Home
                 </Link>
-                <Link href="/listings/new" className="transition-colors hover:text-foreground/80 text-foreground">
-                    Sell
+                <Link href="/about" className="transition-colors hover:text-foreground/80 text-foreground/60">
+                    About
                 </Link>
             </nav>
         </div>
