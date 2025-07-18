@@ -6,7 +6,7 @@ import { useCart } from "@/context/cart-context";
 import { useToast } from "@/hooks/use-toast";
 import type { Product } from "@/lib/types";
 import { Minus, Plus, ShoppingCart } from "lucide-react";
-import { ToastAction } from "@/components/ui/toast";
+import { ToastAction, ToastClose } from "@/components/ui/toast";
 import Link from 'next/link';
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -24,12 +24,15 @@ export function AddToCartButtons({ product }: AddToCartButtonsProps) {
     addToCart(product, quantity);
     toast({
       title: "Added to cart!",
-      description: `${quantity} x ${product.name} has been added. You can continue shopping or view your cart.`,
-      action: (
-          <ToastAction asChild altText="View Cart">
-            <Link href="/cart">View Cart</Link>
-          </ToastAction>
-        ),
+      description: (
+        <p>
+          {product.name} is in your cart. You can continue shopping or{" "}
+          <Link href="/cart" className="font-bold underline">
+            view your cart
+          </Link>
+          .
+        </p>
+      ),
     });
   };
 
