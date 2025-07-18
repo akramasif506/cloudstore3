@@ -22,7 +22,17 @@ async function getProduct(id: string): Promise<Product | null> {
     const snapshot = await productRef.once('value');
     if (snapshot.exists()) {
       const productData = snapshot.val();
-      return { ...productData, id, condition: productData.condition || 'Used' };
+      
+      // Convert reviews from object to array if they exist
+      let reviewsArray = [];
+      if (productData.reviews) {
+        reviewsArray = Object.keys(productData.reviews).map(key => ({
+            ...productData.reviews[key],
+            id: key,
+        }));
+      }
+
+      return { ...productData, id, condition: productData.condition || 'Used', reviews: reviewsArray };
     }
     return null;
   } catch (error) {
