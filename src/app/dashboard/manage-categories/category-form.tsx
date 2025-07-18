@@ -55,7 +55,7 @@ export function CategoryForm({ initialCategories }: CategoryFormProps) {
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, update } = useFieldArray({
     control: form.control,
     name: 'categories',
   });
@@ -75,20 +75,21 @@ export function CategoryForm({ initialCategories }: CategoryFormProps) {
   const handleAddSubcategory = (categoryIndex: number) => {
     const newSubcategory = newSubcategoryValues[categoryIndex];
     if (newSubcategory && newSubcategory.trim() !== '') {
-      const currentSubcategories = form.getValues(`categories.${categoryIndex}.subcategories`);
-       if (currentSubcategories.some(sub => sub.toLowerCase() === newSubcategory.toLowerCase())) {
+      const categoryField = fields[categoryIndex];
+      if (categoryField.subcategories.some(sub => sub.toLowerCase() === newSubcategory.toLowerCase())) {
         toast({ variant: 'destructive', title: 'Subcategory already exists.' });
         return;
       }
-      form.setValue(`categories.${categoryIndex}.subcategories`, [...currentSubcategories, newSubcategory]);
+      const updatedSubcategories = [...categoryField.subcategories, newSubcategory];
+      update(categoryIndex, { ...categoryField, subcategories: updatedSubcategories });
       setNewSubcategoryValues(prev => ({ ...prev, [categoryIndex]: '' }));
     }
   };
   
   const handleRemoveSubcategory = (categoryIndex: number, subcategoryIndex: number) => {
-    const currentSubcategories = form.getValues(`categories.${categoryIndex}.subcategories`);
-    const updatedSubcategories = currentSubcategories.filter((_, i) => i !== subcategoryIndex);
-    form.setValue(`categories.${categoryIndex}.subcategories`, updatedSubcategories);
+    const categoryField = fields[categoryIndex];
+    const updatedSubcategories = categoryField.subcategories.filter((_, i) => i !== subcategoryIndex);
+    update(categoryIndex, { ...categoryField, subcategories: updatedSubcategories });
   }
 
   const onSubmit = async (data: FormValues) => {
