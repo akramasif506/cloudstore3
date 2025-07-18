@@ -6,7 +6,7 @@ import { notFound } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Star, Tag, User, Building, ShieldCheck } from 'lucide-react';
+import { Star, Tag, User, Building, ShieldCheck, Phone } from 'lucide-react';
 import { CustomerFeedback } from '@/components/products/customer-feedback';
 import type { Product } from '@/lib/types';
 import { initializeAdmin } from '@/lib/firebase-admin';
@@ -118,17 +118,28 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
              <Card>
                 <CardHeader>
                     <CardTitle className="text-xl flex items-center gap-2">
-                        <Building className="h-5 w-5" />
-                        Sold by CloudStore
+                        Sold by
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <p className="text-sm text-muted-foreground">
-                        All products on CloudStore are verified and sold directly by us. 
-                        We ensure quality and authenticity for a trustworthy shopping experience.
-                    </p>
+                     <div className="flex items-center gap-4">
+                        <Avatar className="h-12 w-12">
+                            {/* Assuming seller might have a profile image one day */}
+                            <AvatarImage src="" alt={product.seller.name} data-ai-hint="seller avatar" />
+                            <AvatarFallback>{product.seller.name.charAt(0).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                            <p className="font-semibold text-lg">{product.seller.name}</p>
+                            {product.seller.contactNumber && (
+                                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                    <Phone className="h-3 w-3" />
+                                    {product.seller.contactNumber}
+                                </p>
+                            )}
+                        </div>
+                    </div>
                      <Link href="/contact" className="w-full">
-                        <span className="inline-block w-full text-center py-2 px-4 border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md text-sm font-medium">Contact Support</span>
+                        <span className="inline-block w-full text-center py-2 px-4 border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md text-sm font-medium">Contact Seller</span>
                      </Link>
                 </CardContent>
             </Card>
