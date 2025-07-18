@@ -74,7 +74,11 @@ export async function placeOrder(values: {
         price: item.price,
         quantity: item.quantity,
         imageUrl: item.imageUrl,
-        seller: item.seller, // Pass seller info through
+        seller: {
+            id: item.seller?.id || 'unknown',
+            name: item.seller?.name || 'CloudStore',
+            contactNumber: item.seller?.contactNumber || 'N/A'
+        }
     })),
     subtotal,
     platformFee,
