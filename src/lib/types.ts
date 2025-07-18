@@ -40,6 +40,7 @@ export interface Product {
   condition?: Condition;
   reviews: Review[];
   status: 'active' | 'pending_review' | 'rejected' | 'sold' | 'pending_image';
+  rejectionReason?: string;
   createdAt: string;
   seller: {
     id: string;

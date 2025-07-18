@@ -54,6 +54,33 @@ export async function approveProduct(productId: string): Promise<{ success: bool
     }
 }
 
+export async function rejectProduct(
+    productId: string,
+    reason: string
+): Promise<{ success: boolean; message?: string }> {
+    if (!reason) {
+        return { success: false, message: 'A reason for rejection is required.' };
+    }
+
+    try {
+        const { db } = initializeAdmin();
+        const productRef = ref(db, `products/${productId}`);
+        await update(productRef, {
+            status: 'rejected',
+            rejectionReason: reason
+        });
+        
+        revalidatePath('/dashboard/pending-products');
+        revalidatePath('/my-listings');
+
+        return { success: true };
+    } catch (error) {
+        console.error("Error rejecting product:", error);
+        return { success: false, message: 'Failed to reject product.' };
+    }
+}
+
+
 export async function updateAndApproveProduct(
     values: z.infer<typeof updateProductSchema>
 ): Promise<{ success: boolean; message?: string }> {

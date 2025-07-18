@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { ProductGrid } from '@/components/products/product-grid';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package, Clock, Loader2, Frown, CheckCircle } from 'lucide-react';
+import { Package, Clock, Loader2, Frown, CheckCircle, XCircle } from 'lucide-react';
 import type { Product } from '@/lib/types';
 import { useAuth } from '@/context/auth-context';
 import { getMyListings } from './actions';
@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 
 export function MyListingsClient() {
   const { user } = useAuth();
@@ -69,6 +71,7 @@ export function MyListingsClient() {
 
   const pendingProducts = products.filter(p => p.status === 'pending_review');
   const activeProducts = products.filter(p => p.status === 'active');
+  const rejectedProducts = products.filter(p => p.status === 'rejected');
 
   return (
     <div>
@@ -131,6 +134,36 @@ export function MyListingsClient() {
               </CardHeader>
               <CardContent>
                 <ProductGrid products={activeProducts} showViewButton={true} />
+              </CardContent>
+            </Card>
+          )}
+
+          {rejectedProducts.length > 0 && (
+            <Card className="border-destructive">
+              <CardHeader>
+                <div className="flex items-center gap-2 text-destructive">
+                  <XCircle className="h-5 w-5" />
+                  <CardTitle className="text-lg text-destructive">Rejected Listings</CardTitle>
+                </div>
+                <CardDescription>
+                  These items were not approved. Please review the feedback and resubmit if necessary.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {rejectedProducts.map(product => (
+                    <div key={product.id}>
+                      <ProductGrid products={[product]} showViewButton={true} />
+                       <Alert variant="destructive" className="mt-2 text-sm">
+                        <Info className="h-4 w-4" />
+                        <AlertTitle>Admin Feedback</AlertTitle>
+                        <AlertDescription>
+                          {product.rejectionReason || "No reason provided."}
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           )}

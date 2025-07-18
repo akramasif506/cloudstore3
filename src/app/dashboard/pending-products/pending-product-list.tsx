@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, CheckCircle, Info, Edit, User, Phone } from 'lucide-react';
 import Link from 'next/link';
 import { EditProductDialog } from './edit-product-dialog';
+import { RejectProductDialog } from './reject-product-dialog';
 
 interface PendingProductListProps {
   initialProducts: Product[];
@@ -27,13 +28,22 @@ export function PendingProductList({ initialProducts }: PendingProductListProps)
   const { toast } = useToast();
 
   const handleProductUpdate = (productId: string) => {
-    // Remove the approved product from the list
+    // Remove the approved/rejected product from the list
     setProducts(currentProducts => currentProducts.filter(p => p.id !== productId));
     toast({
       title: "Product Approved",
       description: "The listing is now active and visible to all users.",
       variant: 'default',
     });
+  }
+  
+  const handleProductReject = (productId: string) => {
+    setProducts(currentProducts => currentProducts.filter(p => p.id !== productId));
+    toast({
+        title: "Product Rejected",
+        description: "The listing has been rejected and the seller has been notified.",
+        variant: 'default',
+    })
   }
 
   const handleUpdateError = (message: string) => {
@@ -103,12 +113,17 @@ export function PendingProductList({ initialProducts }: PendingProductListProps)
                 </TableCell>
                 <TableCell>Rs {product.price.toFixed(2)}</TableCell>
                 <TableCell>{new Date(product.createdAt).toLocaleDateString()}</TableCell>
-                <TableCell className="text-right">
-                  <EditProductDialog
-                    product={product}
-                    onSuccess={handleProductUpdate}
-                    onError={handleUpdateError}
-                  />
+                <TableCell className="text-right space-x-2">
+                    <RejectProductDialog
+                        productId={product.id}
+                        onSuccess={handleProductReject}
+                        onError={handleUpdateError}
+                    />
+                    <EditProductDialog
+                        product={product}
+                        onSuccess={handleProductUpdate}
+                        onError={handleUpdateError}
+                    />
                 </TableCell>
             </TableRow>
             ))}
