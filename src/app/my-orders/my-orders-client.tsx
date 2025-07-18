@@ -160,7 +160,6 @@ export function MyOrdersClient() {
                                     <Button
                                         variant="outline"
                                         onClick={() => toast({ title: "Feature Coming Soon!", description: "The ability to request returns is currently under development."})}
-                                        disabled
                                     >
                                         <Undo2 className="mr-2 h-4 w-4" />
                                         Request Return
