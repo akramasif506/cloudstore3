@@ -24,7 +24,7 @@ export function AddToCartButtons({ product }: AddToCartButtonsProps) {
     addToCart(product, quantity);
     toast({
       title: "Added to cart!",
-      description: `${quantity} x ${product.name} is now in your shopping cart.`,
+      description: `${quantity} x ${product.name} has been added. You can continue shopping or view your cart.`,
       action: (
           <ToastAction asChild altText="View Cart">
             <Link href="/cart">View Cart</Link>
@@ -51,7 +51,7 @@ export function AddToCartButtons({ product }: AddToCartButtonsProps) {
             </Button>
         </div>
       <Button size="lg" className="w-full text-lg h-12" onClick={handleAddToCart}>
-        <ShoppingCart className="mr-2" /> Buy Now
+        <ShoppingCart className="mr-2" /> Add to Cart
       </Button>
     </div>
   );
