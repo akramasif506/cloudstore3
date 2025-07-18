@@ -200,4 +200,3 @@ export function ManageOrderList({ initialOrders }: ManageOrderListProps) {
     </div>
   );
 }
-
