@@ -10,10 +10,6 @@ interface ProductShowcaseProps {
 }
 
 export function ProductShowcase({ products, categories, selectedCategory }: ProductShowcaseProps) {
-  if (selectedCategory) {
-    // If a category is selected, just show the grid for that category's products
-    return <ProductGrid products={products} />;
-  }
 
   // Group products by category
   const productsByCategory: { [key: string]: Product[] } = {};
@@ -24,16 +20,19 @@ export function ProductShowcase({ products, categories, selectedCategory }: Prod
     productsByCategory[product.category].push(product);
   });
   
-  // Only show categories that have products
-  const categoriesWithProducts = categories.filter(cat => productsByCategory[cat.name]);
+  // If a category is selected, just show that one. Otherwise, show all categories that have products.
+  const categoriesToShow = selectedCategory
+    ? categories.filter(cat => cat.name === selectedCategory && productsByCategory[cat.name]?.length > 0)
+    : categories.filter(cat => productsByCategory[cat.name]?.length > 0);
+
 
   return (
     <div className="space-y-12">
-      {categoriesWithProducts.map(category => (
+      {categoriesToShow.map((category, index) => (
         <div key={category.name}>
           <h3 className="text-2xl font-bold font-headline mb-4">{category.name}</h3>
           <ProductGrid products={productsByCategory[category.name].slice(0, 6)} /> 
-          <Separator className="my-8" />
+          {index < categoriesToShow.length - 1 && <Separator className="mt-8" />}
         </div>
       ))}
     </div>

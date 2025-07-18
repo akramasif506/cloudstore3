@@ -70,7 +70,8 @@ export default async function Home({
   const maxPrice = Number(searchParams?.maxPrice);
   const sortBy = searchParams?.sortBy || 'newest';
 
-  const hasActiveFilters = !!(selectedCategory || selectedSubcategory || selectedCondition || minPrice || maxPrice || searchQuery);
+  // A specific search or subcategory filter will trigger the flat grid view.
+  const useFlatGrid = !!(searchQuery || selectedSubcategory);
 
   let productsToShow = allProducts.filter(product => {
     // Exclude the featured product from the main grid if it exists
@@ -105,14 +106,14 @@ export default async function Home({
 
   return (
     <div className="space-y-8">
-      {featuredProductInfo?.product && !hasActiveFilters && (
+      {featuredProductInfo?.product && !useFlatGrid && !selectedCategory && (
         <FeaturedProductBanner 
             product={featuredProductInfo.product} 
             promoText={featuredProductInfo.promoText}
         />
       )}
       
-      {!hasActiveFilters && <CategoryBrowser categories={categories} />}
+      {!useFlatGrid && <CategoryBrowser categories={categories} />}
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
         <div className="lg:col-span-1 lg:sticky lg:top-24">
@@ -127,7 +128,7 @@ export default async function Home({
                     <ProductSort />
                 </div>
             </div>
-          {hasActiveFilters ? (
+          {useFlatGrid ? (
              <ProductGrid 
                 products={productsToShow} 
                 adProducts={allProducts.filter(p => p.id !== featuredProductInfo?.productId).slice(0, 3)} 
@@ -136,6 +137,7 @@ export default async function Home({
             <ProductShowcase 
               products={productsToShow} 
               categories={categories}
+              selectedCategory={selectedCategory}
             />
           )}
         </div>
