@@ -1,7 +1,7 @@
 
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Package, ShieldAlert, CheckCircle, ShoppingCart, List, MessageSquare, Star, BookUser, Megaphone, Percent, Truck } from 'lucide-react';
+import { Users, Package, ShieldAlert, CheckCircle, ShoppingCart, List, MessageSquare, Star, BookUser, Megaphone, Percent, Truck, FolderKanban } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { CategoryChart } from '@/components/dashboard/category-chart';
 import { RecentProducts } from '@/components/dashboard/recent-products';
@@ -167,6 +167,12 @@ export default async function DashboardPage() {
                     value={"Set Rates"}
                     icon={Percent}
                     href="/dashboard/manage-fees"
+                />
+                 <StatsCard 
+                    title="Categories"
+                    value={"Manage"}
+                    icon={FolderKanban}
+                    href="/dashboard/manage-categories"
                 />
             </CardContent>
         </Card>
