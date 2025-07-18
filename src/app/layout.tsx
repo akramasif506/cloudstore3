@@ -12,6 +12,13 @@ import { Loader2 } from 'lucide-react';
 import React from 'react';
 import { CartProvider } from '@/context/cart-context';
 import { BroadcastBanner } from '@/components/layout/broadcast-banner';
+import { PT_Sans } from 'next/font/google'
+
+const ptSans = PT_Sans({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  variable: '--font-body',
+})
 
 function AppContent({ children }: { children: React.ReactNode }) {
   const { loading } = useAuth();
@@ -46,11 +53,8 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <title>CloudStore - A Secondhand Marketplace</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
       </head>
-      <body className={cn('font-body antialiased min-h-screen flex flex-col')}>
+      <body className={cn('font-body antialiased min-h-screen flex flex-col', ptSans.variable)}>
         <AuthProvider>
             <CartProvider>
               <AppContent>
