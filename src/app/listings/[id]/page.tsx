@@ -115,26 +115,6 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
                     <AddToCartButtons product={product} />
                 </CardContent>
             </Card>
-             <Card>
-                <CardHeader>
-                    <CardTitle className="text-xl flex items-center gap-2">
-                        <User className="w-5 h-5" />
-                        Sold by
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                     <div className="flex items-center gap-4">
-                        <Avatar className="h-12 w-12">
-                            <AvatarImage src="https://placehold.co/100x100.png" alt="CloudStore" data-ai-hint="store logo" />
-                            <AvatarFallback>CS</AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <p className="font-semibold text-lg">CloudStore</p>
-                            <p className="text-sm text-muted-foreground">Verified Seller</p>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
             <ShareButtons productName={product.name} productUrl={productUrl} />
         </div>
       </div>
