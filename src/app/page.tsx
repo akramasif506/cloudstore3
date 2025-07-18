@@ -10,6 +10,9 @@ import { getCategories } from './dashboard/manage-categories/actions';
 import type { CategoryMap } from './dashboard/manage-categories/actions';
 import { CategoryBrowser } from '@/components/products/category-browser';
 import { ProductShowcase } from '@/components/products/product-showcase';
+import { ProductFilters } from '@/components/products/product-filters';
+import { Card, CardContent } from '@/components/ui/card';
+import { ProductGrid } from '@/components/products/product-grid';
 
 async function getProducts(): Promise<Product[]> {
   if (!db) {
@@ -42,6 +45,10 @@ export default async function Home({
   searchParams?: {
     q?: string;
     category?: string;
+    subcategory?: string;
+    condition?: string;
+    minPrice?: string;
+    maxPrice?: string;
     sortBy?: string;
   };
 }) {
@@ -51,14 +58,19 @@ export default async function Home({
   
   const categories: Category[] = Object.keys(categoryMap).map(name => ({
     name,
-    // For now, we'll just show a placeholder image. This could be extended later.
     imageUrl: `https://placehold.co/400x300.png?text=${encodeURIComponent(name)}`,
     productCount: allProducts.filter(p => p.category === name).length,
   }));
 
   const searchQuery = searchParams?.q?.toLowerCase() || '';
   const selectedCategory = searchParams?.category;
+  const selectedSubcategory = searchParams?.subcategory;
+  const selectedCondition = searchParams?.condition;
+  const minPrice = Number(searchParams?.minPrice) || 0;
+  const maxPrice = Number(searchParams?.maxPrice);
   const sortBy = searchParams?.sortBy || 'newest';
+
+  const hasActiveFilters = !!(selectedCategory || selectedSubcategory || selectedCondition || minPrice || maxPrice || searchQuery);
 
   let productsToShow = allProducts.filter(product => {
     // Exclude the featured product from the main grid if it exists
@@ -70,10 +82,12 @@ export default async function Home({
         product.description.toLowerCase().includes(searchQuery)
       : true;
     
-    // If a category is selected, filter by it. Otherwise, show all.
     const categoryMatch = selectedCategory ? product.category === selectedCategory : true;
-    
-    return searchMatch && categoryMatch;
+    const subcategoryMatch = selectedSubcategory ? product.subcategory === selectedSubcategory : true;
+    const conditionMatch = selectedCondition ? product.condition === selectedCondition : true;
+    const priceMatch = product.price >= minPrice && (maxPrice ? product.price <= maxPrice : true);
+
+    return searchMatch && categoryMatch && subcategoryMatch && conditionMatch && priceMatch;
   });
 
   // Sort products
@@ -91,29 +105,41 @@ export default async function Home({
 
   return (
     <div className="space-y-8">
-      {featuredProductInfo?.product && (
+      {featuredProductInfo?.product && !hasActiveFilters && (
         <FeaturedProductBanner 
             product={featuredProductInfo.product} 
             promoText={featuredProductInfo.promoText}
         />
       )}
       
-      <CategoryBrowser categories={categories} />
-      
-      <div className="flex flex-col sm:flex-row gap-4 items-center">
-          <div className="w-full sm:flex-grow">
-              <ProductSearch />
-          </div>
-          <div className="w-full sm:w-auto">
-              <ProductSort />
-          </div>
-      </div>
+      {!hasActiveFilters && <CategoryBrowser categories={categories} />}
 
-      <ProductShowcase 
-        products={productsToShow} 
-        categories={categories}
-        selectedCategory={selectedCategory}
-      />
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+        <div className="lg:col-span-1 lg:sticky lg:top-24">
+           <ProductFilters categories={categoryMap} />
+        </div>
+        <div className="lg:col-span-3">
+            <div className="flex flex-col sm:flex-row gap-4 items-center mb-8">
+                <div className="w-full sm:flex-grow">
+                    <ProductSearch />
+                </div>
+                <div className="w-full sm:w-auto">
+                    <ProductSort />
+                </div>
+            </div>
+          {hasActiveFilters ? (
+             <ProductGrid 
+                products={productsToShow} 
+                adProducts={allProducts.filter(p => p.id !== featuredProductInfo?.productId).slice(0, 3)} 
+              />
+          ) : (
+            <ProductShowcase 
+              products={productsToShow} 
+              categories={categories}
+            />
+          )}
+        </div>
+      </div>
     </div>
   );
 }

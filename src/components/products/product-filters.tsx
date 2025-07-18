@@ -31,7 +31,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
   
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [selectedSubcategory, setSelectedSubcategory] = useState(searchParams.get('subcategory') || 'all');
-  const [selectedCondition, setSelectedCondition] = useState(searchParams.get('condition') || 'all');
+  const [selectedCondition, setSelectedCondition] = useState(search_params.get('condition') || 'all');
   const [priceRange, setPriceRange] = useState([
     Number(searchParams.get('minPrice')) || 0,
     Number(searchParams.get('maxPrice')) || MAX_PRICE
@@ -56,11 +56,22 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
     if (selectedCondition && selectedCondition !== 'all') params.set('condition', selectedCondition);
     else params.delete('condition');
 
-    params.set('minPrice', priceRange[0].toString());
-    params.set('maxPrice', priceRange[1].toString());
+    if (priceRange[0] > 0) params.set('minPrice', priceRange[0].toString());
+    else params.delete('minPrice');
+
+    if (priceRange[1] < MAX_PRICE) params.set('maxPrice', priceRange[1].toString());
+    else params.delete('maxPrice');
     
     router.push(`/?${params.toString()}`);
   };
+  
+  const handleResetFilters = () => {
+    setSelectedCategory('all');
+    setSelectedSubcategory('all');
+    setSelectedCondition('all');
+    setPriceRange([0, MAX_PRICE]);
+    router.push('/');
+  }
 
   const handleCategoryChange = (value: string) => {
     setSelectedCategory(value);
@@ -133,7 +144,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
         <div className="space-y-2">
           <div className="flex justify-between">
             <Label>Price Range</Label>
-            <span className="text-sm text-muted-foreground">Rs {priceRange[0]} - Rs {priceRange[1]}</span>
+            <span className="text-sm text-muted-foreground">Rs {priceRange[0]} - Rs {priceRange[1] === MAX_PRICE ? `${MAX_PRICE}+` : priceRange[1]}</span>
           </div>
           <Slider
             min={0}
@@ -143,9 +154,14 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
             onValueChange={setPriceRange}
           />
         </div>
-        <Button className="w-full bg-accent hover:bg-accent/90" onClick={handleApplyFilters}>
-          Apply Filters
-        </Button>
+        <div className="flex flex-col gap-2">
+          <Button className="w-full bg-accent hover:bg-accent/90" onClick={handleApplyFilters}>
+            Apply Filters
+          </Button>
+           <Button className="w-full" variant="ghost" onClick={handleResetFilters}>
+            Reset Filters
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
