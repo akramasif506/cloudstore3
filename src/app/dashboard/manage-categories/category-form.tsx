@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -16,117 +16,173 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Info, PlusCircle, Trash2 } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader2, PlusCircle, Trash2, Save } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { CategoryMap } from './actions';
-import { Label } from '@/components/ui/label';
+import { saveCategories } from './actions';
 
 const categorySchema = z.object({
-  newCategory: z.string().optional(),
-  newSubcategory: z.string().optional(),
+  name: z.string().min(1, 'Category name cannot be empty.'),
+  subcategories: z.array(z.string().min(1, 'Subcategory name cannot be empty.')),
 });
+
+const formSchema = z.object({
+  categories: z.array(categorySchema),
+  newCategoryName: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 interface CategoryFormProps {
     initialCategories: CategoryMap;
 }
 
 export function CategoryForm({ initialCategories }: CategoryFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [categories, setCategories] = useState(initialCategories);
+  const [isSaving, setIsSaving] = useState(false);
+  const [newSubcategoryValues, setNewSubcategoryValues] = useState<Record<number, string>>({});
   const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof categorySchema>>({
-    resolver: zodResolver(categorySchema),
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
-        newCategory: '',
-        newSubcategory: '',
+      categories: Object.entries(initialCategories).map(([name, subcategories]) => ({
+        name,
+        subcategories,
+      })),
+      newCategoryName: '',
     },
   });
 
-  async function handleAddCategory(values: z.infer<typeof categorySchema>) {
-    // This will be implemented in the next step
-    console.log('Adding new category:', values.newCategory);
-    toast({ title: "Note", description: "Adding categories will be implemented next." });
-  }
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: 'categories',
+  });
+
+  const handleAddCategory = () => {
+    const newCategoryName = form.getValues('newCategoryName');
+    if (newCategoryName && newCategoryName.trim() !== '') {
+      if (fields.some(field => field.name.toLowerCase() === newCategoryName.toLowerCase())) {
+        toast({ variant: 'destructive', title: 'Category already exists.' });
+        return;
+      }
+      append({ name: newCategoryName, subcategories: [] });
+      form.setValue('newCategoryName', '');
+    }
+  };
+
+  const handleAddSubcategory = (categoryIndex: number) => {
+    const newSubcategory = newSubcategoryValues[categoryIndex];
+    if (newSubcategory && newSubcategory.trim() !== '') {
+      const currentSubcategories = form.getValues(`categories.${categoryIndex}.subcategories`);
+       if (currentSubcategories.some(sub => sub.toLowerCase() === newSubcategory.toLowerCase())) {
+        toast({ variant: 'destructive', title: 'Subcategory already exists.' });
+        return;
+      }
+      form.setValue(`categories.${categoryIndex}.subcategories`, [...currentSubcategories, newSubcategory]);
+      setNewSubcategoryValues(prev => ({ ...prev, [categoryIndex]: '' }));
+    }
+  };
   
-  async function handleAddSubcategory(category: string) {
-    // This will be implemented in the next step
-    console.log('Adding new subcategory to:', category);
-    toast({ title: "Note", description: "Adding subcategories will be implemented next." });
+  const handleRemoveSubcategory = (categoryIndex: number, subcategoryIndex: number) => {
+    const currentSubcategories = form.getValues(`categories.${categoryIndex}.subcategories`);
+    const updatedSubcategories = currentSubcategories.filter((_, i) => i !== subcategoryIndex);
+    form.setValue(`categories.${categoryIndex}.subcategories`, updatedSubcategories);
   }
+
+  const onSubmit = async (data: FormValues) => {
+    setIsSaving(true);
+    const categoryMap: CategoryMap = data.categories.reduce((acc, category) => {
+      acc[category.name] = category.subcategories;
+      return acc;
+    }, {} as CategoryMap);
+    
+    const result = await saveCategories(categoryMap);
+    
+    setIsSaving(false);
+    if (result.success) {
+      toast({ title: 'Success!', description: result.message });
+    } else {
+      toast({ variant: 'destructive', title: 'Error', description: result.message });
+    }
+  };
 
   return (
-    <div className="space-y-8">
-       <Card>
-        <CardHeader>
-            <CardTitle>Add New Category</CardTitle>
-        </CardHeader>
-        <CardContent>
-            <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleAddCategory)} className="flex items-end gap-4">
-                    <FormField
-                        control={form.control}
-                        name="newCategory"
-                        render={({ field }) => (
-                            <FormItem className="flex-grow">
-                                <FormLabel>New Category Name</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="e.g. Books" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <Button type="submit" disabled={isSubmitting}>
-                        <PlusCircle className="mr-2 h-4 w-4" /> Add Category
-                    </Button>
-                </form>
-            </Form>
-        </CardContent>
-      </Card>
-
-      <div>
-        <h3 className="text-xl font-headline mb-4">Existing Categories</h3>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="space-y-6">
-            {Object.entries(categories).map(([category, subcategories]) => (
-                <Card key={category}>
+            {fields.map((field, index) => (
+                <Card key={field.id}>
                     <CardHeader>
                         <CardTitle className="flex justify-between items-center">
-                           <span>{category}</span>
-                           <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                           <span>{field.name}</span>
+                           <Button type="button" variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => remove(index)}>
                                <Trash2 className="h-5 w-5" />
                            </Button>
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="flex flex-wrap gap-2">
-                           {subcategories.map(sub => (
-                               <Badge key={sub} variant="secondary" className="text-sm py-1 px-3">
+                        <div className="flex flex-wrap gap-2 min-h-[30px]">
+                           {field.subcategories.map((sub, subIndex) => (
+                               <Badge key={`${field.id}-sub-${subIndex}`} variant="secondary" className="text-sm py-1 px-3">
                                    {sub}
-                                   <Button variant="ghost" size="icon" className="ml-1 h-5 w-5 text-destructive hover:text-destructive hover:bg-destructive/10">
+                                   <Button type="button" variant="ghost" size="icon" className="ml-1 h-5 w-5 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleRemoveSubcategory(index, subIndex)}>
                                        <Trash2 className="h-3 w-3" />
                                    </Button>
                                </Badge>
                            ))}
                         </div>
                          <div className="pt-4 border-t">
-                             <form onSubmit={() => handleAddSubcategory(category)} className="flex items-end gap-4">
-                                <div className="flex-grow">
-                                    <Label>New Subcategory</Label>
-                                    <Input placeholder="e.g. Fiction" />
+                            <div className="flex items-end gap-4">
+                               <div className="flex-grow">
+                                    <Label htmlFor={`new-subcategory-${index}`}>New Subcategory</Label>
+                                    <Input
+                                        id={`new-subcategory-${index}`}
+                                        placeholder="e.g. Fiction"
+                                        value={newSubcategoryValues[index] || ''}
+                                        onChange={(e) => setNewSubcategoryValues(prev => ({...prev, [index]: e.target.value}))}
+                                    />
                                 </div>
-                                <Button type="submit">
+                                <Button type="button" onClick={() => handleAddSubcategory(index)}>
                                     <PlusCircle className="mr-2 h-4 w-4" /> Add Subcategory
                                 </Button>
-                             </form>
+                             </div>
                          </div>
                     </CardContent>
                 </Card>
             ))}
         </div>
-      </div>
-    </div>
+        
+        <Card>
+            <CardHeader><CardTitle>Add New Category</CardTitle></CardHeader>
+            <CardContent>
+                <div className="flex items-end gap-4">
+                    <FormField
+                        control={form.control}
+                        name="newCategoryName"
+                        render={({ field }) => (
+                            <FormItem className="flex-grow">
+                                <FormLabel>New Category Name</FormLabel>
+                                <FormControl><Input placeholder="e.g. Books" {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <Button type="button" onClick={handleAddCategory}>
+                        <PlusCircle className="mr-2 h-4 w-4" /> Add Category
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
+
+        <div className="mt-8 flex justify-end">
+          <Button type="submit" size="lg" disabled={isSaving}>
+            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Save className="mr-2 h-4 w-4" />
+            Save All Changes
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }

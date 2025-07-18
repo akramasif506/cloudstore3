@@ -7,26 +7,44 @@ import { revalidatePath } from 'next/cache';
 
 export type CategoryMap = { [key: string]: string[] };
 
-// For now, this is hardcoded. In the future, this will fetch from Firebase.
-const hardcodedCategories: CategoryMap = {
-  'Furniture': ['Chairs', 'Tables', 'Shelving', 'Beds'],
-  'Home Decor': ['Vases', 'Lamps', 'Rugs', 'Wall Art'],
-  'Cloths': ['Jackets', 'Dresses', 'Shoes', 'Accessories'],
-  'Electronics': ['Cameras', 'Audio', 'Computers', 'Phones'],
-  'Outdoor & Sports': ['Bikes', 'Camping Gear', 'Fitness'],
-  'Grocery': ['Snacks', 'Beverages', 'Pantry Staples'],
-  'Other': ['Miscellaneous'],
-};
-
+const CATEGORIES_PATH = 'site_config/categories';
 
 export async function getCategories(): Promise<CategoryMap> {
-  // In the future, we will replace this with a call to Firebase.
-  // For now, it returns the hardcoded data.
-  // const { db } = initializeAdmin();
-  // const categoriesRef = db.ref('site_config/categories');
-  // const snapshot = await categoriesRef.once('value');
-  // if (snapshot.exists()) {
-  //   return snapshot.val();
-  // }
-  return Promise.resolve(hardcodedCategories);
+  try {
+    const { db } = initializeAdmin();
+    const categoriesRef = db.ref(CATEGORIES_PATH);
+    const snapshot = await categoriesRef.once('value');
+    if (snapshot.exists()) {
+      return snapshot.val();
+    }
+  } catch (error) {
+    console.error("Error fetching categories from Firebase:", error);
+  }
+  // Return a default structure if nothing is found in the DB
+  return {
+    'Furniture': ['Chairs', 'Tables', 'Shelving', 'Beds'],
+    'Home Decor': ['Vases', 'Lamps', 'Rugs', 'Wall Art'],
+    'Cloths': ['Jackets', 'Dresses', 'Shoes', 'Accessories'],
+    'Electronics': ['Cameras', 'Audio', 'Computers', 'Phones'],
+  };
+}
+
+export async function saveCategories(
+  categories: CategoryMap
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const { db } = initializeAdmin();
+    const categoriesRef = db.ref(CATEGORIES_PATH);
+    await categoriesRef.set(categories);
+
+    // Revalidate paths that use categories
+    revalidatePath('/listings/new');
+    revalidatePath('/'); // For filters
+    revalidatePath('/dashboard/manage-categories');
+
+    return { success: true, message: 'Categories have been saved successfully!' };
+  } catch (error) {
+    console.error("Error saving categories to Firebase:", error);
+    return { success: false, message: 'Failed to save categories.' };
+  }
 }
