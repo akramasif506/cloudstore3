@@ -31,7 +31,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
   
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [selectedSubcategory, setSelectedSubcategory] = useState(searchParams.get('subcategory') || 'all');
-  const [selectedCondition, setSelectedCondition] = useState(search_params.get('condition') || 'all');
+  const [selectedCondition, setSelectedCondition] = useState(searchParams.get('condition') || 'all');
   const [priceRange, setPriceRange] = useState([
     Number(searchParams.get('minPrice')) || 0,
     Number(searchParams.get('maxPrice')) || MAX_PRICE
