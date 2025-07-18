@@ -74,6 +74,7 @@ export async function placeOrder(values: {
         price: item.price,
         quantity: item.quantity,
         imageUrl: item.imageUrl,
+        seller: item.seller, // Pass seller info through
     })),
     subtotal,
     platformFee,

@@ -115,11 +115,11 @@ export function ManageProductList({ initialProducts }: ManageProductListProps) {
                 <TableCell>
                     <div className="flex items-center gap-2">
                         <User className="h-4 w-4 text-muted-foreground" />
-                        <span>{product.seller.name}</span>
+                        <span>{product.seller?.name || 'N/A'}</span>
                     </div>
                 </TableCell>
                 <TableCell>
-                    {product.seller.contactNumber && (
+                    {product.seller?.contactNumber && (
                         <div className="flex items-center gap-2">
                             <Phone className="h-4 w-4 text-muted-foreground" />
                             <span>{product.seller.contactNumber}</span>

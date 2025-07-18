@@ -29,6 +29,12 @@ export interface Review {
 
 export type Condition = 'New' | 'Like New' | 'Used';
 
+export interface ProductSeller {
+  id: string;
+  name: string;
+  contactNumber?: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -42,20 +48,7 @@ export interface Product {
   status: 'active' | 'pending_review' | 'rejected' | 'sold' | 'pending_image';
   rejectionReason?: string;
   createdAt: string;
-  seller: {
-    id: string;
-    name: string;
-    contactNumber?: string;
-  };
-}
-
-export interface ContactMessage {
-  id: string;
-  name: string;
-  email: string;
-  message: string;
-  timestamp: string;
-  contactNumber?: string;
+  seller: ProductSeller;
 }
 
 export interface OrderItem {
@@ -64,6 +57,7 @@ export interface OrderItem {
     price: number;
     quantity: number;
     imageUrl: string;
+    seller?: ProductSeller;
 }
 
 export interface Order {
