@@ -1,7 +1,7 @@
 
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Package, ShieldAlert, CheckCircle, ShoppingCart, List, MessageSquare, Star, BookUser, Megaphone, Percent } from 'lucide-react';
+import { Users, Package, ShieldAlert, CheckCircle, ShoppingCart, List, MessageSquare, Star, BookUser, Megaphone, Percent, Truck } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { CategoryChart } from '@/components/dashboard/category-chart';
 import { RecentProducts } from '@/components/dashboard/recent-products';
@@ -22,7 +22,7 @@ async function getDashboardStats() {
         ({ db } = initializeAdmin());
     } catch (error) {
         console.error("Firebase Admin SDK init error:", error);
-        return { totalProducts: 0, activeProducts: 0, pendingProducts: 0, totalUsers: 0, totalOrders: 0, totalMessages: 0, chartData: [] };
+        return { totalProducts: 0, activeProducts: 0, pendingProducts: 0, totalUsers: 0, openOrders: 0, totalMessages: 0, chartData: [] };
     }
 
     try {
@@ -34,12 +34,14 @@ async function getDashboardStats() {
             const productsData = productsSnapshot.val();
             products = Object.keys(productsData).map(key => ({...productsData[key], id: key}));
         }
-
+        
         const ordersRef = db.ref('all_orders');
         const ordersSnapshot = await ordersRef.once('value');
-        let totalOrders = 0;
+        let openOrders = 0;
         if(ordersSnapshot.exists()){
-            totalOrders = ordersSnapshot.size;
+            const ordersData = ordersSnapshot.val();
+            const allOrders: Order[] = Object.values(ordersData);
+            openOrders = allOrders.filter(o => o.status === 'Pending' || o.status === 'Shipped').length;
         }
 
         const messagesRef = db.ref('messages');
@@ -70,17 +72,17 @@ async function getDashboardStats() {
 
         const chartData = Object.entries(productsByCategory).map(([name, products]) => ({ name, products }));
 
-        return { totalProducts, activeProducts, pendingProducts, totalUsers, totalOrders, totalMessages, chartData };
+        return { totalProducts, activeProducts, pendingProducts, totalUsers, openOrders, totalMessages, chartData };
 
     } catch (error) {
         console.error("Error fetching dashboard stats from Firebase:", error);
-        return { totalProducts: 0, activeProducts: 0, pendingProducts: 0, totalUsers: 0, totalOrders: 0, totalMessages: 0, chartData: [] };
+        return { totalProducts: 0, activeProducts: 0, pendingProducts: 0, totalUsers: 0, openOrders: 0, totalMessages: 0, chartData: [] };
     }
 }
 
 
 export default async function DashboardPage() {
-  const { totalProducts, activeProducts, pendingProducts, totalUsers, totalOrders, totalMessages, chartData } = await getDashboardStats();
+  const { totalProducts, activeProducts, pendingProducts, totalUsers, openOrders, totalMessages, chartData } = await getDashboardStats();
   
   return (
     <div className="space-y-8">
@@ -108,9 +110,9 @@ export default async function DashboardPage() {
                     href="/dashboard/manage-products"
                     />
                 <StatsCard 
-                    title="Total Orders" 
-                    value={totalOrders} 
-                    icon={ShoppingCart} 
+                    title="Open Orders" 
+                    value={openOrders} 
+                    icon={Truck} 
                     href="/dashboard/manage-orders"
                     />
                 <StatsCard 
