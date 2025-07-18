@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import type { CategoryMap } from './actions';
 import { saveCategories } from './actions';
+import { Label } from '@/components/ui/label';
 
 const categorySchema = z.object({
   name: z.string().min(1, 'Category name cannot be empty.'),
