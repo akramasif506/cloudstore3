@@ -72,94 +72,94 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
     
     return (
         <Collapsible asChild>
-            <>
-            <TableRow className="bg-background hover:bg-muted/50" data-state={isExpanded ? 'open' : 'closed'}>
-                <TableCell>
-                    <CollapsibleTrigger asChild>
-                        <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)}>
-                            {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                            <span className="sr-only">Toggle details</span>
-                        </Button>
-                    </CollapsibleTrigger>
-                </TableCell>
-                <TableCell className="font-medium">#{order.id.substring(0, 8)}</TableCell>
-                <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
-                <TableCell>{order.customerName}</TableCell>
-                <TableCell>Rs {typeof order.total === 'number' ? order.total.toFixed(2) : '0.00'}</TableCell>
-                <TableCell>
-                    <Badge variant="secondary" className={`capitalize ${statusStyles[order.status]}`}>
-                        <div className="flex items-center gap-2">
-                            {statusIcons[order.status]}
-                            {order.status}
-                        </div>
-                    </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                    {updatingStatusId === order.id ? (
-                    <Loader2 className="h-5 w-5 animate-spin ml-auto" />
-                    ) : (
-                    <div className="flex justify-end gap-2">
-                        <Button asChild size="sm" variant="ghost">
-                            <Link href={`/my-orders/${order.id}`} target="_blank">
-                                <Eye className="h-4 w-4" />
-                            </Link>
-                        </Button>
-                        <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Actions</span>
+            <tbody data-state={isExpanded ? 'open' : 'closed'}>
+                <TableRow className="bg-background hover:bg-muted/50">
+                    <TableCell>
+                        <CollapsibleTrigger asChild>
+                            <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)}>
+                                {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                                <span className="sr-only">Toggle details</span>
                             </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            {statusOptions.map(status => (
-                            <DropdownMenuItem
-                                key={status}
-                                disabled={order.status === status}
-                                onClick={() => handleStatusChange(order.id, status)}
-                            >
-                                Mark as {status}
-                            </DropdownMenuItem>
-                            ))}
-                        </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                    )}
-                </TableCell>
-            </TableRow>
-            <CollapsibleContent asChild>
-                <TableRow>
-                    <TableCell colSpan={7} className="p-0">
-                       <div className="p-4 bg-muted space-y-4">
-                           <h4 className="font-semibold">Items for Order #{order.id.substring(0, 8)}</h4>
-                           <div className="space-y-3">
-                            {order.items.map((item: OrderItem) => (
-                                <div key={item.id} className="flex justify-between items-center bg-background p-3 rounded-md">
-                                    <div className="flex items-center gap-4">
-                                        <Image src={item.imageUrl} alt={item.name} width={48} height={48} className="rounded-md object-cover h-12 w-12"/>
-                                        <div>
-                                            <p className="font-medium">{item.name}</p>
-                                            <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <div className="flex items-center gap-2 font-medium">
-                                            <User className="h-4 w-4 text-muted-foreground" />
-                                            <span>{item.seller?.name || 'Unknown Seller'}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                            <Phone className="h-4 w-4" />
-                                            <span>{item.seller?.contactNumber || 'No contact'}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                           </div>
-                       </div>
+                        </CollapsibleTrigger>
+                    </TableCell>
+                    <TableCell className="font-medium">#{order.id.substring(0, 8)}</TableCell>
+                    <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell>{order.customerName}</TableCell>
+                    <TableCell>Rs {typeof order.total === 'number' ? order.total.toFixed(2) : '0.00'}</TableCell>
+                    <TableCell>
+                        <Badge variant="secondary" className={`capitalize ${statusStyles[order.status]}`}>
+                            <div className="flex items-center gap-2">
+                                {statusIcons[order.status]}
+                                {order.status}
+                            </div>
+                        </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                        {updatingStatusId === order.id ? (
+                        <Loader2 className="h-5 w-5 animate-spin ml-auto" />
+                        ) : (
+                        <div className="flex justify-end gap-2">
+                            <Button asChild size="sm" variant="ghost">
+                                <Link href={`/my-orders/${order.id}`} target="_blank">
+                                    <Eye className="h-4 w-4" />
+                                </Link>
+                            </Button>
+                            <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Actions</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                {statusOptions.map(status => (
+                                <DropdownMenuItem
+                                    key={status}
+                                    disabled={order.status === status}
+                                    onClick={() => handleStatusChange(order.id, status)}
+                                >
+                                    Mark as {status}
+                                </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+                        )}
                     </TableCell>
                 </TableRow>
-            </CollapsibleContent>
-            </>
+                <CollapsibleContent asChild>
+                    <TableRow>
+                        <TableCell colSpan={7} className="p-0">
+                           <div className="p-4 bg-muted space-y-4">
+                               <h4 className="font-semibold">Items for Order #{order.id.substring(0, 8)}</h4>
+                               <div className="space-y-3">
+                                {order.items.map((item: OrderItem) => (
+                                    <div key={item.id} className="flex justify-between items-center bg-background p-3 rounded-md">
+                                        <div className="flex items-center gap-4">
+                                            <Image src={item.imageUrl} alt={item.name} width={48} height={48} className="rounded-md object-cover h-12 w-12"/>
+                                            <div>
+                                                <p className="font-medium">{item.name}</p>
+                                                <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="flex items-center gap-2 font-medium">
+                                                <User className="h-4 w-4 text-muted-foreground" />
+                                                <span>{item.seller?.name || 'Unknown Seller'}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                <Phone className="h-4 w-4" />
+                                                <span>{item.seller?.contactNumber || 'No contact'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                               </div>
+                           </div>
+                        </TableCell>
+                    </TableRow>
+                </CollapsibleContent>
+            </tbody>
         </Collapsible>
     )
 }
@@ -191,11 +191,9 @@ export function ManageOrderList({ initialOrders }: ManageOrderListProps) {
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
-          {initialOrders.map((order) => (
+        {initialOrders.map((order) => (
             <OrderRow key={order.id} order={order} />
-          ))}
-        </TableBody>
+        ))}
       </Table>
     </div>
   );
