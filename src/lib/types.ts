@@ -79,3 +79,9 @@ export interface FeeConfig {
     platformFeePercent: number;
     handlingFeeFixed: number;
 }
+
+export interface Category {
+  name: string;
+  imageUrl: string;
+  productCount: number;
+}

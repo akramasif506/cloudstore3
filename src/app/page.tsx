@@ -1,14 +1,15 @@
 
 import { FeaturedProductBanner } from '@/components/products/featured-product-banner';
-import { ProductFilters } from '@/components/products/product-filters';
-import { ProductGrid } from '@/components/products/product-grid';
 import { ProductSearch } from '@/components/products/product-search';
 import { ProductSort } from '@/components/products/product-sort';
 import { db } from '@/lib/firebase';
-import type { Product } from '@/lib/types';
+import type { Product, Category } from '@/lib/types';
 import { get, ref } from 'firebase/database';
 import { getFeaturedProduct } from './dashboard/manage-featured-product/actions';
 import { getCategories } from './dashboard/manage-categories/actions';
+import type { CategoryMap } from './dashboard/manage-categories/actions';
+import { CategoryBrowser } from '@/components/products/category-browser';
+import { ProductShowcase } from '@/components/products/product-showcase';
 
 async function getProducts(): Promise<Product[]> {
   if (!db) {
@@ -26,7 +27,6 @@ async function getProducts(): Promise<Product[]> {
         price: Number(productsData[key].price) || 0,
         imageUrl: productsData[key].imageUrl || 'https://placehold.co/400x300.png',
       }));
-      // Filter for active products on the server
       return allProducts.filter(product => product.status === 'active');
     }
     return [];
@@ -42,43 +42,42 @@ export default async function Home({
   searchParams?: {
     q?: string;
     category?: string;
-    subcategory?: string;
-    condition?: string;
-    minPrice?: string;
-    maxPrice?: string;
     sortBy?: string;
   };
 }) {
   const allProducts = await getProducts();
   const featuredProductInfo = await getFeaturedProduct();
-  const categories = await getCategories();
+  const categoryMap: CategoryMap = await getCategories();
+  
+  const categories: Category[] = Object.keys(categoryMap).map(name => ({
+    name,
+    // For now, we'll just show a placeholder image. This could be extended later.
+    imageUrl: `https://placehold.co/400x300.png?text=${encodeURIComponent(name)}`,
+    productCount: allProducts.filter(p => p.category === name).length,
+  }));
 
   const searchQuery = searchParams?.q?.toLowerCase() || '';
-  const category = searchParams?.category;
-  const subcategory = searchParams?.subcategory;
-  const condition = searchParams?.condition;
-  const minPrice = searchParams?.minPrice ? Number(searchParams.minPrice) : 0;
-  const maxPrice = searchParams?.maxPrice ? Number(searchParams.maxPrice) : Infinity;
+  const selectedCategory = searchParams?.category;
   const sortBy = searchParams?.sortBy || 'newest';
 
-  const filteredProducts = allProducts.filter(product => {
+  let productsToShow = allProducts.filter(product => {
     // Exclude the featured product from the main grid if it exists
     if (featuredProductInfo?.productId === product.id) {
         return false;
     }
-    const categoryMatch = category ? product.category === category : true;
-    const subcategoryMatch = subcategory ? product.subcategory === subcategory : true;
-    const conditionMatch = condition ? product.condition === condition : true;
-    const priceMatch = product.price >= minPrice && product.price <= maxPrice;
     const searchMatch = searchQuery
       ? product.name.toLowerCase().includes(searchQuery) || 
         product.description.toLowerCase().includes(searchQuery)
       : true;
-    return categoryMatch && subcategoryMatch && priceMatch && searchMatch && conditionMatch;
+    
+    // If a category is selected, filter by it. Otherwise, show all.
+    const categoryMatch = selectedCategory ? product.category === selectedCategory : true;
+    
+    return searchMatch && categoryMatch;
   });
 
   // Sort products
-  filteredProducts.sort((a, b) => {
+  productsToShow.sort((a, b) => {
     switch (sortBy) {
       case 'price-asc':
         return a.price - b.price;
@@ -90,15 +89,6 @@ export default async function Home({
     }
   });
 
-  let adProducts: Product[] = [];
-  if (filteredProducts.length === 0 && allProducts.length > 0) {
-    // If no products match filter, show a few other products as ads
-    adProducts = allProducts
-      .filter(p => !filteredProducts.some(fp => fp.id === p.id))
-      .slice(0, 3);
-  }
-
-
   return (
     <div className="space-y-8">
       {featuredProductInfo?.product && (
@@ -107,24 +97,23 @@ export default async function Home({
             promoText={featuredProductInfo.promoText}
         />
       )}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-1">
-          <div className="sticky top-24">
-            <ProductFilters categories={categories} />
+      
+      <CategoryBrowser categories={categories} />
+      
+      <div className="flex flex-col sm:flex-row gap-4 items-center">
+          <div className="w-full sm:flex-grow">
+              <ProductSearch />
           </div>
-        </div>
-        <div className="lg:col-span-3 space-y-6">
-          <div className="flex flex-col sm:flex-row gap-4 items-center">
-              <div className="w-full sm:flex-grow">
-                  <ProductSearch />
-              </div>
-              <div className="w-full sm:w-auto">
-                  <ProductSort />
-              </div>
+          <div className="w-full sm:w-auto">
+              <ProductSort />
           </div>
-          <ProductGrid products={filteredProducts} adProducts={adProducts} />
-        </div>
       </div>
+
+      <ProductShowcase 
+        products={productsToShow} 
+        categories={categories}
+        selectedCategory={selectedCategory}
+      />
     </div>
   );
 }
