@@ -14,9 +14,19 @@ export async function getAllOrders(): Promise<Order[]> {
     
     if (snapshot.exists()) {
       const ordersData = snapshot.val();
-      return Object.keys(ordersData)
-        .map(key => ({ ...ordersData[key], id: key }))
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      const allOrders: Order[] = Object.keys(ordersData).map(key => ({ ...ordersData[key], id: key }));
+      
+      const twoDaysAgo = new Date();
+      twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+
+      const filteredOrders = allOrders.filter(order => {
+        const orderDate = new Date(order.createdAt);
+        const isOldAndClosed = orderDate < twoDaysAgo && (order.status === 'Delivered' || order.status === 'Cancelled');
+        return !isOldAndClosed;
+      });
+        
+      // Sort the filtered orders by creation date, newest first
+      return filteredOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
     return [];
   } catch (error) {
