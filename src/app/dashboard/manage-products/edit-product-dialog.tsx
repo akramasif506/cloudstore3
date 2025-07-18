@@ -36,25 +36,16 @@ import { Loader2, Edit } from 'lucide-react';
 import type { Product } from '@/lib/types';
 import { updateProduct } from './actions';
 import { updateProductSchema } from '@/lib/schemas/product';
+import type { CategoryMap } from '../manage-categories/actions';
 
 interface EditProductDialogProps {
   product: Product;
+  categories: CategoryMap;
   onSuccess: (product: Product) => void;
   onError: (message: string) => void;
 }
 
-const categories = {
-  'Furniture': ['Chairs', 'Tables', 'Shelving', 'Beds'],
-  'Home Decor': ['Vases', 'Lamps', 'Rugs', 'Wall Art'],
-  'Cloths': ['Jackets', 'Dresses', 'Shoes', 'Accessories'],
-  'Electronics': ['Cameras', 'Audio', 'Computers', 'Phones'],
-  'Outdoor & Sports': ['Bikes', 'Camping Gear', 'Fitness'],
-  'Grocery': ['Snacks', 'Beverages', 'Pantry Staples'],
-  'Other': ['Miscellaneous'],
-};
-
-
-export function EditProductDialog({ product, onSuccess, onError }: EditProductDialogProps) {
+export function EditProductDialog({ product, categories, onSuccess, onError }: EditProductDialogProps) {
     const [open, setOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 

@@ -15,22 +15,17 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { SlidersHorizontal } from "lucide-react";
-
-const categories = {
-  'Furniture': ['Chairs', 'Tables', 'Shelving', 'Beds'],
-  'Home Decor': ['Vases', 'Lamps', 'Rugs', 'Wall Art'],
-  'Cloths': ['Jackets', 'Dresses', 'Shoes', 'Accessories'],
-  'Electronics': ['Cameras', 'Audio', 'Computers', 'Phones'],
-  'Outdoor & Sports': ['Bikes', 'Camping Gear', 'Fitness'],
-  'Grocery': ['Snacks', 'Beverages', 'Pantry Staples'],
-  'Other': ['Miscellaneous'],
-};
+import type { CategoryMap } from '@/app/dashboard/manage-categories/actions';
 
 const conditions = ['New', 'Like New', 'Used'];
 
 const MAX_PRICE = 50000;
 
-export function ProductFilters() {
+interface ProductFiltersProps {
+  categories: CategoryMap;
+}
+
+export function ProductFilters({ categories }: ProductFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -47,7 +42,7 @@ export function ProductFilters() {
     if (selectedCategory !== 'all' && !categories[selectedCategory as keyof typeof categories]?.includes(selectedSubcategory)) {
       setSelectedSubcategory('all');
     }
-  }, [selectedCategory, selectedSubcategory]);
+  }, [selectedCategory, selectedSubcategory, categories]);
 
   const handleApplyFilters = () => {
     const params = new URLSearchParams(searchParams);

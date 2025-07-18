@@ -1,3 +1,4 @@
+
 // src/app/dashboard/pending-products/pending-product-list.tsx
 "use client";
 
@@ -18,12 +19,14 @@ import { Loader2, CheckCircle, Info, Edit, User, Phone } from 'lucide-react';
 import Link from 'next/link';
 import { EditProductDialog } from './edit-product-dialog';
 import { RejectProductDialog } from './reject-product-dialog';
+import type { CategoryMap } from '../manage-categories/actions';
 
 interface PendingProductListProps {
   initialProducts: Product[];
+  categories: CategoryMap;
 }
 
-export function PendingProductList({ initialProducts }: PendingProductListProps) {
+export function PendingProductList({ initialProducts, categories }: PendingProductListProps) {
   const [products, setProducts] = useState(initialProducts);
   const { toast } = useToast();
 
@@ -121,6 +124,7 @@ export function PendingProductList({ initialProducts }: PendingProductListProps)
                     />
                     <EditProductDialog
                         product={product}
+                        categories={categories}
                         onSuccess={handleProductUpdate}
                         onError={handleUpdateError}
                     />

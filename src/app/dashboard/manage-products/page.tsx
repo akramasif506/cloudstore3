@@ -6,9 +6,11 @@ import { getManageableProducts } from './actions';
 import { ManageProductList } from './manage-product-list';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { getCategories } from '../manage-categories/actions';
 
 export default async function ManageProductsPage() {
   const products = await getManageableProducts();
+  const categories = await getCategories();
 
   return (
     <Card>
@@ -32,7 +34,7 @@ export default async function ManageProductsPage() {
             </div>
         </CardHeader>
         <CardContent>
-            <ManageProductList initialProducts={products} />
+            <ManageProductList initialProducts={products} categories={categories} />
         </CardContent>
     </Card>
   );

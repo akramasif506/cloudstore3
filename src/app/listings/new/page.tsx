@@ -2,8 +2,11 @@
 import { ListingForm } from './listing-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FilePlus2 } from 'lucide-react';
+import { getCategories } from '@/app/dashboard/manage-categories/actions';
 
-export default function NewListingPage() {
+export default async function NewListingPage() {
+  const categories = await getCategories();
+
   return (
     <div className="max-w-4xl mx-auto">
       <Card>
@@ -19,7 +22,7 @@ export default function NewListingPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <ListingForm />
+          <ListingForm categories={categories} />
         </CardContent>
       </Card>
     </div>

@@ -8,6 +8,7 @@ import { db } from '@/lib/firebase';
 import type { Product } from '@/lib/types';
 import { get, ref } from 'firebase/database';
 import { getFeaturedProduct } from './dashboard/manage-featured-product/actions';
+import { getCategories } from './dashboard/manage-categories/actions';
 
 async function getProducts(): Promise<Product[]> {
   if (!db) {
@@ -50,6 +51,7 @@ export default async function Home({
 }) {
   const allProducts = await getProducts();
   const featuredProductInfo = await getFeaturedProduct();
+  const categories = await getCategories();
 
   const searchQuery = searchParams?.q?.toLowerCase() || '';
   const category = searchParams?.category;
@@ -108,7 +110,7 @@ export default async function Home({
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="lg:col-span-1">
           <div className="sticky top-24">
-            <ProductFilters />
+            <ProductFilters categories={categories} />
           </div>
         </div>
         <div className="lg:col-span-3 space-y-6">

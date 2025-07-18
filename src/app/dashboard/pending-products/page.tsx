@@ -7,9 +7,11 @@ import { PendingProductList } from './pending-product-list';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { getCategories } from '../manage-categories/actions';
 
 export default async function PendingProductsPage() {
   const pendingProducts = await getPendingProducts();
+  const categories = await getCategories();
 
   return (
     <Card>
@@ -33,7 +35,7 @@ export default async function PendingProductsPage() {
             </div>
         </CardHeader>
         <CardContent>
-            <PendingProductList initialProducts={pendingProducts} />
+            <PendingProductList initialProducts={pendingProducts} categories={categories} />
         </CardContent>
     </Card>
   );

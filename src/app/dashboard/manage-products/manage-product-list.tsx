@@ -19,12 +19,14 @@ import Link from 'next/link';
 import { EditProductDialog } from './edit-product-dialog';
 import { updateProductStatus } from './actions';
 import { Badge } from '@/components/ui/badge';
+import type { CategoryMap } from '../manage-categories/actions';
 
 interface ManageProductListProps {
   initialProducts: Product[];
+  categories: CategoryMap;
 }
 
-export function ManageProductList({ initialProducts }: ManageProductListProps) {
+export function ManageProductList({ initialProducts, categories }: ManageProductListProps) {
   const [products, setProducts] = useState(initialProducts);
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
   const { toast } = useToast();
@@ -149,6 +151,7 @@ export function ManageProductList({ initialProducts }: ManageProductListProps) {
                   </Button>
                   <EditProductDialog
                     product={product}
+                    categories={categories}
                     onSuccess={handleProductUpdate}
                     onError={handleUpdateError}
                   />

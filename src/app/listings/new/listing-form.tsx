@@ -35,16 +35,7 @@ import Image from 'next/image';
 import { uploadImageAndGetUrl } from '@/lib/storage';
 import imageCompression from 'browser-image-compression';
 import { generateDescription } from '@/ai/flows/generate-description-flow';
-
-const categories = {
-  'Furniture': ['Chairs', 'Tables', 'Shelving', 'Beds'],
-  'Home Decor': ['Vases', 'Lamps', 'Rugs', 'Wall Art'],
-  'Cloths': ['Jackets', 'Dresses', 'Shoes', 'Accessories'],
-  'Electronics': ['Cameras', 'Audio', 'Computers', 'Phones'],
-  'Outdoor & Sports': ['Bikes', 'Camping Gear', 'Fitness'],
-  'Grocery': ['Snacks', 'Beverages', 'Pantry Staples'],
-  'Other': ['Miscellaneous'],
-};
+import type { CategoryMap } from '@/app/dashboard/manage-categories/actions';
 
 const conditions = ['New', 'Like New', 'Used'];
 
@@ -60,7 +51,11 @@ const fileToDataUri = (file: File): Promise<string> => {
   });
 };
 
-export function ListingForm() {
+interface ListingFormProps {
+  categories: CategoryMap;
+}
+
+export function ListingForm({ categories }: ListingFormProps) {
   const { toast } = useToast();
   const router = useRouter();
   const { user } = useAuth();
