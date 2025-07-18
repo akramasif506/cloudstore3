@@ -39,8 +39,6 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
   ]);
 
   useEffect(() => {
-    // This effect syncs the component's state with the URL's search parameters.
-    // This is useful for when the user uses the back/forward browser buttons.
     setSelectedCategory(searchParams.get('category') || 'all');
     setSelectedSubcategory(searchParams.get('subcategory') || 'all');
     setSelectedCondition(searchParams.get('condition') || 'all');

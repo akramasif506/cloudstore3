@@ -28,13 +28,18 @@ export function ProductShowcase({ products, categories, selectedCategory }: Prod
 
   return (
     <div className="space-y-12">
-      {categoriesToShow.map((category, index) => (
-        <div key={category.name}>
-          <h3 className="text-2xl font-bold font-headline mb-4">{category.name}</h3>
-          <ProductGrid products={productsByCategory[category.name].slice(0, 6)} /> 
-          {index < categoriesToShow.length - 1 && <Separator className="mt-8" />}
-        </div>
-      ))}
+      {categoriesToShow.map((category, index) => {
+        if (!productsByCategory[category.name] || productsByCategory[category.name].length === 0) {
+          return null;
+        }
+        return (
+          <div key={category.name}>
+            <h3 className="text-2xl font-bold font-headline mb-4">{category.name}</h3>
+            <ProductGrid products={productsByCategory[category.name].slice(0, 6)} /> 
+            {index < categoriesToShow.length - 1 && <Separator className="mt-8" />}
+          </div>
+        )
+      })}
     </div>
   );
 }
