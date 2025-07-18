@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { RecentOrders } from '@/components/dashboard/recent-orders';
+import { RecentReturns } from '@/components/dashboard/recent-returns';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0; // Or 'no-store'
@@ -206,19 +207,34 @@ export default async function DashboardPage() {
         </Card>
       </div>
       
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Recent Orders</CardTitle>
-           <Button asChild variant="outline">
-             <Link href="/dashboard/manage-orders">View All Orders</Link>
-           </Button>
-        </CardHeader>
-        <CardContent>
-           <Suspense fallback={<Skeleton className="h-24 w-full" />}>
-            <RecentOrders />
-           </Suspense>
-        </CardContent>
-      </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Recent Orders</CardTitle>
+                <Button asChild variant="outline">
+                    <Link href="/dashboard/manage-orders">View All Orders</Link>
+                </Button>
+                </CardHeader>
+                <CardContent>
+                <Suspense fallback={<Skeleton className="h-24 w-full" />}>
+                    <RecentOrders />
+                </Suspense>
+                </CardContent>
+            </Card>
+             <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Pending Return Requests</CardTitle>
+                <Button asChild variant="outline">
+                    <Link href="/dashboard/manage-returns">Manage All</Link>
+                </Button>
+                </CardHeader>
+                <CardContent>
+                <Suspense fallback={<Skeleton className="h-24 w-full" />}>
+                    <RecentReturns />
+                </Suspense>
+                </CardContent>
+            </Card>
+        </div>
     </div>
   );
 }

@@ -80,6 +80,23 @@ export async function getAllReturnRequests(): Promise<ReturnRequest[]> {
     }
 }
 
+export async function getPendingReturnRequests(): Promise<ReturnRequest[]> {
+    const { db } = initializeAdmin();
+    try {
+        const requestsRef = db.ref(RETURN_REQUESTS_PATH);
+        const snapshot = await requestsRef.orderByChild('status').equalTo('Pending').once('value');
+        if (snapshot.exists()) {
+            const data = snapshot.val();
+            const requests: ReturnRequest[] = Object.values(data);
+            return requests.sort((a,b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime());
+        }
+        return [];
+    } catch (error) {
+        console.error('Error fetching pending return requests:', error);
+        return [];
+    }
+}
+
 export async function updateReturnStatus(
     requestId: string,
     orderId: string,
@@ -107,6 +124,7 @@ export async function updateReturnStatus(
 
         revalidatePath('/dashboard/manage-returns');
         revalidatePath('/my-orders');
+        revalidatePath('/dashboard');
         
         return { success: true, message: `Return request has been ${newStatus.toLowerCase()}.` };
     } catch (error) {
