@@ -21,6 +21,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { CategoryMap } from './actions';
+import { Label } from '@/components/ui/label';
 
 const categorySchema = z.object({
   newCategory: z.string().optional(),
