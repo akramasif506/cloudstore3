@@ -99,7 +99,6 @@ export async function placeOrder(values: {
     const globalOrderRef = db.ref(`all_orders/${orderId}`);
     await globalOrderRef.set(orderData);
 
-    console.log(`Order ${orderId} saved for user ${userId} and globally.`);
     return { success: true, orderId };
   } catch (error) {
     console.error('Error saving order to Firebase:', error);

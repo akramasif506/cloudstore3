@@ -37,7 +37,6 @@ export async function sendMessage(
       ...validatedFields.data,
       timestamp: new Date().toISOString(),
     });
-    console.log('Message saved to Firebase Realtime Database');
     return { success: true };
   } catch (error) {
     console.error('Error saving message to Firebase:', error);
