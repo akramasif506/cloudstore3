@@ -16,6 +16,7 @@ import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { SlidersHorizontal } from "lucide-react";
 import type { CategoryMap } from '@/app/dashboard/manage-categories/actions';
+import { cn } from '@/lib/utils';
 
 const conditions = ['New', 'Like New', 'Used'];
 
@@ -127,18 +128,26 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="condition">Condition</Label>
-          <Select onValueChange={setSelectedCondition} value={selectedCondition}>
-            <SelectTrigger id="condition">
-              <SelectValue placeholder="Any Condition" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Any Condition</SelectItem>
-              {conditions.map(c => (
-                 <SelectItem key={c} value={c}>{c}</SelectItem>
+          <Label>Condition</Label>
+          <div className="grid grid-cols-2 gap-2">
+              <Button
+                  variant={selectedCondition === 'all' ? 'default' : 'outline'}
+                  onClick={() => setSelectedCondition('all')}
+                  className="w-full col-span-2"
+              >
+                  Any Condition
+              </Button>
+              {conditions.map((condition) => (
+                  <Button
+                      key={condition}
+                      variant={selectedCondition === condition ? 'default' : 'outline'}
+                      onClick={() => setSelectedCondition(condition)}
+                      className="w-full"
+                  >
+                      {condition}
+                  </Button>
               ))}
-            </SelectContent>
-          </Select>
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -152,6 +161,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
             step={100}
             value={priceRange}
             onValueChange={setPriceRange}
+            className="[&>span:first-child]:h-2 [&>span>span]:h-5 [&>span>span]:w-5 [&>span>span]:border-2"
           />
         </div>
         <div className="flex flex-col gap-2">
