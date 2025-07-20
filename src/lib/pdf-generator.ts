@@ -6,11 +6,8 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { Order, OrderItem } from "./types";
 
-// Using a static, reliable placeholder to avoid all fetch/CORS issues.
-const PLACEHOLDER_IMAGE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAQAAADOPi6zAAAB+klEQVR42u3PMQEAAAgEoNP+nU3b3QcKGU1JSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSfscjKsn+b9A1gAAAABJRU5ErkJggg==";
-
 /**
- * Generates a customer-facing invoice PDF for a given order.
+ * Generates a customer-facing invoice PDF for a given order, mirroring the order details page.
  * @param order The order object.
  */
 export async function generateCustomerInvoicePdf(order: Order) {
@@ -38,8 +35,10 @@ export async function generateCustomerInvoicePdf(order: Order) {
   doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
   doc.text(order.customerName, 14, 59);
-  doc.text(order.shippingAddress.split(',').join('\n'), 14, 65); // Better wrapping for addresses
-  doc.text(order.contactNumber, 14, 80);
+  const addressLines = doc.splitTextToSize(order.shippingAddress, 80); // Wrap address
+  doc.text(addressLines, 14, 65);
+  doc.text(order.contactNumber, 14, 65 + addressLines.length * 5 + 5);
+
 
   // Right Column: Order Summary
   const rightAlign = doc.internal.pageSize.width - 14;
@@ -64,41 +63,31 @@ export async function generateCustomerInvoicePdf(order: Order) {
   doc.text("Total:", rightAlign - 35, summaryY + 22);
   doc.text(`Rs ${order.total.toFixed(2)}`, rightAlign, summaryY + 22, { align: 'right' });
 
-  // 3. Table of Items with Images
+  // 3. Table of Items
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
-  doc.text("Items Ordered", 14, 98);
+  doc.text("Items Ordered", 14, 105);
   
   const tableData = order.items.map(item => [
-    { content: '', image: PLACEHOLDER_IMAGE }, // Use the reliable placeholder
-    `${item.name}\nQty: ${item.quantity}`,
+    item.name,
+    item.quantity,
     `Rs ${item.price.toFixed(2)}`,
     `Rs ${(item.quantity * item.price).toFixed(2)}`
   ]);
 
   autoTable(doc, {
-    startY: 104,
-    head: [['', 'Item', 'Unit Price', 'Total']],
+    startY: 112,
+    head: [['Item', 'Quantity', 'Unit Price', 'Total']],
     body: tableData as any,
     theme: 'striped',
     headStyles: { fillColor: [143, 188, 143] }, // Soft green from theme
     columnStyles: {
-        0: { cellWidth: 20 },
-        1: { cellWidth: 'auto' },
+        0: { cellWidth: 'auto' },
+        1: { halign: 'center' },
         2: { halign: 'right' },
         3: { halign: 'right' },
     },
-    didDrawCell: (data) => {
-        if (data.column.index === 0 && data.cell.section === 'body') {
-            const imgData = (data.row.raw as any)[0].image;
-            if (imgData) {
-                // Add image to cell
-                doc.addImage(imgData, 'PNG', data.cell.x + 2, data.cell.y + 2, 16, 16);
-            }
-        }
-    },
     rowPageBreak: 'avoid',
-    bodyStyles: { minCellHeight: 20, valign: 'middle' },
   });
 
 
@@ -146,17 +135,13 @@ export function generateSellerOrderPdfs(order: Order) {
     doc.text(`Order ID: #${order.id.substring(0, 8)}`, 14, 30);
     doc.text(`Seller: ${sellerName}`, 14, 36);
 
-    // Note on Customer Privacy
-    doc.setFontSize(10);
-    doc.setTextColor(150);
-    doc.text("Note: Customer contact details are anonymized. Please ship to the address provided below.", 14, 50);
-
-     // Shipping Information (anonymized)
+    // Shipping Information
     doc.setFontSize(14);
-    doc.text("Ship To:", 14, 60);
+    doc.text("Ship To:", 14, 50);
     doc.setFontSize(11);
-    doc.text(`Customer Name: ${order.customerName}`, 14, 66);
-    doc.text(`Address: ${order.shippingAddress}`, 14, 72);
+    doc.text(`Customer Name: ${order.customerName}`, 14, 56);
+    const addressLines = doc.splitTextToSize(order.shippingAddress, 180);
+    doc.text(addressLines, 14, 62);
     
     // Table of Items for this seller
     const tableData = sellerItems.map(item => [
@@ -166,7 +151,7 @@ export function generateSellerOrderPdfs(order: Order) {
     ]);
 
     autoTable(doc, {
-      startY: 85,
+      startY: 75,
       head: [['Product ID', 'Item Name', 'Quantity to Ship']],
       body: tableData,
       theme: 'striped',
