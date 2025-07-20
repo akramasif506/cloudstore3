@@ -12,7 +12,7 @@ interface OrderPdfDownloadButtonProps {
 export function OrderPdfDownloadButton({ order }: OrderPdfDownloadButtonProps) {
     const handleDownload = () => {
         const originalTitle = document.title;
-        document.title = `CloudStore_Invoice_${order.id.substring(0, 8)}`;
+        document.title = `CloudStore_Invoice_${order.id}`;
 
         // Use the browser's native print functionality
         window.print();

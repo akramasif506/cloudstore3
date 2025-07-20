@@ -15,7 +15,8 @@ import { getReturnPolicy } from '../dashboard/manage-returns/actions';
 import type { ReturnPolicy } from '../dashboard/manage-returns/actions';
 import { useToast } from '@/hooks/use-toast';
 import { RequestReturnDialog } from './request-return-dialog';
-import { generateCustomerInvoicePdf } from '@/lib/pdf-generator';
+import { OrderPdfDownloadButton } from './[id]/order-pdf-download-button';
+
 
 function StatusBadge({ status }: { status: Order['status'] }) {
     const baseClasses = "flex items-center gap-2 text-sm font-medium px-3 py-1 rounded-full w-fit";
@@ -184,10 +185,7 @@ export function MyOrdersClient() {
                                     <Button asChild variant="outline" size="sm">
                                         <Link href={`/my-orders/${order.internalId}`}>View Details</Link>
                                     </Button>
-                                    <Button variant="secondary" size="sm" onClick={() => generateCustomerInvoicePdf(order)}>
-                                        <Download className="mr-2 h-4 w-4" />
-                                        Invoice
-                                    </Button>
+                                    <OrderPdfDownloadButton order={order} />
                                 </div>
                             </CardContent>
                              {returnPolicy && isReturnable(order, returnPolicy) && (
