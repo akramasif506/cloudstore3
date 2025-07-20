@@ -33,7 +33,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center">
+      <div className="container flex h-20 items-center">
         <div className="mr-4 md:hidden">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -67,9 +67,9 @@ export function Header() {
         </div>
         
         <Link href="/" className="flex items-center space-x-2 mr-6">
-          <Image src="/logo.png" alt="CloudStore Logo" width={32} height={32} key={Math.random()} />
+          <Image src="/logo.png" alt="CloudStore Logo" width={40} height={40} key={Math.random()} />
           <div>
-            <span className="font-bold font-headline text-lg">CloudStore</span>
+            <span className="font-bold font-headline text-xl">CloudStore</span>
             <p className="text-xs text-muted-foreground -mt-1">A Akram Product</p>
           </div>
         </Link>
