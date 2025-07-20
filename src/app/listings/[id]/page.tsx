@@ -16,6 +16,7 @@ import { headers } from 'next/headers';
 import { getReturnPolicy } from '@/app/dashboard/manage-returns/actions';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
+import { getCurrentUser } from '@/lib/auth';
 
 
 async function getProduct(id: string): Promise<Product | null> {
@@ -46,10 +47,15 @@ async function getProduct(id: string): Promise<Product | null> {
 
 
 export default async function ListingDetailPage({ params }: { params: { id:string } }) {
-  const product = await getProduct(params.id);
-  const returnPolicy = await getReturnPolicy();
+  const productPromise = getProduct(params.id);
+  const returnPolicyPromise = getReturnPolicy();
+  const userPromise = getCurrentUser();
 
-  if (!product || (product.status !== 'active' && product.status !== 'pending_review')) {
+  const [product, returnPolicy, user] = await Promise.all([productPromise, returnPolicyPromise, userPromise]);
+
+  const canViewNonActiveProduct = user?.role === 'admin' || product?.seller?.id === user?.id;
+
+  if (!product || (product.status !== 'active' && !canViewNonActiveProduct)) {
     notFound();
   }
   
@@ -111,38 +117,60 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
       </div>
       <div className="lg:col-span-1">
         <div className="sticky top-24 space-y-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-3xl font-bold text-primary">Rs {product.price.toFixed(2)}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <AddToCartButtons product={product} />
-                </CardContent>
-            </Card>
-             {returnPolicy?.isEnabled && (
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-4">
-                    <Undo2 className="h-8 w-8 text-primary" />
-                    <div>
-                      <h3 className="font-semibold">{returnPolicy.returnWindowDays}-Day Returns</h3>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                           <Button variant="link" className="text-sm p-0 h-auto">View Policy</Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-80">
-                           <div className="prose prose-sm dark:prose-invert">
-                                <h4>Return Policy</h4>
-                                <p>{returnPolicy.policyText}</p>
-                           </div>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            {product.status === 'active' && (
+                <>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-3xl font-bold text-primary">Rs {product.price.toFixed(2)}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <AddToCartButtons product={product} />
+                        </CardContent>
+                    </Card>
+                    {returnPolicy?.isEnabled && (
+                    <Card>
+                        <CardContent className="pt-6">
+                        <div className="flex items-center gap-4">
+                            <Undo2 className="h-8 w-8 text-primary" />
+                            <div>
+                            <h3 className="font-semibold">{returnPolicy.returnWindowDays}-Day Returns</h3>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                <Button variant="link" className="text-sm p-0 h-auto">View Policy</Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-80">
+                                <div className="prose prose-sm dark:prose-invert">
+                                    <h4>Return Policy</h4>
+                                    <p>{returnPolicy.policyText}</p>
+                                </div>
+                                </PopoverContent>
+                            </Popover>
+                            </div>
+                        </div>
+                        </CardContent>
+                    </Card>
+                    )}
+                    <ShareButtons productName={product.name} productUrl={productUrl} />
+                </>
             )}
-            <ShareButtons productName={product.name} productUrl={productUrl} />
+
+            {product.status !== 'active' && (
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Listing Status</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex items-center justify-center p-4 bg-muted rounded-md">
+                           <p className="text-lg font-semibold capitalize">{product.status.replace('_', ' ')}</p>
+                        </div>
+                        {product.rejectionReason && (
+                            <div className="mt-4 text-sm text-destructive border-l-4 border-destructive pl-3">
+                                <strong>Rejection Reason:</strong> {product.rejectionReason}
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            )}
         </div>
       </div>
     </div>
