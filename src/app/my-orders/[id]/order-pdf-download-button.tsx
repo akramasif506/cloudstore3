@@ -11,8 +11,17 @@ interface OrderPdfDownloadButtonProps {
 
 export function OrderPdfDownloadButton({ order }: OrderPdfDownloadButtonProps) {
     const handleDownload = () => {
+        const originalTitle = document.title;
+        document.title = `CloudStore_Invoice_${order.id.substring(0, 8)}`;
+
         // Use the browser's native print functionality
         window.print();
+
+        // Restore the original title shortly after the print dialog opens.
+        // This is more reliable than 'afterprint' which may not fire if the user cancels.
+        setTimeout(() => {
+            document.title = originalTitle;
+        }, 500);
     };
 
     return (

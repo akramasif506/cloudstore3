@@ -10,6 +10,7 @@ import { initializeAdmin } from '@/lib/firebase-admin';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { OrderPdfDownloadButton } from './order-pdf-download-button';
+import type { Metadata } from 'next';
 
 async function getOrder(id: string): Promise<Order | null> {
     let db;
@@ -33,6 +34,23 @@ async function getOrder(id: string): Promise<Order | null> {
         return null;
     }
 }
+
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const order = await getOrder(params.id);
+  const orderIdShort = order?.id.substring(0, 8).toUpperCase();
+  
+  if (!order) {
+    return {
+      title: 'Order Not Found',
+    }
+  }
+
+  return {
+    title: `Order Details #${orderIdShort} - CloudStore`,
+    description: `Details for order ${orderIdShort}, including status, items, and shipping information.`,
+  }
+}
+
 
 function StatusIcon({ status }: { status: Order['status'] }) {
     const iconProps = { className: "h-12 w-12" };
