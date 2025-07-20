@@ -28,7 +28,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
-import { generateSellerOrderPdfs } from '@/lib/pdf-generator';
+import { generateSellerOrderPdfs, generateCustomerInvoicePdf } from '@/lib/pdf-generator';
 
 interface ManageOrderListProps {
   initialOrders: Order[];
@@ -116,6 +116,10 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => generateCustomerInvoicePdf(order)}>
+                                     <Download className="mr-2 h-4 w-4"/>
+                                     Download Invoice
+                                </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => generateSellerOrderPdfs(order)}>
                                      <Download className="mr-2 h-4 w-4"/>
                                      Download Seller Slips
@@ -147,7 +151,7 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
                                         {order.items.map((item: OrderItem) => (
                                             <div key={item.id} className="flex justify-between items-center bg-background p-3 rounded-md">
                                                 <div className="flex items-center gap-4">
-                                                    <Image src={item.imageUrl} alt={item.name} width={48} height={48} className="rounded-md object-cover h-12 w-12"/>
+                                                    <Image src={item.imageUrl} alt={item.name} width={48} height={48} className="rounded-md object-cover"/>
                                                     <div>
                                                         <p className="font-medium">{item.name}</p>
                                                         <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>

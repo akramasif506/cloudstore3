@@ -36,6 +36,14 @@ export function generateSellerOrderPdfs(order: Order) {
     doc.text(`Order ID: #${order.id}`, 14, 30);
     doc.text(`Seller: ${sellerName}`, 14, 36);
 
+    // Shipping info for the seller's reference
+    doc.setFontSize(12);
+    doc.text("Ship to Customer:", 14, 46);
+    doc.setFont('helvetica', 'normal');
+    doc.text(order.customerName, 14, 52);
+    doc.text(order.shippingAddress, 14, 58);
+
+
     // Table of Items for this seller
     const tableData = sellerItems.map(item => [
       item.id,
@@ -44,7 +52,7 @@ export function generateSellerOrderPdfs(order: Order) {
     ]);
 
     autoTable(doc, {
-      startY: 45,
+      startY: 65,
       head: [['Product ID', 'Item Name', 'Quantity to Ship']],
       body: tableData as any,
       theme: 'striped',
@@ -100,7 +108,7 @@ export async function generateCustomerInvoicePdf(order: Order) {
 
   // Order Summary
   autoTable(doc, {
-    startY: 50,
+    startY: 58, // Adjusted to prevent overlap
     startX: 110,
     theme: 'plain',
     tableWidth: 86,
