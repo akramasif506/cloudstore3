@@ -95,7 +95,7 @@ export async function generateCustomerInvoicePdf(order: Order) {
   doc.text(`Placed on: ${new Date(order.createdAt).toLocaleDateString()}`, 14, 36);
 
   // --- Columns for Details ---
-  // Shipping Details
+  // Shipping Details (Left Column)
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(14);
   doc.text('Shipping To:', 14, 50);
@@ -104,17 +104,20 @@ export async function generateCustomerInvoicePdf(order: Order) {
   doc.text(order.customerName, 14, 58);
   const addressLines = doc.splitTextToSize(order.shippingAddress, 80);
   doc.text(addressLines, 14, 64);
-  doc.text(order.contactNumber, 14, 64 + (addressLines.length * 5) + 2);
+  const shippingDetailsEndY = 64 + (addressLines.length * 5);
+  doc.text(order.contactNumber, 14, shippingDetailsEndY + 2);
 
-  // Order Summary
+  // Order Summary (Right Column)
+  const summaryStartX = 110;
   autoTable(doc, {
-    startY: 58, // Adjusted to prevent overlap
-    startX: 110,
+    startY: 50,
+    startX: summaryStartX,
     theme: 'plain',
     tableWidth: 86,
     styles: {
       font: 'helvetica',
       fontSize: 11,
+      cellPadding: 1,
     },
     body: [
         ['Subtotal:', `Rs ${order.subtotal.toFixed(2)}`],
@@ -131,10 +134,10 @@ export async function generateCustomerInvoicePdf(order: Order) {
   // Total Line
   const summaryTableY = (doc as any).lastAutoTable.finalY;
   doc.setDrawColor(mutedColor);
-  doc.line(110, summaryTableY + 2, 196, summaryTableY + 2); // Separator
+  doc.line(summaryStartX, summaryTableY + 1, summaryStartX + 86, summaryTableY + 1); // Separator
   doc.setFont('helvetica', 'bold');
-  doc.text('Total:', 110, summaryTableY + 8);
-  doc.text(`Rs ${order.total.toFixed(2)}`, 196, summaryTableY + 8, { align: 'right' });
+  doc.text('Total:', summaryStartX, summaryTableY + 7);
+  doc.text(`Rs ${order.total.toFixed(2)}`, summaryStartX + 86, summaryTableY + 7, { align: 'right' });
 
 
   // --- Items Table ---
@@ -146,7 +149,7 @@ export async function generateCustomerInvoicePdf(order: Order) {
   ]);
 
   autoTable(doc, {
-    startY: Math.max(summaryTableY, 70) + 15,
+    startY: Math.max(shippingDetailsEndY, summaryTableY) + 15,
     head: [['Item', 'Qty', 'Unit Price', 'Total']],
     body: tableBody as any,
     theme: 'striped',
