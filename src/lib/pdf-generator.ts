@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import jsPDF from "jspdf";
@@ -37,7 +36,6 @@ export function generateSellerOrderPdfs(order: Order) {
     doc.text(`Order ID: #${order.id}`, 14, 30);
     doc.text(`Seller: ${sellerName}`, 14, 36);
 
-
     // Table of Items for this seller
     const tableData = sellerItems.map(item => [
       item.id,
@@ -59,7 +57,6 @@ export function generateSellerOrderPdfs(order: Order) {
     doc.setFontSize(10);
     doc.setTextColor(150);
     doc.text("Please package these items and prepare them for shipping.", 105, finalY + 20, { align: 'center' });
-
 
     doc.save(`CloudStore_Order_${order.id}_Seller_${sellerName.replace(/\s/g, '')}.pdf`);
   });

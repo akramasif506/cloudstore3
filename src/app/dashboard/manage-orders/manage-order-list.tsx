@@ -28,6 +28,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
+import { generateSellerOrderPdfs } from '@/lib/pdf-generator';
 
 interface ManageOrderListProps {
   initialOrders: Order[];
@@ -73,6 +74,23 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
         }
     };
     
+    const handleDownloadSlips = () => {
+        try {
+            generateSellerOrderPdfs(order);
+            toast({
+                title: "Seller Slips Generated",
+                description: "PDF fulfillment slips are being downloaded.",
+            });
+        } catch (error) {
+            console.error("Failed to generate seller slips:", error);
+            toast({
+                variant: "destructive",
+                title: "Generation Failed",
+                description: "Could not generate seller slips. Please check the console.",
+            });
+        }
+    }
+
     return (
         <Collapsible asChild>
             <tbody data-state={isExpanded ? 'open' : 'closed'}>
@@ -115,6 +133,10 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={handleDownloadSlips}>
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Download Seller Slips
+                                </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 {statusOptions.map(status => (
                                 <DropdownMenuItem
