@@ -5,9 +5,39 @@ import { z } from 'zod';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
 
-export type CategoryMap = { [key: string]: string[] };
+export interface Subcategory {
+  name: string;
+  enabled: boolean;
+}
+
+export interface Category {
+  enabled: boolean;
+  subcategories: Subcategory[];
+}
+
+export type CategoryMap = { [key: string]: Category };
 
 const CATEGORIES_PATH = 'site_config/categories';
+
+// Helper to check if the data is in the old format (string[])
+function isOldFormat(data: any): boolean {
+    if (typeof data !== 'object' || data === null) return false;
+    const firstValue = Object.values(data)[0];
+    return Array.isArray(firstValue) && firstValue.every(item => typeof item === 'string');
+}
+
+// Helper to convert old format to new format
+function convertToNewFormat(oldData: { [key: string]: string[] }): CategoryMap {
+    const newData: CategoryMap = {};
+    for (const key in oldData) {
+        newData[key] = {
+            enabled: true, // Assume all existing categories are enabled
+            subcategories: oldData[key].map(sub => ({ name: sub, enabled: true })),
+        };
+    }
+    return newData;
+}
+
 
 export async function getCategories(): Promise<CategoryMap> {
   try {
@@ -15,17 +45,24 @@ export async function getCategories(): Promise<CategoryMap> {
     const categoriesRef = db.ref(CATEGORIES_PATH);
     const snapshot = await categoriesRef.once('value');
     if (snapshot.exists()) {
-      return snapshot.val();
+      const data = snapshot.val();
+      // If the data is in the old format, convert it, save it, and return it.
+      if (isOldFormat(data)) {
+          const newData = convertToNewFormat(data);
+          await db.ref(CATEGORIES_PATH).set(newData);
+          return newData;
+      }
+      return data;
     }
   } catch (error) {
     console.error("Error fetching categories from Firebase:", error);
   }
-  // Return a default structure if nothing is found in the DB
+  
+  // Return a default structure in the new format if nothing is in the DB
   return {
-    'Furniture': ['Chairs', 'Tables', 'Shelving', 'Beds'],
-    'Home Decor': ['Vases', 'Lamps', 'Rugs', 'Wall Art'],
-    'Cloths': ['Jackets', 'Dresses', 'Shoes', 'Accessories'],
-    'Electronics': ['Cameras', 'Audio', 'Computers', 'Phones'],
+    'Furniture': { enabled: true, subcategories: [{name: 'Chairs', enabled: true}, {name: 'Tables', enabled: true}] },
+    'Home Decor': { enabled: true, subcategories: [{name: 'Vases', enabled: true}, {name: 'Lamps', enabled: true}] },
+    'Electronics': { enabled: true, subcategories: [{name: 'Cameras', enabled: true}, {name: 'Audio', enabled: true}] },
   };
 }
 

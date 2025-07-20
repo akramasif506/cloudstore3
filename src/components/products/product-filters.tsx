@@ -87,6 +87,8 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
     setSelectedSubcategory(value);
   }
 
+  const enabledCategories = Object.entries(categories).filter(([_, catData]) => catData.enabled);
+
   return (
     <Card>
       <CardHeader>
@@ -104,8 +106,8 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
-              {Object.keys(categories).map(cat => (
-                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+              {enabledCategories.map(([catName]) => (
+                <SelectItem key={catName} value={catName}>{catName}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -123,8 +125,10 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
             </SelectTrigger>
             <SelectContent>
                <SelectItem value="all">All Subcategories</SelectItem>
-              {selectedCategory && selectedCategory !== 'all' && categories[selectedCategory as keyof typeof categories]?.map(subcat => (
-                <SelectItem key={subcat} value={subcat}>{subcat}</SelectItem>
+              {selectedCategory && selectedCategory !== 'all' && categories[selectedCategory as keyof typeof categories]?.subcategories
+                .filter(sub => sub.enabled)
+                .map(subcat => (
+                  <SelectItem key={subcat.name} value={subcat.name}>{subcat.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>

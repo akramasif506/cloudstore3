@@ -237,6 +237,8 @@ export function ListingForm({ categories }: ListingFormProps) {
   if (submissionStep === 'uploading_image') buttonText = 'Uploading image...';
   if (submissionStep === 'finalizing') buttonText = 'Finalizing...';
 
+  const enabledCategories = Object.entries(categories).filter(([_, catData]) => catData.enabled);
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -338,8 +340,8 @@ export function ListingForm({ categories }: ListingFormProps) {
                     <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {Object.keys(categories).map(cat => (
-                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    {enabledCategories.map(([catName]) => (
+                      <SelectItem key={catName} value={catName}>{catName}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -358,8 +360,10 @@ export function ListingForm({ categories }: ListingFormProps) {
                     <SelectTrigger><SelectValue placeholder="Select a subcategory" /></SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {selectedCategory && categories[selectedCategory as keyof typeof categories]?.map(subcat => (
-                      <SelectItem key={subcat} value={subcat}>{subcat}</SelectItem>
+                    {selectedCategory && categories[selectedCategory as keyof typeof categories]?.subcategories
+                        .filter(sub => sub.enabled)
+                        .map(subcat => (
+                           <SelectItem key={subcat.name} value={subcat.name}>{subcat.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -19,13 +19,21 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, PlusCircle, Trash2, Save } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import type { CategoryMap } from './actions';
+import type { CategoryMap, Category, Subcategory } from './actions';
 import { saveCategories } from './actions';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { cn } from '@/lib/utils';
+
+const subcategorySchema = z.object({
+  name: z.string().min(1, 'Subcategory name cannot be empty.'),
+  enabled: z.boolean(),
+});
 
 const categorySchema = z.object({
   name: z.string().min(1, 'Category name cannot be empty.'),
-  subcategories: z.array(z.string().min(1, 'Subcategory name cannot be empty.')),
+  enabled: z.boolean(),
+  subcategories: z.array(subcategorySchema),
 });
 
 const formSchema = z.object({
@@ -47,9 +55,10 @@ export function CategoryForm({ initialCategories }: CategoryFormProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      categories: Object.entries(initialCategories).map(([name, subcategories]) => ({
+      categories: Object.entries(initialCategories).map(([name, categoryData]) => ({
         name,
-        subcategories,
+        enabled: categoryData.enabled,
+        subcategories: categoryData.subcategories,
       })),
       newCategoryName: '',
     },
@@ -67,7 +76,7 @@ export function CategoryForm({ initialCategories }: CategoryFormProps) {
         toast({ variant: 'destructive', title: 'Category already exists.' });
         return;
       }
-      append({ name: newCategoryName, subcategories: [] });
+      append({ name: newCategoryName, subcategories: [], enabled: true });
       form.setValue('newCategoryName', '');
     }
   };
@@ -76,11 +85,12 @@ export function CategoryForm({ initialCategories }: CategoryFormProps) {
     const newSubcategory = newSubcategoryValues[categoryIndex];
     if (newSubcategory && newSubcategory.trim() !== '') {
       const categoryField = fields[categoryIndex];
-      if (categoryField.subcategories.some(sub => sub.toLowerCase() === newSubcategory.toLowerCase())) {
+      if (categoryField.subcategories.some(sub => sub.name.toLowerCase() === newSubcategory.toLowerCase())) {
         toast({ variant: 'destructive', title: 'Subcategory already exists.' });
         return;
       }
-      const updatedSubcategories = [...categoryField.subcategories, newSubcategory];
+      const newSub: Subcategory = { name: newSubcategory, enabled: true };
+      const updatedSubcategories = [...categoryField.subcategories, newSub];
       update(categoryIndex, { ...categoryField, subcategories: updatedSubcategories });
       setNewSubcategoryValues(prev => ({ ...prev, [categoryIndex]: '' }));
     }
@@ -95,7 +105,10 @@ export function CategoryForm({ initialCategories }: CategoryFormProps) {
   const onSubmit = async (data: FormValues) => {
     setIsSaving(true);
     const categoryMap: CategoryMap = data.categories.reduce((acc, category) => {
-      acc[category.name] = category.subcategories;
+      acc[category.name] = {
+        enabled: category.enabled,
+        subcategories: category.subcategories,
+      };
       return acc;
     }, {} as CategoryMap);
     
@@ -114,10 +127,23 @@ export function CategoryForm({ initialCategories }: CategoryFormProps) {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="space-y-6">
             {fields.map((field, index) => (
-                <Card key={field.id}>
+                <Card key={field.id} className={cn(!field.enabled && 'bg-muted/50')}>
                     <CardHeader>
                         <CardTitle className="flex justify-between items-center">
-                           <span>{field.name}</span>
+                           <div className="flex items-center gap-4">
+                            <Controller
+                                control={form.control}
+                                name={`categories.${index}.enabled`}
+                                render={({ field: switchField }) => (
+                                    <Switch
+                                        checked={switchField.value}
+                                        onCheckedChange={switchField.onChange}
+                                        aria-label={`${field.name} category status`}
+                                    />
+                                )}
+                            />
+                            <span className={cn(!field.enabled && 'text-muted-foreground line-through')}>{field.name}</span>
+                           </div>
                            <Button type="button" variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => remove(index)}>
                                <Trash2 className="h-5 w-5" />
                            </Button>
@@ -126,12 +152,26 @@ export function CategoryForm({ initialCategories }: CategoryFormProps) {
                     <CardContent className="space-y-4">
                         <div className="flex flex-wrap gap-2 min-h-[30px]">
                            {field.subcategories.map((sub, subIndex) => (
-                               <Badge key={`${field.id}-sub-${subIndex}`} variant="secondary" className="text-sm py-1 px-3">
-                                   {sub}
-                                   <Button type="button" variant="ghost" size="icon" className="ml-1 h-5 w-5 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleRemoveSubcategory(index, subIndex)}>
-                                       <Trash2 className="h-3 w-3" />
-                                   </Button>
-                               </Badge>
+                                <div key={`${field.id}-sub-${subIndex}`} className="flex items-center gap-2">
+                                   <Controller
+                                        control={form.control}
+                                        name={`categories.${index}.subcategories.${subIndex}.enabled`}
+                                        render={({ field: switchField }) => (
+                                            <Switch
+                                                checked={switchField.value}
+                                                onCheckedChange={switchField.onChange}
+                                                className="h-4 w-7 [&>span]:h-3 [&>span]:w-3 data-[state=checked]:translate-x-3 data-[state=unchecked]:translate-x-0.5"
+                                                aria-label={`${sub.name} subcategory status`}
+                                            />
+                                        )}
+                                    />
+                                    <Badge variant="secondary" className={cn("text-sm py-1 px-3", !sub.enabled && 'text-muted-foreground line-through')}>
+                                        {sub.name}
+                                        <Button type="button" variant="ghost" size="icon" className="ml-1 h-5 w-5 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleRemoveSubcategory(index, subIndex)}>
+                                            <Trash2 className="h-3 w-3" />
+                                        </Button>
+                                    </Badge>
+                                </div>
                            ))}
                         </div>
                          <div className="pt-4 border-t">
