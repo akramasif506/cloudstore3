@@ -18,15 +18,17 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { updateOrderStatus } from './actions';
-import { CheckCircle, MoreHorizontal, Loader2, PackageOpen, Truck, Frown, Eye, ChevronDown, ChevronRight, User, Phone, Undo2, Ban } from 'lucide-react';
+import { CheckCircle, MoreHorizontal, Loader2, PackageOpen, Truck, Frown, Eye, ChevronDown, ChevronRight, User, Phone, Undo2, Ban, Download } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
+import { generateCustomerInvoicePdf, generateSellerOrderPdfs } from '@/lib/pdf-generator';
 
 interface ManageOrderListProps {
   initialOrders: Order[];
@@ -114,6 +116,15 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => generateCustomerInvoicePdf(order)}>
+                                    <Download className="mr-2 h-4 w-4"/>
+                                    Download Invoice
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => generateSellerOrderPdfs(order)}>
+                                     <Download className="mr-2 h-4 w-4"/>
+                                     Download Seller Slips
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
                                 {statusOptions.map(status => (
                                 <DropdownMenuItem
                                     key={status}
