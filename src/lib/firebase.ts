@@ -29,7 +29,7 @@ if (firebaseConfig.apiKey && firebaseConfig.databaseURL && firebaseConfig.storag
     db = getDatabase(app);
     storage = getStorage(app);
     auth = getAuth(app);
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID) {
       messaging = getMessaging(app);
     }
 } else {
