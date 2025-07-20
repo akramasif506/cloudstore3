@@ -67,7 +67,7 @@ export function Header() {
         </div>
         
         <Link href="/" className="flex items-center space-x-2 mr-6">
-          <Image src="/logo.png" alt="CloudStore Logo" width={40} height={40} key={Math.random()} />
+          <Image src="/logo.png" alt="CloudStore Logo" width={160} height={40} className="object-contain" key={Math.random()} />
           <div>
             <p className="text-xs text-muted-foreground">A Akram Product</p>
           </div>
