@@ -15,6 +15,7 @@ import { getReturnPolicy } from '../dashboard/manage-returns/actions';
 import type { ReturnPolicy } from '../dashboard/manage-returns/actions';
 import { useToast } from '@/hooks/use-toast';
 import { RequestReturnDialog } from './request-return-dialog';
+import { OrderPrintButton } from './[id]/order-print-button';
 
 
 function StatusBadge({ status }: { status: Order['status'] }) {
@@ -132,7 +133,7 @@ export function MyOrdersClient() {
     }
     
     const handleReturnSuccess = (orderId: string) => {
-        setOrders(prevOrders => prevOrders.map(o => o.id === orderId ? {...o, returnStatus: 'Return Requested'} : o));
+        setOrders(prevOrders => prevOrders.map(o => o.internalId === orderId ? {...o, returnStatus: 'Return Requested'} : o));
     }
 
 
@@ -181,6 +182,7 @@ export function MyOrdersClient() {
                              <CardContent className="flex justify-between items-center">
                                 <p className="text-xl font-bold">Total: Rs {order.total.toFixed(2)}</p>
                                 <div className="flex items-center gap-2">
+                                    <OrderPrintButton order={order} />
                                     <Button asChild variant="outline" size="sm">
                                         <Link href={`/my-orders/${order.internalId}`}>View Details</Link>
                                     </Button>

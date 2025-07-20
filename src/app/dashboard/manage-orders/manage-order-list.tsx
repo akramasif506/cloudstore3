@@ -29,6 +29,7 @@ import Image from 'next/image';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
 import { generateSellerOrderPdfs } from '@/lib/pdf-generator';
+import { OrderPrintButton } from '@/app/my-orders/[id]/order-print-button';
 
 interface ManageOrderListProps {
   initialOrders: Order[];
@@ -120,11 +121,7 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
                         <Loader2 className="h-5 w-5 animate-spin ml-auto" />
                         ) : (
                         <div className="flex justify-end gap-2">
-                            <Button asChild size="sm" variant="ghost">
-                                <Link href={`/my-orders/${order.internalId}`} target="_blank">
-                                    <Eye className="h-4 w-4" />
-                                </Link>
-                            </Button>
+                            <OrderPrintButton order={order} />
                             <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon">
@@ -133,6 +130,12 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                                <DropdownMenuItem asChild>
+                                    <Link href={`/my-orders/${order.internalId}`} target="_blank" className="flex items-center">
+                                        <Eye className="mr-2 h-4 w-4" />
+                                        View Details
+                                    </Link>
+                                </DropdownMenuItem>
                                 <DropdownMenuItem onClick={handleDownloadSlips}>
                                     <Download className="mr-2 h-4 w-4" />
                                     Download Seller Slips

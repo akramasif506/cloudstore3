@@ -157,7 +157,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                             Continue Shopping
                         </Link>
                     </Button>
-                    <OrderPrintButton orderId={order.id} />
+                    <OrderPrintButton order={order} />
                 </CardFooter>
             </Card>
         </div>

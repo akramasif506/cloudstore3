@@ -4,15 +4,16 @@
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import React from 'react';
+import type { Order } from "@/lib/types";
 
 interface OrderPrintButtonProps {
-    orderId: string;
+    order: Order;
 }
 
-export function OrderPrintButton({ orderId }: OrderPrintButtonProps) {
+export function OrderPrintButton({ order }: OrderPrintButtonProps) {
     const handlePrint = () => {
         const originalTitle = document.title;
-        document.title = `CloudStore_Invoice_${orderId}`;
+        document.title = `CloudStore_Invoice_${order.id}`;
         window.print();
         
         // Use setTimeout to allow the print dialog to open before resetting the title
@@ -22,9 +23,9 @@ export function OrderPrintButton({ orderId }: OrderPrintButtonProps) {
     };
 
     return (
-        <Button variant="outline" onClick={handlePrint}>
+        <Button variant="outline" onClick={handlePrint} size="sm">
             <Download className="mr-2 h-4 w-4" />
-            Download Invoice
+            Invoice
         </Button>
     );
 }
