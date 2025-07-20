@@ -58,7 +58,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
 
 
     return (
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto" id="invoice-content">
             <Card>
                 <CardHeader className="text-center bg-muted/30">
                     <div className="mx-auto">
@@ -130,7 +130,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                         </div>
                     </div>
                 </CardContent>
-                 <CardFooter className="bg-muted/30 p-6 flex justify-center gap-4">
+                 <CardFooter className="bg-muted/30 p-6 flex justify-center gap-4 no-print">
                     <Button asChild>
                         <Link href="/">
                             <ShoppingCart className="mr-2 h-4 w-4" />

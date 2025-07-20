@@ -2,7 +2,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { generateCustomerInvoicePdf } from "@/lib/pdf-generator";
 import type { Order } from "@/lib/types";
 import { Download } from "lucide-react";
 
@@ -12,7 +11,8 @@ interface OrderPdfDownloadButtonProps {
 
 export function OrderPdfDownloadButton({ order }: OrderPdfDownloadButtonProps) {
     const handleDownload = () => {
-        generateCustomerInvoicePdf(order);
+        // Use the browser's native print functionality
+        window.print();
     };
 
     return (

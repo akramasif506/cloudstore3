@@ -28,7 +28,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
-import { generateCustomerInvoicePdf, generateSellerOrderPdfs } from '@/lib/pdf-generator';
+import { generateSellerOrderPdfs } from '@/lib/pdf-generator';
 
 interface ManageOrderListProps {
   initialOrders: Order[];
@@ -116,10 +116,6 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => generateCustomerInvoicePdf(order)}>
-                                    <Download className="mr-2 h-4 w-4"/>
-                                    Download Invoice
-                                </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => generateSellerOrderPdfs(order)}>
                                      <Download className="mr-2 h-4 w-4"/>
                                      Download Seller Slips
