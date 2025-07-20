@@ -56,10 +56,12 @@ export default async function Home({
   const featuredProductInfo = await getFeaturedProduct();
   const categoryMap: CategoryMap = await getCategories();
   
-  const categories: Category[] = Object.keys(categoryMap).map(name => ({
-    name,
-    imageUrl: `https://placehold.co/400x300.png?text=${encodeURIComponent(name)}`,
-    productCount: allProducts.filter(p => p.category === name).length,
+  const categories: Category[] = Object.entries(categoryMap)
+    .filter(([_, catData]) => catData.enabled) // Filter for enabled categories
+    .map(([name, _]) => ({
+      name,
+      imageUrl: `https://placehold.co/400x300.png?text=${encodeURIComponent(name)}`,
+      productCount: allProducts.filter(p => p.category === name).length,
   }));
 
   const searchQuery = searchParams?.q?.toLowerCase() || '';
