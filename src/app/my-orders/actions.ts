@@ -40,7 +40,7 @@ export async function getMyOrders(): Promise<Order[]> {
         const ordersData = snapshot.val();
         // The data is an object of orders, convert it to an array
         const userOrders = Object.keys(ordersData)
-            .map(key => ({ ...ordersData[key], id: key }))
+            .map(key => ({ ...ordersData[key], internalId: key }))
             // Sort by creation date, newest first
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         
@@ -105,6 +105,12 @@ export async function requestReturn(
         await orderRef.update({
             returnStatus: 'Return Requested',
             returnRequestId: returnRequestId,
+        });
+        
+        const globalOrderRef = db.ref(`all_orders/${orderId}`);
+        await globalOrderRef.update({
+             returnStatus: 'Return Requested',
+             returnRequestId: returnRequestId,
         });
 
         // 6. Revalidate paths

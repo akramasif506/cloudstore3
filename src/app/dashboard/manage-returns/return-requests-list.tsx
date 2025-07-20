@@ -68,7 +68,7 @@ export function ReturnRequestsList({ initialRequests }: ReturnRequestsListProps)
         <AccordionItem value={request.id} key={request.id}>
           <AccordionTrigger>
              <div className="flex flex-wrap items-center gap-4 w-full pr-4">
-                <div className="font-medium">#{request.orderId.substring(0, 8)}</div>
+                <div className="font-medium">#{request.order.id}</div>
                 <div className="text-muted-foreground">{request.order.customerName}</div>
                 <div className="text-sm text-muted-foreground truncate hidden md:block" style={{ flexBasis: '200px' }}>
                     {request.reason}

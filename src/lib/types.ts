@@ -63,7 +63,8 @@ export interface OrderItem {
 export type ReturnStatus = 'Return Requested' | 'Return Approved' | 'Return Rejected' | 'Returned';
 
 export interface Order {
-    id:string;
+    id: string; // Human-readable e.g., CS-1001
+    internalId?: string; // The original UUID for internal linking
     userId: string;
     customerName: string;
     items: OrderItem[];
@@ -81,7 +82,7 @@ export interface Order {
 
 export interface ReturnRequest {
     id: string;
-    orderId: string;
+    orderId: string; // This is the internal UUID
     userId: string;
     reason: string;
     requestedAt: string;

@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { OrderPdfDownloadButton } from './order-pdf-download-button';
 import type { Metadata } from 'next';
 
-async function getOrder(id: string): Promise<Order | null> {
+async function getOrder(internalId: string): Promise<Order | null> {
     let db;
     try {
         ({ db } = initializeAdmin());
@@ -23,10 +23,10 @@ async function getOrder(id: string): Promise<Order | null> {
     
     try {
         // Fetch from the denormalized 'all_orders' path for direct lookup
-        const orderRef = db.ref(`all_orders/${id}`);
+        const orderRef = db.ref(`all_orders/${internalId}`);
         const snapshot = await orderRef.once('value');
         if (snapshot.exists()) {
-            return { ...snapshot.val(), id };
+            return { ...snapshot.val(), internalId: internalId };
         }
         return null;
     } catch (error) {
@@ -37,7 +37,7 @@ async function getOrder(id: string): Promise<Order | null> {
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const order = await getOrder(params.id);
-  const orderIdShort = order?.id.substring(0, 8).toUpperCase();
+  const orderIdShort = order?.id;
   
   if (!order) {
     return {
@@ -83,7 +83,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                         <StatusIcon status={order.status} />
                     </div>
                     <CardTitle className="text-3xl font-bold mt-4">Order Status: {order.status}</CardTitle>
-                    <CardDescription>Order #{order.id.substring(0, 8).toUpperCase()}</CardDescription>
+                    <CardDescription>Order #{order.id}</CardDescription>
                 </CardHeader>
                 <CardContent className="p-6">
                     <div className="grid md:grid-cols-2 gap-8">

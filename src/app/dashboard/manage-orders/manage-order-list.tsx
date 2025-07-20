@@ -63,7 +63,7 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
             setOrder(o => ({ ...o, status: newStatus }));
             toast({
                 title: "Order Status Updated",
-                description: `Order #${orderId.substring(0,8)} is now ${newStatus}.`,
+                description: `Order #${order.id.substring(0,8)} is now ${newStatus}.`,
             });
         } else {
             toast({
@@ -86,7 +86,7 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
                             </Button>
                         </CollapsibleTrigger>
                     </TableCell>
-                    <TableCell className="font-medium">#{order.id.substring(0, 8)}</TableCell>
+                    <TableCell className="font-medium">#{order.id}</TableCell>
                     <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
                     <TableCell>{order.customerName}</TableCell>
                     <TableCell>Rs {typeof order.total === 'number' ? order.total.toFixed(2) : '0.00'}</TableCell>
@@ -99,12 +99,12 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
                         </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                        {updatingStatusId === order.id ? (
+                        {updatingStatusId === order.internalId ? (
                         <Loader2 className="h-5 w-5 animate-spin ml-auto" />
                         ) : (
                         <div className="flex justify-end gap-2">
                             <Button asChild size="sm" variant="ghost">
-                                <Link href={`/my-orders/${order.id}`} target="_blank">
+                                <Link href={`/my-orders/${order.internalId}`} target="_blank">
                                     <Eye className="h-4 w-4" />
                                 </Link>
                             </Button>
@@ -125,7 +125,7 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
                                 <DropdownMenuItem
                                     key={status}
                                     disabled={order.status === status}
-                                    onClick={() => handleStatusChange(order.id, status)}
+                                    onClick={() => handleStatusChange(order.internalId!, status)}
                                 >
                                     Mark as {status}
                                 </DropdownMenuItem>
@@ -227,7 +227,7 @@ export function ManageOrderList({ initialOrders }: ManageOrderListProps) {
           </TableRow>
         </TableHeader>
         {initialOrders.map((order) => (
-            <OrderRow key={order.id} order={order} />
+            <OrderRow key={order.internalId} order={order} />
         ))}
       </Table>
     </div>

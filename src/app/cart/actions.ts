@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
 import type { CartItem, FeeConfig } from '@/context/cart-context';
+import { ServerValue } from 'firebase-admin/database';
 
 const placeOrderSchema = z.object({
   userId: z.string().min(1, 'User ID is required.'),
@@ -29,6 +30,24 @@ async function getFeeConfigServer(): Promise<FeeConfig> {
         return { platformFeePercent: 0, handlingFeeFixed: 0 };
     }
 }
+
+async function getNextOrderId(db: any): Promise<string> {
+  const counterRef = db.ref('site_config/order_counter');
+  const result = await counterRef.transaction((currentValue: number | null) => {
+    if (currentValue === null) {
+      return 1001; // Starting value
+    }
+    return currentValue + 1;
+  });
+
+  if (!result.committed) {
+    throw new Error('Failed to generate a new order ID. Please try again.');
+  }
+  
+  const newOrderNumber = result.snapshot.val();
+  return `CS-${newOrderNumber}`;
+}
+
 
 export async function placeOrder(values: {
     userId: string;
@@ -62,46 +81,48 @@ export async function placeOrder(values: {
   const total = subtotal + platformFee + handlingFee;
   // ---
 
-  const orderId = uuidv4();
-
-  const orderData = {
-    id: orderId,
-    userId,
-    customerName,
-    items: items.map(item => ({
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        imageUrl: item.imageUrl,
-        seller: {
-            id: item.seller?.id || 'unknown',
-            name: item.seller?.name || 'CloudStore',
-            contactNumber: item.seller?.contactNumber || 'N/A'
-        }
-    })),
-    subtotal,
-    platformFee,
-    handlingFee,
-    total,
-    shippingAddress,
-    contactNumber,
-    status: 'Pending' as const,
-    createdAt: new Date().toISOString(),
-  };
-
   try {
+    const orderId = await getNextOrderId(db);
+    const internalId = uuidv4(); // Still use UUID for internal unique key
+
+    const orderData = {
+      id: orderId,
+      userId,
+      customerName,
+      items: items.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          imageUrl: item.imageUrl,
+          seller: {
+              id: item.seller?.id || 'unknown',
+              name: item.seller?.name || 'CloudStore',
+              contactNumber: item.seller?.contactNumber || 'N/A'
+          }
+      })),
+      subtotal,
+      platformFee,
+      handlingFee,
+      total,
+      shippingAddress,
+      contactNumber,
+      status: 'Pending' as const,
+      createdAt: new Date().toISOString(),
+    };
+
     // Store the order under the user's ID for efficient retrieval
-    const userOrderRef = db.ref(`orders/${userId}/${orderId}`);
+    const userOrderRef = db.ref(`orders/${userId}/${internalId}`);
     await userOrderRef.set(orderData);
     
     // Also store a copy for direct lookup by admins or for the order detail page
-    const globalOrderRef = db.ref(`all_orders/${orderId}`);
+    const globalOrderRef = db.ref(`all_orders/${internalId}`);
     await globalOrderRef.set(orderData);
 
-    return { success: true, orderId };
+    return { success: true, orderId: internalId };
   } catch (error) {
     console.error('Error saving order to Firebase:', error);
-    return { success: false, message: 'Failed to place order.' };
+    const errorMessage = error instanceof Error ? error.message : 'Failed to place order.';
+    return { success: false, message: errorMessage };
   }
 }

@@ -99,7 +99,7 @@ export async function getPendingReturnRequests(): Promise<ReturnRequest[]> {
 
 export async function updateReturnStatus(
     requestId: string,
-    orderId: string,
+    orderId: string, // This is the internal UUID
     userId: string,
     newStatus: 'Approved' | 'Rejected'
 ): Promise<{ success: boolean; message: string }> {

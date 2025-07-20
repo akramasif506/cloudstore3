@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, PackageOpen, CheckCircle, Truck, Frown, Loader2, Undo2, Ban } from 'lucide-react';
+import { DollarSign, PackageOpen, CheckCircle, Truck, Frown, Loader2, Undo2, Ban, Download } from 'lucide-react';
 import type { Order, ReturnStatus } from '@/lib/types';
 import Link from 'next/link';
 import { useAuth } from '@/context/auth-context';
@@ -15,6 +15,7 @@ import { getReturnPolicy } from '../dashboard/manage-returns/actions';
 import type { ReturnPolicy } from '../dashboard/manage-returns/actions';
 import { useToast } from '@/hooks/use-toast';
 import { RequestReturnDialog } from './request-return-dialog';
+import { generateCustomerInvoicePdf } from '@/lib/pdf-generator';
 
 function StatusBadge({ status }: { status: Order['status'] }) {
     const baseClasses = "flex items-center gap-2 text-sm font-medium px-3 py-1 rounded-full w-fit";
@@ -164,11 +165,11 @@ export function MyOrdersClient() {
             ) : (
                 <div className="space-y-6">
                     {orders.map(order => (
-                        <Card key={order.id} className="transition-shadow hover:shadow-md">
+                        <Card key={order.internalId} className="transition-shadow hover:shadow-md">
                             <CardHeader>
                                 <div className="flex justify-between items-start flex-wrap gap-2">
-                                    <Link href={`/my-orders/${order.id}`} className="block">
-                                        <CardTitle className="text-lg">Order #{order.id.substring(0, 8).toUpperCase()}</CardTitle>
+                                    <Link href={`/my-orders/${order.internalId}`} className="block">
+                                        <CardTitle className="text-lg">Order #{order.id}</CardTitle>
                                         <CardDescription>Placed on {new Date(order.createdAt).toLocaleDateString()}</CardDescription>
                                     </Link>
                                     <div className="flex items-center gap-2">
@@ -177,15 +178,21 @@ export function MyOrdersClient() {
                                     </div>
                                 </div>
                             </CardHeader>
-                             <CardContent>
-                                <div className="flex justify-between items-end">
-                                    <p className="text-xl font-bold">Total: Rs {order.total.toFixed(2)}</p>
-                                    <Link href={`/my-orders/${order.id}`} className="text-sm text-primary hover:underline">View Details</Link>
+                             <CardContent className="flex justify-between items-center">
+                                <p className="text-xl font-bold">Total: Rs {order.total.toFixed(2)}</p>
+                                <div className="flex items-center gap-2">
+                                    <Button asChild variant="outline" size="sm">
+                                        <Link href={`/my-orders/${order.internalId}`}>View Details</Link>
+                                    </Button>
+                                    <Button variant="secondary" size="sm" onClick={() => generateCustomerInvoicePdf(order)}>
+                                        <Download className="mr-2 h-4 w-4" />
+                                        Invoice
+                                    </Button>
                                 </div>
                             </CardContent>
                              {returnPolicy && isReturnable(order, returnPolicy) && (
                                 <CardFooter className="bg-muted/30">
-                                   <RequestReturnDialog orderId={order.id} onSuccess={() => handleReturnSuccess(order.id)} />
+                                   <RequestReturnDialog orderId={order.internalId!} onSuccess={() => handleReturnSuccess(order.internalId!)} />
                                 </CardFooter>
                             )}
                         </Card>

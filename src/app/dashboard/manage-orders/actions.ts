@@ -14,7 +14,7 @@ export async function getAllOrders(): Promise<Order[]> {
     
     if (snapshot.exists()) {
       const ordersData = snapshot.val();
-      const allOrders: Order[] = Object.keys(ordersData).map(key => ({ ...ordersData[key], id: key }));
+      const allOrders: Order[] = Object.keys(ordersData).map(key => ({ ...ordersData[key], internalId: key }));
       
       const twoDaysAgo = new Date();
       twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
@@ -36,13 +36,13 @@ export async function getAllOrders(): Promise<Order[]> {
 }
 
 export async function updateOrderStatus(
-  orderId: string,
+  internalOrderId: string,
   status: Order['status']
 ): Promise<{ success: boolean; message?: string }> {
   try {
     const { db } = initializeAdmin();
     // To update status, we need to find the original record under the user's ID
-    const globalOrderRef = db.ref(`all_orders/${orderId}`);
+    const globalOrderRef = db.ref(`all_orders/${internalOrderId}`);
     const snapshot = await globalOrderRef.once('value');
     if (!snapshot.exists()) {
         return { success: false, message: 'Order not found.' };
@@ -55,12 +55,12 @@ export async function updateOrderStatus(
     }
 
     // Update both the user-specific record and the global record for consistency
-    const userOrderRef = db.ref(`orders/${userId}/${orderId}`);
+    const userOrderRef = db.ref(`orders/${userId}/${internalOrderId}`);
     await userOrderRef.update({ status });
     await globalOrderRef.update({ status });
 
     revalidatePath('/dashboard/manage-orders');
-    revalidatePath(`/my-orders/${orderId}`);
+    revalidatePath(`/my-orders/${internalOrderId}`);
 
     return { success: true };
   } catch (error) {
