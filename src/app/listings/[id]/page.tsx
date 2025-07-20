@@ -53,7 +53,7 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
 
   const [product, returnPolicy, user] = await Promise.all([productPromise, returnPolicyPromise, userPromise]);
 
-  const canViewNonActiveProduct = user?.role === 'admin' || product?.seller?.id === user?.id;
+  const canViewNonActiveProduct = user?.role === 'admin' || (product && user && product.seller?.id === user.id);
 
   if (!product || (product.status !== 'active' && !canViewNonActiveProduct)) {
     notFound();
