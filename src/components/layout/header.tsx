@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Leaf, User, LogOut, LayoutDashboard, DollarSign, Package, LogIn, UserPlus, ShoppingCart, FilePlus2, Settings, ShoppingBag, MessageSquare, Menu, Home, Tag } from 'lucide-react';
+import { User, LogOut, LayoutDashboard, DollarSign, Package, LogIn, UserPlus, ShoppingCart, FilePlus2, Settings, ShoppingBag, MessageSquare, Menu, Home, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/context/auth-context';
 import { useCart } from '@/context/cart-context';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export function Header() {
   const { user, logout } = useAuth();
@@ -66,7 +67,7 @@ export function Header() {
         </div>
         
         <Link href="/" className="flex items-center space-x-2 mr-6">
-          <Leaf className="h-6 w-6 text-primary" />
+          <Image src="/logo.png" alt="CloudStore Logo" width={32} height={32} />
           <div>
             <span className="font-bold font-headline text-lg">CloudStore</span>
             <p className="text-xs text-muted-foreground -mt-1">A Akram Product</p>
