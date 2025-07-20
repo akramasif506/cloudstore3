@@ -77,13 +77,14 @@
 
 @media print {
   body {
-    background: white;
+    background: white !important;
   }
   header, footer, .no-print {
-    display: none;
+    display: none !important;
   }
   main {
     padding: 0 !important;
+    margin: 0 !important;
   }
   .max-w-4xl {
     max-width: 100% !important;

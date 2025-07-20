@@ -1,4 +1,5 @@
 
+
 // src/app/my-orders/[id]/page.tsx
 import { notFound } from 'next/navigation';
 import type { Order } from '@/lib/types';
@@ -10,7 +11,7 @@ import { initializeAdmin } from '@/lib/firebase-admin';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { OrderPdfDownloadButton } from './order-pdf-download-button';
+import { OrderPrintButton } from './order-print-button';
 
 
 async function getOrder(internalId: string): Promise<Order | null> {
@@ -47,7 +48,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   }
 
   return {
-    title: `Order Details #${orderIdShort} - CloudStore`,
+    title: `CloudStore Invoice ${orderIdShort}`,
     description: `Details for order ${orderIdShort}, including status, items, and shipping information.`,
   }
 }
@@ -156,7 +157,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                             Continue Shopping
                         </Link>
                     </Button>
-                    <OrderPdfDownloadButton order={order} />
+                    <OrderPrintButton orderId={order.id} />
                 </CardFooter>
             </Card>
         </div>

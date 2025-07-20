@@ -15,7 +15,6 @@ import { getReturnPolicy } from '../dashboard/manage-returns/actions';
 import type { ReturnPolicy } from '../dashboard/manage-returns/actions';
 import { useToast } from '@/hooks/use-toast';
 import { RequestReturnDialog } from './request-return-dialog';
-import { OrderPdfDownloadButton } from './[id]/order-pdf-download-button';
 
 
 function StatusBadge({ status }: { status: Order['status'] }) {
@@ -185,7 +184,6 @@ export function MyOrdersClient() {
                                     <Button asChild variant="outline" size="sm">
                                         <Link href={`/my-orders/${order.internalId}`}>View Details</Link>
                                     </Button>
-                                    <OrderPdfDownloadButton order={order} />
                                 </div>
                             </CardContent>
                              {returnPolicy && isReturnable(order, returnPolicy) && (

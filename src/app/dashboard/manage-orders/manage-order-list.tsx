@@ -28,7 +28,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
-import { generateCustomerInvoicePdf, generateSellerOrderPdfs } from '@/lib/pdf-generator';
 
 interface ManageOrderListProps {
   initialOrders: Order[];
@@ -63,7 +62,7 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
             setOrder(o => ({ ...o, status: newStatus }));
             toast({
                 title: "Order Status Updated",
-                description: `Order #${order.id.substring(0,8)} is now ${newStatus}.`,
+                description: `Order #${order.id} is now ${newStatus}.`,
             });
         } else {
             toast({
@@ -116,14 +115,6 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => generateCustomerInvoicePdf(order)}>
-                                     <Download className="mr-2 h-4 w-4"/>
-                                     Download Invoice
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => generateSellerOrderPdfs(order)}>
-                                     <Download className="mr-2 h-4 w-4"/>
-                                     Download Seller Slips
-                                </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 {statusOptions.map(status => (
                                 <DropdownMenuItem
