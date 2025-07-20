@@ -6,28 +6,8 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { Order, OrderItem } from "./types";
 
-// Helper to fetch an image and convert it to Base64
-async function imageToBase64(url: string): Promise<string> {
-    const placeholder = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAQAAADOPi6zAAAB+klEQVR42u3PMQEAAAgEoNP+nU3b3QcKGU1JSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSfscjKsn+b9A1gAAAABJRU5ErkJggg==";
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const blob = await response.blob();
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.onerror = (error) => reject(error);
-            reader.readAsDataURL(blob);
-        });
-    } catch (error) {
-        console.error(`Error converting image to Base64 from URL ${url}:`, error);
-        // Return a placeholder on any error (CORS, network, etc.)
-        return placeholder;
-    }
-}
-
+// Using a static, reliable placeholder to avoid all fetch/CORS issues.
+const PLACEHOLDER_IMAGE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAQAAADOPi6zAAAB+klEQVR42u3PMQEAAAgEoNP+nU3b3QcKGU1JSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSfscjKsn+b9A1gAAAABJRU5ErkJggg==";
 
 /**
  * Generates a customer-facing invoice PDF for a given order.
@@ -89,15 +69,12 @@ export async function generateCustomerInvoicePdf(order: Order) {
   doc.setFont('helvetica', 'bold');
   doc.text("Items Ordered", 14, 98);
   
-  const tableData = await Promise.all(order.items.map(async item => {
-    const imgData = await imageToBase64(item.imageUrl);
-    return [
-      { content: '', image: imgData }, // Placeholder for image content
-      `${item.name}\nQty: ${item.quantity}`,
-      `Rs ${item.price.toFixed(2)}`,
-      `Rs ${(item.quantity * item.price).toFixed(2)}`
-    ];
-  }));
+  const tableData = order.items.map(item => [
+    { content: '', image: PLACEHOLDER_IMAGE }, // Use the reliable placeholder
+    `${item.name}\nQty: ${item.quantity}`,
+    `Rs ${item.price.toFixed(2)}`,
+    `Rs ${(item.quantity * item.price).toFixed(2)}`
+  ]);
 
   autoTable(doc, {
     startY: 104,
