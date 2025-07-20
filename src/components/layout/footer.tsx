@@ -8,7 +8,7 @@ export function Footer() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center space-x-2 mb-4 md:mb-0">
-            <Image src="/logo.png" alt="CloudStore Logo" width={160} height={40} className="object-contain" key={Math.random()} />
+            <Image src="/logo.png" alt="CloudStore Logo" width={120} height={30} className="object-contain" key={Math.random()} />
             <div>
                 <p className="text-xs text-muted-foreground">A Akram Product</p>
             </div>
