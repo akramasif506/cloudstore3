@@ -28,9 +28,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
-import { generateSellerOrderPdfs } from '@/lib/pdf-generator';
-import { OrderPdfDownloadButton } from '@/app/my-orders/[id]/order-pdf-download-button';
-
+import { generateCustomerInvoicePdf, generateSellerOrderPdfs } from '@/lib/pdf-generator';
 
 interface ManageOrderListProps {
   initialOrders: Order[];
@@ -105,7 +103,6 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
                         <Loader2 className="h-5 w-5 animate-spin ml-auto" />
                         ) : (
                         <div className="flex justify-end gap-2">
-                             <OrderPdfDownloadButton order={order} />
                             <Button asChild size="sm" variant="ghost">
                                 <Link href={`/my-orders/${order.internalId}`} target="_blank">
                                     <Eye className="h-4 w-4" />
@@ -119,6 +116,10 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => generateCustomerInvoicePdf(order)}>
+                                     <Download className="mr-2 h-4 w-4"/>
+                                     Download Invoice
+                                </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => generateSellerOrderPdfs(order)}>
                                      <Download className="mr-2 h-4 w-4"/>
                                      Download Seller Slips
