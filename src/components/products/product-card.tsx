@@ -17,7 +17,7 @@ export function ProductCard({ product, showViewButton = false }: ProductCardProp
       <Card className="overflow-hidden h-full flex flex-col transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
         <Link href={`/listings/${product.id}`} className="flex flex-col flex-grow">
           <CardHeader className="p-0">
-            <div className="relative w-full aspect-video">
+            <div className="relative w-full aspect-square">
               <Image
                 src={imageUrl}
                 alt={product.name || 'Product image'}
@@ -27,15 +27,15 @@ export function ProductCard({ product, showViewButton = false }: ProductCardProp
               />
             </div>
           </CardHeader>
-          <CardContent className="p-4 flex-grow">
-            <CardTitle className="text-lg font-headline mb-2 truncate">{product.name}</CardTitle>
-            <p className="text-2xl font-bold text-primary">Rs {product.price.toFixed(2)}</p>
+          <CardContent className="p-3 flex-grow">
+            <CardTitle className="text-base font-headline mb-1 truncate leading-tight">{product.name}</CardTitle>
+            <p className="text-lg font-bold text-primary">Rs {product.price.toFixed(2)}</p>
           </CardContent>
         </Link>
-        <CardFooter className="p-4 bg-secondary/30 flex justify-between items-center">
+        <CardFooter className="p-3 bg-secondary/30 flex justify-between items-center">
              <div className="flex items-center gap-2">
                 <Building className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">CloudStore</span>
+                <span className="text-xs text-muted-foreground">CloudStore</span>
             </div>
             {showViewButton && (
               <Button asChild variant="outline" size="sm">

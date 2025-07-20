@@ -24,7 +24,7 @@ export function ProductGrid({ products, adProducts = [], showViewButton = false 
           <div>
             <h2 className="text-2xl font-bold font-headline mb-4">You might also like</h2>
              <Separator />
-             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 mt-6">
+             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 mt-6">
                 {adProducts.map((product) => (
                     <ProductCard key={`ad-${product.id}`} product={product} />
                 ))}
@@ -36,7 +36,7 @@ export function ProductGrid({ products, adProducts = [], showViewButton = false 
   }
   
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
       {products.map((product) => (
         <ProductCard key={product.id} product={product} showViewButton={showViewButton} />
       ))}
