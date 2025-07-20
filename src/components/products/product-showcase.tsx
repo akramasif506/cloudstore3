@@ -1,15 +1,19 @@
 
-import type { Product, Category } from '@/lib/types';
+import type { Product } from '@/lib/types';
 import { ProductGrid } from './product-grid';
 import { Separator } from '../ui/separator';
 
-interface ProductShowcaseProps {
-  products: Product[];
-  categories: Category[];
-  selectedCategory?: string | null;
+interface CategoryInfo {
+  name: string;
+  productCount: number;
 }
 
-export function ProductShowcase({ products, categories, selectedCategory }: ProductShowcaseProps) {
+interface ProductShowcaseProps {
+  products: Product[];
+  categories: CategoryInfo[];
+}
+
+export function ProductShowcase({ products, categories }: ProductShowcaseProps) {
 
   // Group products by category
   const productsByCategory: { [key: string]: Product[] } = {};
@@ -20,10 +24,7 @@ export function ProductShowcase({ products, categories, selectedCategory }: Prod
     productsByCategory[product.category].push(product);
   });
   
-  // If a category is selected, just show that one. Otherwise, show all categories that have products.
-  const categoriesToShow = selectedCategory
-    ? categories.filter(cat => cat.name === selectedCategory && productsByCategory[cat.name]?.length > 0)
-    : categories.filter(cat => productsByCategory[cat.name]?.length > 0);
+  const categoriesToShow = categories.filter(cat => productsByCategory[cat.name]?.length > 0);
 
 
   return (

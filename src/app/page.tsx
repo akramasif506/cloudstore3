@@ -3,15 +3,14 @@ import { FeaturedProductBanner } from '@/components/products/featured-product-ba
 import { ProductSearch } from '@/components/products/product-search';
 import { ProductSort } from '@/components/products/product-sort';
 import { db } from '@/lib/firebase';
-import type { Product, Category } from '@/lib/types';
+import type { Product } from '@/lib/types';
 import { get, ref } from 'firebase/database';
 import { getFeaturedProduct } from './dashboard/manage-featured-product/actions';
 import { getCategories } from './dashboard/manage-categories/actions';
-import type { CategoryMap } from './dashboard/manage-categories/actions';
+import type { CategoryMap, Category as CategoryType } from './dashboard/manage-categories/actions';
 import { CategoryBrowser } from '@/components/products/category-browser';
 import { ProductShowcase } from '@/components/products/product-showcase';
 import { ProductFilters } from '@/components/products/product-filters';
-import { Card, CardContent } from '@/components/ui/card';
 import { ProductGrid } from '@/components/products/product-grid';
 
 async function getProducts(): Promise<Product[]> {
@@ -56,11 +55,10 @@ export default async function Home({
   const featuredProductInfo = await getFeaturedProduct();
   const categoryMap: CategoryMap = await getCategories();
   
-  const categories: Category[] = Object.entries(categoryMap)
+  const categories = Object.entries(categoryMap)
     .filter(([_, catData]) => catData.enabled) // Filter for enabled categories
-    .map(([name, _]) => ({
+    .map(([name, catData]) => ({
       name,
-      imageUrl: `https://placehold.co/400x300.png?text=${encodeURIComponent(name)}`,
       productCount: allProducts.filter(p => p.category === name).length,
   }));
 
@@ -72,7 +70,7 @@ export default async function Home({
   const maxPrice = Number(searchParams?.maxPrice);
   const sortBy = searchParams?.sortBy || 'newest';
 
-  const hasActiveFilters = !!(searchQuery || selectedSubcategory || selectedCondition || minPrice > 0 || maxPrice);
+  const hasActiveFilters = !!(searchQuery || selectedCategory || selectedSubcategory || selectedCondition || minPrice > 0 || maxPrice);
 
   let productsToShow = allProducts.filter(product => {
     if (featuredProductInfo?.productId === product.id) {
@@ -105,7 +103,7 @@ export default async function Home({
 
   return (
     <div className="space-y-8">
-      {featuredProductInfo?.product && !hasActiveFilters && !selectedCategory && (
+      {featuredProductInfo?.product && !hasActiveFilters && (
         <FeaturedProductBanner 
             product={featuredProductInfo.product} 
             promoText={featuredProductInfo.promoText}
@@ -127,7 +125,7 @@ export default async function Home({
                     <ProductSort />
                 </div>
             </div>
-          {hasActiveFilters || selectedCategory ? (
+          {hasActiveFilters ? (
              <ProductGrid 
                 products={productsToShow} 
                 adProducts={allProducts.filter(p => p.id !== featuredProductInfo?.productId).slice(0, 3)} 
@@ -136,7 +134,6 @@ export default async function Home({
             <ProductShowcase 
               products={productsToShow} 
               categories={categories}
-              selectedCategory={selectedCategory}
             />
           )}
         </div>

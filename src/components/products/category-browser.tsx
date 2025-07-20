@@ -1,15 +1,16 @@
 
 "use client";
 
-import type { Category } from '@/lib/types';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '../ui/button';
 import { ScrollArea, ScrollBar } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import type { CategoryInfo } from '@/lib/types';
+
 
 interface CategoryBrowserProps {
-  categories: Category[];
+  categories: CategoryInfo[];
 }
 
 export function CategoryBrowser({ categories }: CategoryBrowserProps) {
@@ -24,6 +25,13 @@ export function CategoryBrowser({ categories }: CategoryBrowserProps) {
     } else {
       params.delete('category');
     }
+    // when a category is selected, we want to clear other filters
+    params.delete('q');
+    params.delete('subcategory');
+    params.delete('condition');
+    params.delete('minPrice');
+    params.delete('maxPrice');
+    
     router.push(`/?${params.toString()}`);
   };
 

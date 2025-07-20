@@ -95,8 +95,7 @@ export interface FeeConfig {
     handlingFeeFixed: number;
 }
 
-export interface Category {
+export interface CategoryInfo {
   name: string;
-  imageUrl: string;
   productCount: number;
 }

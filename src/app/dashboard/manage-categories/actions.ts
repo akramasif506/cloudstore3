@@ -17,6 +17,12 @@ export interface Category {
 
 export type CategoryMap = { [key: string]: Category };
 
+export interface CategoryInfo {
+  name: string;
+  productCount: number;
+}
+
+
 const CATEGORIES_PATH = 'site_config/categories';
 
 // Helper to check if the data is in the old format (string[])
