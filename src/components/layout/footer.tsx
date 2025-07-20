@@ -10,8 +10,7 @@ export function Footer() {
           <div className="flex items-center space-x-2 mb-4 md:mb-0">
             <Image src="/logo.png" alt="CloudStore Logo" width={40} height={40} key={Math.random()} />
             <div>
-                <span className="font-bold font-headline text-xl">CloudStore</span>
-                <p className="text-xs text-muted-foreground -mt-1">A Akram Product</p>
+                <p className="text-xs text-muted-foreground">A Akram Product</p>
             </div>
           </div>
           <nav className="flex space-x-6 text-sm text-muted-foreground">
