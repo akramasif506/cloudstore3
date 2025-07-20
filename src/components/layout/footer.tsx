@@ -7,11 +7,9 @@ export function Footer() {
     <footer className="border-t bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col md:flex-row justify-between items-center">
-          <div className="flex items-center space-x-2 mb-4 md:mb-0">
+          <div className="mb-4 md:mb-0">
             <Image src={`/logo.png?v=${new Date().getTime()}`} alt="CloudStore Logo" width={120} height={30} className="object-contain" />
-            <div>
-                <p className="text-xs text-muted-foreground">A Akram Product</p>
-            </div>
+            <p className="text-xs text-muted-foreground mt-1">A Akram Product</p>
           </div>
           <nav className="flex space-x-6 text-sm text-muted-foreground">
             <Link href="/about" className="hover:text-foreground">About</Link>

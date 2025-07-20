@@ -66,10 +66,10 @@ export function Header() {
           </DropdownMenu>
         </div>
         
-        <Link href="/" className="flex items-center space-x-2 mr-6">
-          <Image src={`/logo.png?v=${new Date().getTime()}`} alt="CloudStore Logo" width={120} height={30} className="object-contain" />
+        <Link href="/" className="mr-6">
           <div>
-            <p className="text-xs text-muted-foreground">A Akram Product</p>
+            <Image src={`/logo.png?v=${new Date().getTime()}`} alt="CloudStore Logo" width={120} height={30} className="object-contain" />
+            <p className="text-xs text-muted-foreground mt-1">A Akram Product</p>
           </div>
         </Link>
 
