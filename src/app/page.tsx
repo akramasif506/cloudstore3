@@ -2,9 +2,8 @@
 import { FeaturedProductBanner } from '@/components/products/featured-product-banner';
 import { ProductSearch } from '@/components/products/product-search';
 import { ProductSort } from '@/components/products/product-sort';
-import { db } from '@/lib/firebase';
+import { initializeAdmin } from '@/lib/firebase-admin';
 import type { Product } from '@/lib/types';
-import { get, ref } from 'firebase/database';
 import { getFeaturedProduct } from './dashboard/manage-featured-product/actions';
 import { getCategories } from './dashboard/manage-categories/actions';
 import type { CategoryMap, Category as CategoryType } from './dashboard/manage-categories/actions';
@@ -14,13 +13,10 @@ import { ProductFilters } from '@/components/products/product-filters';
 import { ProductGrid } from '@/components/products/product-grid';
 
 async function getProducts(): Promise<Product[]> {
-  if (!db) {
-    console.warn("Firebase is not configured. Returning empty products.");
-    return [];
-  }
   try {
-    const productsRef = ref(db, 'products');
-    const snapshot = await get(productsRef);
+    const { db } = initializeAdmin();
+    const productsRef = db.ref('products');
+    const snapshot = await productsRef.once('value');
     if (snapshot.exists()) {
       const productsData = snapshot.val();
       const allProducts: Product[] = Object.keys(productsData).map(key => ({
@@ -33,7 +29,7 @@ async function getProducts(): Promise<Product[]> {
     }
     return [];
   } catch (error) {
-    console.error("Error fetching products from Firebase:", error);
+    console.error("Error fetching products from Firebase with Admin SDK:", error);
     return [];
   }
 }
