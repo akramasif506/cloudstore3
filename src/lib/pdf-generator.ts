@@ -73,7 +73,9 @@ export async function generateCustomerInvoicePdf(order: Order) {
         const foot = data.table.foot[0];
         if (foot) {
              const y = foot.y;
-             doc.line(data.table.columns[0].x, y, data.table.getRightX(), y);
+             // FIX: Use table.getRightX() is not a function. Use table.width and table.x instead.
+             const tableRightX = data.table.x + data.table.width;
+             doc.line(data.table.x, y, tableRightX, y);
         }
     }
   });
@@ -153,25 +155,15 @@ export function generateSellerOrderPdfs(order: Order) {
       head: [['Product ID', 'Item Name', 'Quantity to Ship']],
       body: tableData as any,
       theme: 'striped',
-      headStyles: { fillColor: [160, 82, 45] }, // Warm brown from theme
+      headStyles: { fillColor: [25, 57, 40] }, // Warm brown from theme
     });
 
     const finalY = (doc as any).lastAutoTable.finalY || 100;
-
-    // Shipping Info
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text("Ship To:", 14, finalY + 15);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(11);
-    doc.text(order.customerName, 14, finalY + 21);
-    const addressLines = doc.splitTextToSize(order.shippingAddress, 80);
-    doc.text(addressLines, 14, finalY + 27);
     
     // Footer
     doc.setFontSize(10);
     doc.setTextColor(150);
-    doc.text("Please package these items and prepare them for shipping to our distribution center.", 105, finalY + 50, { align: 'center' });
+    doc.text("Please package these items and prepare them for shipping.", 105, finalY + 20, { align: 'center' });
 
 
     doc.save(`CloudStore_Order_${order.id}_Seller_${sellerName.replace(/\s/g, '')}.pdf`);
