@@ -11,6 +11,7 @@ const registerSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters.'),
   mobileNumber: z.string().regex(/^\d{10}$/, 'Please enter a valid 10-digit mobile number.'),
   gender: z.string(),
+  address: z.string().optional(),
 });
 
 export async function registerUser(values: z.infer<typeof registerSchema>) {
@@ -36,6 +37,7 @@ export async function registerUser(values: z.infer<typeof registerSchema>) {
       email: values.email,
       mobileNumber: values.mobileNumber,
       gender: values.gender,
+      address: values.address || '',
       createdAt: new Date().toISOString(),
       // Assign 'admin' role if it's the first user, otherwise 'user'
       role: isFirstUser ? 'admin' : 'user',

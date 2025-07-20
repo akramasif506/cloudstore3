@@ -22,6 +22,7 @@ import { Loader2 } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { Textarea } from '@/components/ui/textarea';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -31,6 +32,7 @@ const registerSchema = z.object({
   gender: z.enum(['male', 'female', 'other'], {
     required_error: "Please select your gender."
   }),
+  address: z.string().optional(),
 });
 
 export function RegisterForm() {
@@ -45,6 +47,7 @@ export function RegisterForm() {
       email: '',
       password: '',
       mobileNumber: '',
+      address: '',
     },
   });
 
@@ -188,6 +191,20 @@ export function RegisterForm() {
                     <FormLabel className="font-normal">Other</FormLabel>
                   </FormItem>
                 </RadioGroup>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="address"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Shipping Address (Optional)</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Enter your full shipping address" {...field} disabled={isLoading} />
               </FormControl>
               <FormMessage />
             </FormItem>

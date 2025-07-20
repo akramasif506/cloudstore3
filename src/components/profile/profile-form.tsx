@@ -24,12 +24,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { useRouter } from 'next/navigation';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { updateUserProfile } from '@/app/profile/actions';
+import { Textarea } from '../ui/textarea';
 
 const profileSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
   email: z.string().email('Please enter a valid email address.'),
   mobileNumber: z.string().regex(/^\d{10}$/, 'Please enter a valid 10-digit mobile number.'),
   gender: z.enum(['male', 'female', 'other']),
+  address: z.string().optional(),
 });
 
 export function ProfileForm() {
@@ -45,6 +47,7 @@ export function ProfileForm() {
       email: '',
       mobileNumber: '',
       gender: undefined,
+      address: '',
     },
   });
 
@@ -55,6 +58,7 @@ export function ProfileForm() {
         email: user.email || '',
         mobileNumber: user.mobileNumber || '',
         gender: user.gender,
+        address: user.address || '',
       });
     }
   }, [user, form]);
@@ -67,6 +71,7 @@ export function ProfileForm() {
         userId: user.id,
         name: values.name,
         mobileNumber: values.mobileNumber,
+        address: values.address,
     });
     
     setIsSubmitting(false);
@@ -203,6 +208,21 @@ export function ProfileForm() {
           )}
         />
         
+        <FormField
+          control={form.control}
+          name="address"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Default Shipping Address</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Enter your full shipping address" {...field} disabled={isSubmitting}/>
+              </FormControl>
+              <FormDescription>This will be pre-filled during checkout.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Save Changes

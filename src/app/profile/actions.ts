@@ -10,6 +10,7 @@ const updateProfileSchema = z.object({
   userId: z.string().min(1, 'User ID is required.'),
   name: z.string().min(3, 'Name must be at least 3 characters.'),
   mobileNumber: z.string().regex(/^\d{10}$/, 'Please enter a valid 10-digit mobile number.'),
+  address: z.string().optional(),
 });
 
 export async function updateUserProfile(values: z.infer<typeof updateProfileSchema>): Promise<{ success: boolean; message?: string }> {
