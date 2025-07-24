@@ -8,7 +8,15 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { updateProductSchema } from '@/lib/schemas/product';
 
-export async function getManageableProducts(): Promise<Product[]> {
+interface ProductFilters {
+    q?: string;
+    category?: string;
+    subcategory?: string;
+    from?: string;
+    to?: string;
+}
+
+export async function getManageableProducts(filters?: ProductFilters): Promise<Product[]> {
   try {
     const { db } = initializeAdmin();
     const productsRef = ref(db, 'products');
@@ -23,9 +31,35 @@ export async function getManageableProducts(): Promise<Product[]> {
       }));
     }
     
-    return allProducts
-        .filter(p => p.status === 'active' || p.status === 'sold')
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    let filteredProducts = allProducts.filter(p => p.status === 'active' || p.status === 'sold');
+
+    if (filters) {
+        const { q, category, subcategory, from, to } = filters;
+        const searchQuery = q?.toLowerCase();
+        
+        filteredProducts = filteredProducts.filter(product => {
+            const searchMatch = searchQuery
+                ? product.name.toLowerCase().includes(searchQuery) || 
+                  (product.displayId && product.displayId.toLowerCase().includes(searchQuery))
+                : true;
+            
+            const categoryMatch = category ? product.category === category : true;
+            const subcategoryMatch = subcategory ? product.subcategory === subcategory : true;
+            
+            const createdAt = new Date(product.createdAt);
+            const fromDate = from ? new Date(from) : null;
+            const toDate = to ? new Date(to) : null;
+
+            if (fromDate) fromDate.setHours(0, 0, 0, 0);
+            if (toDate) toDate.setHours(23, 59, 59, 999);
+
+            const dateMatch = (!fromDate || createdAt >= fromDate) && (!toDate || createdAt <= toDate);
+
+            return searchMatch && categoryMatch && subcategoryMatch && dateMatch;
+        });
+    }
+
+    return filteredProducts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   } catch (error) {
     console.error("Error fetching manageable products from Firebase:", error);

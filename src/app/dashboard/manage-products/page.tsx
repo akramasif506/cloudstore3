@@ -1,15 +1,26 @@
 
-
-import { ShieldAlert, List, ArrowLeft } from 'lucide-react';
+import { ShieldAlert, List, ArrowLeft, Filter } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getManageableProducts } from './actions';
 import { ManageProductList } from './manage-product-list';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { getCategories } from '../manage-categories/actions';
+import { ProductFilters } from './product-filters';
+import { Suspense } from 'react';
 
-export default async function ManageProductsPage() {
-  const products = await getManageableProducts();
+export default async function ManageProductsPage({
+  searchParams
+}: {
+  searchParams?: {
+    q?: string;
+    category?: string;
+    subcategory?: string;
+    from?: string;
+    to?: string;
+  };
+}) {
+  const products = await getManageableProducts(searchParams);
   const categories = await getCategories();
 
   return (
@@ -34,7 +45,12 @@ export default async function ManageProductsPage() {
             </div>
         </CardHeader>
         <CardContent>
-            <ManageProductList initialProducts={products} categories={categories} />
+            <ProductFilters categories={categories} />
+            <div className="mt-8">
+                <Suspense fallback={<div>Loading products...</div>}>
+                    <ManageProductList initialProducts={products} categories={categories} />
+                </Suspense>
+            </div>
         </CardContent>
     </Card>
   );
