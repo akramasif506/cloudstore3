@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState } from 'react';
@@ -22,7 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { updateOrderStatus } from './actions';
+import { updateOrderStatus, getOrderWithSellerDetails } from './actions';
 import { CheckCircle, MoreHorizontal, Loader2, PackageOpen, Truck, Frown, Eye, ChevronDown, ChevronRight, User, Phone, Undo2, Ban, Download } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -51,6 +50,7 @@ const statusIcons = {
 function OrderRow({ order: initialOrder }: { order: Order }) {
     const [order, setOrder] = useState(initialOrder);
     const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
+    const [isDownloading, setIsDownloading] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const { toast } = useToast();
 
@@ -75,19 +75,28 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
     };
     
     const handleDownloadSlips = async () => {
+        setIsDownloading(true);
         try {
-            await generateSellerOrderPdfs(order);
+            // Fetch the full order details including seller addresses etc. from the server action
+            const fullOrderDetails = await getOrderWithSellerDetails(order);
+            
+            // Now pass the complete data to the client-side PDF generator
+            await generateSellerOrderPdfs(fullOrderDetails);
+            
             toast({
                 title: "Seller Slips Generated",
                 description: "PDF fulfillment slips are being downloaded.",
             });
         } catch (error) {
             console.error("Failed to generate seller slips:", error);
+            const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
             toast({
                 variant: "destructive",
                 title: "Generation Failed",
-                description: "Could not generate seller slips. Please check the console.",
+                description: `Could not generate seller slips. ${errorMessage}`,
             });
+        } finally {
+            setIsDownloading(false);
         }
     }
 
@@ -131,11 +140,15 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
                                 <DropdownMenuItem asChild>
                                     <Link href={`/my-orders/${order.internalId}`} target="_blank" className="flex items-center">
                                         <Eye className="mr-2 h-4 w-4" />
-                                        View Details / Invoice
+                                        View Details
                                     </Link>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={handleDownloadSlips}>
-                                    <Download className="mr-2 h-4 w-4" />
+                                <DropdownMenuItem onClick={handleDownloadSlips} disabled={isDownloading}>
+                                    {isDownloading ? (
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <Download className="mr-2 h-4 w-4" />
+                                    )}
                                     Download Seller Slips
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />

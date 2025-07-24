@@ -3,30 +3,12 @@
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import type { Order, OrderItem, User } from "./types";
-import { initializeAdmin } from "./firebase-admin";
-
-async function getSellerDetails(sellerId: string): Promise<Partial<User> | null> {
-    if (sellerId === 'unknown_seller') return null;
-    try {
-        const { db } = initializeAdmin();
-        const userRef = db.ref(`users/${sellerId}`);
-        const snapshot = await userRef.once('value');
-        if (snapshot.exists()) {
-            return snapshot.val();
-        }
-        return null;
-    } catch (error) {
-        console.error(`Failed to fetch details for seller ${sellerId}:`, error);
-        return null;
-    }
-}
-
+import type { Order, OrderItem } from "./types";
 
 /**
  * Generates one or more seller-facing order request PDFs.
  * If an order has items from multiple sellers, a separate PDF is generated for each.
- * @param order The order object.
+ * @param order The order object, which must include full seller details.
  */
 export async function generateSellerOrderPdfs(order: Order) {
   // Group items by seller
@@ -43,7 +25,7 @@ export async function generateSellerOrderPdfs(order: Order) {
   // Generate a PDF for each seller
   for (const sellerId of Object.keys(itemsBySeller)) {
     const sellerItems = itemsBySeller[sellerId];
-    const sellerInfo = await getSellerDetails(sellerId);
+    const sellerInfo = sellerItems[0].seller; // All items in this group have the same seller
     const sellerName = sellerInfo?.name || 'Unknown Seller';
     
     const doc = new jsPDF();
@@ -53,7 +35,7 @@ export async function generateSellerOrderPdfs(order: Order) {
 
     // Header
     doc.setFontSize(20);
-    doc.text("Fulfillment Request", 150, 22, { align: 'right' });
+    doc.text("Fulfillment Request", 195, 22, { align: 'right' });
     
     const startY = 40;
 
@@ -64,8 +46,8 @@ export async function generateSellerOrderPdfs(order: Order) {
     doc.roundedRect(12, startY + 2, 90, 30, 3, 3, 'S');
     doc.setFontSize(10);
     doc.text(`Seller: ${sellerName}`, 16, startY + 9);
-    doc.text(`Contact: ${sellerInfo?.mobileNumber || 'N/A'}`, 16, startY + 15);
-    doc.text(`Address: ${sellerInfo?.address || 'N/A'}`, 16, startY + 21, { maxWidth: 85 });
+    doc.text(`Contact: ${sellerInfo?.contactNumber || 'N/A'}`, 16, startY + 15);
+    doc.text(`Address: ${(sellerInfo as any)?.address || 'N/A'}`, 16, startY + 21, { maxWidth: 85 });
     
     // Order Details Box
     doc.setFontSize(12);

@@ -1,7 +1,7 @@
 
 'use server';
 
-import type { Order } from '@/lib/types';
+import type { Order, User, ProductSeller } from '@/lib/types';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
 
@@ -67,4 +67,43 @@ export async function updateOrderStatus(
     console.error("Error updating order status:", error);
     return { success: false, message: 'Failed to update order status.' };
   }
+}
+
+export async function getOrderWithSellerDetails(order: Order): Promise<Order> {
+    const { db } = initializeAdmin();
+    const sellerIds = [...new Set(order.items.map(item => item.seller?.id).filter(Boolean))];
+
+    const sellerDetailsPromises = sellerIds.map(async (sellerId) => {
+        if (!sellerId || sellerId === 'unknown') {
+            return { id: sellerId, details: null };
+        }
+        const userRef = db.ref(`users/${sellerId}`);
+        const snapshot = await userRef.once('value');
+        return { id: sellerId, details: snapshot.exists() ? snapshot.val() as User : null };
+    });
+
+    const sellerResults = await Promise.all(sellerDetailsPromises);
+    const sellerDetailsMap = new Map(sellerResults.map(s => [s.id, s.details]));
+
+    const itemsWithFullSellerInfo = order.items.map(item => {
+        const sellerId = item.seller?.id;
+        if (sellerId && sellerDetailsMap.has(sellerId)) {
+            const details = sellerDetailsMap.get(sellerId);
+            return {
+                ...item,
+                seller: {
+                    ...item.seller,
+                    name: details?.name || item.seller?.name || 'Unknown Seller',
+                    contactNumber: details?.mobileNumber || item.seller?.contactNumber || 'N/A',
+                    address: details?.address || 'N/A',
+                }
+            };
+        }
+        return item;
+    });
+
+    return {
+        ...order,
+        items: itemsWithFullSellerInfo,
+    };
 }
