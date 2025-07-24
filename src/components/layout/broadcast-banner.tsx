@@ -51,14 +51,14 @@ export function BroadcastBanner() {
   }
 
   const BannerContent = (
-    <Alert className="relative rounded-none border-x-0 border-t-0 bg-primary/10 text-primary-foreground pr-10">
-      <Megaphone className="h-4 w-4 text-primary" />
-      <AlertDescription className="font-semibold text-primary">
+    <Alert className="relative rounded-none border-x-0 border-t-0 bg-accent text-accent-foreground pr-10">
+      <Megaphone className="h-4 w-4 text-accent-foreground" />
+      <AlertDescription className="font-semibold text-accent-foreground">
         {broadcast.message}
       </AlertDescription>
       <button
         onClick={handleDismiss}
-        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-primary/70 hover:text-primary"
+        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-accent-foreground/70 hover:text-accent-foreground"
         aria-label="Dismiss announcement"
       >
         <X className="h-4 w-4" />
