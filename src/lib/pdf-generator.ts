@@ -49,15 +49,12 @@ export async function generateSellerOrderPdfs(order: Order) {
     doc.text(`Contact: ${sellerInfo?.contactNumber || 'N/A'}`, 16, startY + 15);
     doc.text(`Address: ${(sellerInfo as any)?.address || 'N/A'}`, 16, startY + 21, { maxWidth: 85 });
     
-    // Order Details Box
+    // Order Details Box - Customer info removed
     doc.setFontSize(12);
     doc.text("Order Details:", 110, startY);
-    doc.roundedRect(108, startY + 2, 90, 30, 3, 3, 'S');
+    doc.roundedRect(108, startY + 2, 90, 15, 3, 3, 'S'); // Reduced height of the box
     doc.setFontSize(10);
     doc.text(`Order ID: #${order.id}`, 110, startY + 9);
-    doc.text(`Customer Name: ${order.customerName}`, 110, startY + 15);
-    doc.text(`Customer Contact: ${order.contactNumber}`, 110, startY + 21);
-
 
     // Table of Items for this seller
     const tableData = sellerItems.map(item => [
