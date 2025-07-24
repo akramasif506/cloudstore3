@@ -71,6 +71,7 @@ export function ListingForm({ categories }: ListingFormProps) {
       productName: '',
       productDescription: '',
       price: undefined,
+      originalPrice: undefined,
       category: '',
       subcategory: '',
       condition: 'Used',
@@ -379,7 +380,7 @@ export function ListingForm({ categories }: ListingFormProps) {
             name="price"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Price</FormLabel>
+                <FormLabel>Price (Current)</FormLabel>
                 <div className="relative">
                   <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                     <span className="text-gray-500 sm:text-sm">Rs</span>
@@ -387,7 +388,7 @@ export function ListingForm({ categories }: ListingFormProps) {
                   <FormControl>
                     <Input
                       type="number"
-                      placeholder="0.00"
+                      placeholder="e.g. 1500.00"
                       className="pl-8"
                       step="0.01"
                       {...field}
@@ -400,11 +401,45 @@ export function ListingForm({ categories }: ListingFormProps) {
                     />
                   </FormControl>
                 </div>
+                <FormDescription>The final price after discount.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <FormField
+           <FormField
+            control={form.control}
+            name="originalPrice"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Original Price (Optional)</FormLabel>
+                <div className="relative">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                    <span className="text-gray-500 sm:text-sm">Rs</span>
+                  </div>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="e.g. 2000.00"
+                      className="pl-8"
+                      step="0.01"
+                      {...field}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        field.onChange(value === '' ? undefined : Number(value));
+                      }}
+                      value={field.value ?? ''}
+                      disabled={isSubmitting}
+                    />
+                  </FormControl>
+                </div>
+                <FormDescription>The price before discount (for display).</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+         <FormField
             control={form.control}
             name="condition"
             render={({ field }) => (
@@ -424,7 +459,6 @@ export function ListingForm({ categories }: ListingFormProps) {
               </FormItem>
             )}
           />
-        </div>
         
         <Button type="submit" disabled={isSubmitting || !compressedImageFile} size="lg">
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

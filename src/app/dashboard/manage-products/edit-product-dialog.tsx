@@ -18,6 +18,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -56,6 +57,7 @@ export function EditProductDialog({ product, categories, onSuccess, onError }: E
             name: product.name,
             description: product.description,
             price: product.price,
+            originalPrice: product.originalPrice || undefined,
             category: product.category,
             subcategory: product.subcategory,
             condition: product.condition || 'Used',
@@ -171,35 +173,68 @@ export function EditProductDialog({ product, categories, onSuccess, onError }: E
                             />
                         </div>
 
-                         <FormField
-                            control={form.control}
-                            name="price"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Price</FormLabel>
-                                <div className="relative">
-                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                    <span className="text-gray-500 sm:text-sm">Rs</span>
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                                control={form.control}
+                                name="price"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Price (Current)</FormLabel>
+                                    <div className="relative">
+                                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                        <span className="text-gray-500 sm:text-sm">Rs</span>
+                                        </div>
+                                        <FormControl>
+                                        <Input
+                                            type="number"
+                                            placeholder="0.00"
+                                            className="pl-8"
+                                            step="0.01"
+                                            {...field}
+                                            onChange={(e) => {
+                                            const value = e.target.value;
+                                            field.onChange(value === '' ? null : Number(value));
+                                            }}
+                                            value={field.value ?? ''}
+                                        />
+                                        </FormControl>
                                     </div>
-                                    <FormControl>
-                                    <Input
-                                        type="number"
-                                        placeholder="0.00"
-                                        className="pl-8"
-                                        step="0.01"
-                                        {...field}
-                                        onChange={(e) => {
-                                        const value = e.target.value;
-                                        field.onChange(value === '' ? null : Number(value));
-                                        }}
-                                        value={field.value ?? ''}
-                                    />
-                                    </FormControl>
-                                </div>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="originalPrice"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Original Price</FormLabel>
+                                    <div className="relative">
+                                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                        <span className="text-gray-500 sm:text-sm">Rs</span>
+                                        </div>
+                                        <FormControl>
+                                        <Input
+                                            type="number"
+                                            placeholder="e.g. 2000.00"
+                                            className="pl-8"
+                                            step="0.01"
+                                            {...field}
+                                            onChange={(e) => {
+                                            const value = e.target.value;
+                                            field.onChange(value === '' ? undefined : Number(value));
+                                            }}
+                                            value={field.value ?? ''}
+                                        />
+                                        </FormControl>
+                                    </div>
+                                     <FormDescription>Leave blank if not on sale.</FormDescription>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
 
                         <DialogFooter>
                             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>

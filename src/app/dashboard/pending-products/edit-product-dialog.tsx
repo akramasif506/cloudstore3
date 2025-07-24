@@ -19,6 +19,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -60,6 +61,7 @@ export function EditProductDialog({ product, categories, onSuccess, onError }: E
             name: product.name,
             description: product.description,
             price: product.price,
+            originalPrice: product.originalPrice || undefined,
             category: product.category,
             subcategory: product.subcategory,
             condition: product.condition || 'Used',
@@ -179,7 +181,7 @@ export function EditProductDialog({ product, categories, onSuccess, onError }: E
                                 name="price"
                                 render={({ field }) => (
                                     <FormItem>
-                                    <FormLabel>Price</FormLabel>
+                                    <FormLabel>Price (Current)</FormLabel>
                                     <div className="relative">
                                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                         <span className="text-gray-500 sm:text-sm">Rs</span>
@@ -203,6 +205,39 @@ export function EditProductDialog({ product, categories, onSuccess, onError }: E
                                     </FormItem>
                                 )}
                             />
+                             <FormField
+                                control={form.control}
+                                name="originalPrice"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Original Price</FormLabel>
+                                    <div className="relative">
+                                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                        <span className="text-gray-500 sm:text-sm">Rs</span>
+                                        </div>
+                                        <FormControl>
+                                        <Input
+                                            type="number"
+                                            placeholder="0.00"
+                                            className="pl-8"
+                                            step="0.01"
+                                            {...field}
+                                            onChange={(e) => {
+                                            const value = e.target.value;
+                                            field.onChange(value === '' ? undefined : Number(value));
+                                            }}
+                                            value={field.value ?? ''}
+                                        />
+                                        </FormControl>
+                                    </div>
+                                    <FormDescription>Leave blank if not on sale.</FormDescription>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1">
                              <FormField
                                 control={form.control}
                                 name="condition"

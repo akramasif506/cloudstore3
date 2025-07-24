@@ -5,6 +5,7 @@ import type { Product } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building, Eye } from 'lucide-react';
 import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
 
 interface ProductCardProps {
   product: Product;
@@ -13,6 +14,9 @@ interface ProductCardProps {
 
 export function ProductCard({ product, showViewButton = false }: ProductCardProps) {
   const imageUrl = product.imageUrl || 'https://placehold.co/400x300.png';
+  const isDiscounted = product.originalPrice && product.originalPrice > product.price;
+  const discountPercent = isDiscounted ? Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100) : 0;
+
   return (
       <Card className="overflow-hidden h-full flex flex-col transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
         <Link href={`/listings/${product.id}`} className="flex flex-col flex-grow">
@@ -28,11 +32,21 @@ export function ProductCard({ product, showViewButton = false }: ProductCardProp
                <div className="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded-sm">
                 {product.displayId}
               </div>
+              {isDiscounted && (
+                 <Badge variant="destructive" className="absolute top-2 left-2">
+                    {discountPercent}% OFF
+                </Badge>
+              )}
             </div>
           </CardHeader>
           <CardContent className="p-3 flex-grow">
             <CardTitle className="text-base font-headline mb-1 truncate leading-tight">{product.name}</CardTitle>
-            <p className="text-lg font-bold text-primary">Rs {product.price.toFixed(2)}</p>
+            <div className="flex items-baseline gap-2">
+                <p className="text-lg font-bold text-primary">Rs {product.price.toFixed(2)}</p>
+                {isDiscounted && (
+                    <p className="text-sm text-muted-foreground line-through">Rs {product.originalPrice!.toFixed(2)}</p>
+                )}
+            </div>
           </CardContent>
         </Link>
         <CardFooter className="p-3 bg-secondary/30 flex justify-between items-center">
