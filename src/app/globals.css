@@ -4,22 +4,22 @@
 
 @layer base {
   :root {
-    --background: 45 43% 93%; /* Off-white (#F5F5DC) */
+    --background: 36 33% 94%; /* Warm Linen */
     --foreground: 25 10% 20%; /* Dark warm gray */
 
-    --card: 45 43% 95%; /* Slightly lighter off-white */
+    --card: 36 33% 96%; /* Slightly lighter linen */
     --card-foreground: 25 10% 20%;
 
-    --popover: 45 43% 93%;
+    --popover: 36 33% 94%;
     --popover-foreground: 25 10% 20%;
 
     --primary: 120 25% 65%; /* Soft green (#8FBC8F) */
     --primary-foreground: 120 10% 10%; /* Darker text on green for contrast */
 
-    --secondary: 45 20% 85%;
+    --secondary: 36 20% 88%;
     --secondary-foreground: 25 10% 20%;
 
-    --muted: 45 20% 88%;
+    --muted: 36 20% 90%;
     --muted-foreground: 25 10% 40%;
 
     --accent: 25 57% 40%; /* Warm brown (#A0522D) */
@@ -28,8 +28,8 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 45 20% 80%;
-    --input: 45 20% 88%;
+    --border: 36 20% 85%;
+    --input: 36 20% 90%;
     --ring: 120 25% 65%;
     
     --radius: 0.5rem;
