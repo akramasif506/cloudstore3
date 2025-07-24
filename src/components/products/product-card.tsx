@@ -42,7 +42,7 @@ export function ProductCard({ product, showViewButton = false }: ProductCardProp
           <CardContent className="p-3 flex-grow">
             <CardTitle className="text-base font-headline mb-1 truncate leading-tight">{product.name}</CardTitle>
             <div className="flex items-baseline gap-2">
-                <p className="text-lg font-bold text-primary">Rs {product.price.toFixed(2)}</p>
+                <p className="text-lg font-bold text-accent">Rs {product.price.toFixed(2)}</p>
                 {isDiscounted && (
                     <p className="text-sm text-muted-foreground line-through">Rs {product.originalPrice!.toFixed(2)}</p>
                 )}
