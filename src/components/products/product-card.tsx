@@ -25,6 +25,9 @@ export function ProductCard({ product, showViewButton = false }: ProductCardProp
                 className="object-cover"
                 data-ai-hint="product image"
               />
+               <div className="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded-sm">
+                {product.displayId}
+              </div>
             </div>
           </CardHeader>
           <CardContent className="p-3 flex-grow">

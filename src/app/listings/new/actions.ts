@@ -9,6 +9,24 @@ import { listingSchema } from '@/lib/schemas';
 import { getCurrentUser } from '@/lib/auth';
 import { ref, set, update } from 'firebase/database';
 
+
+async function getNextProductId(db: any): Promise<string> {
+  const counterRef = db.ref('site_config/product_counter');
+  const result = await counterRef.transaction((currentValue: number | null) => {
+    if (currentValue === null) {
+      return 1001; // Starting value
+    }
+    return currentValue + 1;
+  });
+
+  if (!result.committed) {
+    throw new Error('Failed to generate a new product ID. Please try again.');
+  }
+  
+  const newProductNumber = result.snapshot.val();
+  return `PID-${newProductNumber}`;
+}
+
 /**
  * Action 1: Creates a new product listing as a draft without an image.
  * This is the first step in the new two-step submission process.
@@ -34,10 +52,12 @@ export async function createListingDraft(
 
   try {
     const productId = uuidv4();
+    const displayId = await getNextProductId(db);
     const { productName, productDescription, ...restOfData } = validatedFields.data;
 
     const newProductData = {
       id: productId,
+      displayId: displayId,
       name: productName,
       description: productDescription,
       price: restOfData.price,

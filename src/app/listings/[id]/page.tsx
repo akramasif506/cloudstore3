@@ -55,7 +55,11 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
 
   const canViewNonActiveProduct = user?.role === 'admin' || (product && user && product.seller?.id === user.id);
 
-  if (!product || (product.status !== 'active' && !canViewNonActiveProduct)) {
+  if (!product || (product.status === 'pending_image')) {
+    notFound();
+  }
+
+  if (product.status !== 'active' && !canViewNonActiveProduct) {
     notFound();
   }
   
@@ -83,7 +87,8 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
             </div>
         </Card>
         <div className="mt-8">
-            <h1 className="text-4xl font-bold font-headline mb-4">{product.name}</h1>
+            <h1 className="text-4xl font-bold font-headline mb-2">{product.name}</h1>
+            <p className="text-sm text-muted-foreground mb-4">Product ID: {product.displayId}</p>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-muted-foreground mb-4">
                 <div className="flex items-center gap-1">
                     <Tag className="w-4 h-4" />

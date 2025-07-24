@@ -37,6 +37,7 @@ export interface ProductSeller {
 
 export interface Product {
   id: string;
+  displayId: string;
   name: string;
   description: string;
   price: number;

@@ -74,7 +74,8 @@ export default async function Home({
     }
     const searchMatch = searchQuery
       ? product.name.toLowerCase().includes(searchQuery) || 
-        product.description.toLowerCase().includes(searchQuery)
+        product.description.toLowerCase().includes(searchQuery) ||
+        (product.displayId && product.displayId.toLowerCase().includes(searchQuery))
       : true;
     
     const categoryMatch = selectedCategory ? product.category === selectedCategory : true;
