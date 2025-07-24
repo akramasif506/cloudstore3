@@ -100,7 +100,7 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
                 <>
                     <Card>
                         <CardHeader>
-                            <CardTitle className="text-3xl font-bold text-accent">Rs {product.price.toFixed(2)}</CardTitle>
+                            <CardTitle className="text-3xl font-bold text-primary">Rs {product.price.toFixed(2)}</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <AddToCartButtons product={product} />
