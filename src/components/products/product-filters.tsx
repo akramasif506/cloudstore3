@@ -138,7 +138,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
           <Label>Condition</Label>
           <div className="grid grid-cols-2 gap-2">
               <Button
-                  variant={selectedCondition === 'all' ? 'default' : 'outline'}
+                  variant={selectedCondition === 'all' ? 'destructive' : 'outline'}
                   onClick={() => setSelectedCondition('all')}
                   className="w-full col-span-2"
               >
@@ -147,7 +147,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
               {conditions.map((condition) => (
                   <Button
                       key={condition}
-                      variant={selectedCondition === condition ? 'default' : 'outline'}
+                      variant={selectedCondition === condition ? 'destructive' : 'outline'}
                       onClick={() => setSelectedCondition(condition)}
                       className="w-full"
                   >
@@ -172,7 +172,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
           />
         </div>
         <div className="flex flex-col gap-2">
-          <Button className="w-full bg-accent hover:bg-accent/90" onClick={handleApplyFilters}>
+          <Button variant="destructive" className="w-full" onClick={handleApplyFilters}>
             Apply Filters
           </Button>
            <Button className="w-full" variant="ghost" onClick={handleResetFilters}>
