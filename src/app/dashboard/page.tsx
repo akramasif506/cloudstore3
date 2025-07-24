@@ -1,7 +1,7 @@
 
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Package, ShieldAlert, CheckCircle, ShoppingCart, List, MessageSquare, Star, BookUser, Megaphone, Percent, Truck, FolderKanban, Undo2 } from 'lucide-react';
+import { Users, Package, ShieldAlert, CheckCircle, ShoppingCart, List, MessageSquare, Star, BookUser, Megaphone, Percent, Truck, FolderKanban, Undo2, DatabaseZap } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { CategoryChart } from '@/components/dashboard/category-chart';
 import { RecentProducts } from '@/components/dashboard/recent-products';
@@ -180,6 +180,13 @@ export default async function DashboardPage() {
                     value={"Set Terms"}
                     icon={Undo2}
                     href="/dashboard/manage-returns"
+                />
+                 <StatsCard 
+                    title="Data Management"
+                    value={"Reset Data"}
+                    icon={DatabaseZap}
+                    href="/dashboard/data-management"
+                    className="border-destructive/50 text-destructive"
                 />
             </CardContent>
         </Card>
