@@ -50,7 +50,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
   }, [searchParams]);
 
   const handleApplyFilters = () => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(searchParams.toString());
     
     if (searchQuery) params.set('q', searchQuery); else params.delete('q');
     if (selectedCategory !== 'all') params.set('category', selectedCategory); else params.delete('category');
@@ -152,7 +152,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
                 </PopoverContent>
             </Popover>
           </div>
-          <div className="flex gap-2 md:col-start-2 lg:col-start-4">
+          <div className="flex gap-2 lg:col-start-4">
               <Button onClick={handleApplyFilters} className="w-full"><Filter className="mr-2 h-4 w-4"/>Apply</Button>
               <Button onClick={handleResetFilters} variant="ghost" className="w-full"><X className="mr-2 h-4 w-4"/>Reset</Button>
           </div>
@@ -161,4 +161,3 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
     </Card>
   );
 }
-
