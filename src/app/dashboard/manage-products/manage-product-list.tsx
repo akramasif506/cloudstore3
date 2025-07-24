@@ -26,13 +26,13 @@ interface ManageProductListProps {
   categories: CategoryMap;
 }
 
-export function ManageProductList({ products: initialProducts, categories }: ManageProductListProps) {
-  const [products, setProducts] = useState(initialProducts);
+export function ManageProductList({ products, categories }: ManageProductListProps) {
+  const [productList, setProductList] = useState(products);
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleProductUpdate = (updatedProduct: Product) => {
-    setProducts(currentProducts => currentProducts.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+    setProductList(currentProducts => currentProducts.map(p => p.id === updatedProduct.id ? updatedProduct : p));
     toast({
       title: "Product Updated",
       description: "The listing details have been saved.",
@@ -55,7 +55,7 @@ export function ManageProductList({ products: initialProducts, categories }: Man
     setUpdatingStatusId(null);
 
     if (result.success) {
-        setProducts(currentProducts => currentProducts.map(p => 
+        setProductList(currentProducts => currentProducts.map(p => 
             p.id === product.id ? {...p, status: newStatus} : p
         ));
         toast({
@@ -72,7 +72,7 @@ export function ManageProductList({ products: initialProducts, categories }: Man
   }
 
 
-  if (initialProducts.length === 0) {
+  if (products.length === 0) {
     return (
       <div className="text-center text-muted-foreground py-20 flex flex-col items-center">
         <CheckCircle className="h-12 w-12 mb-4 text-green-500" />
@@ -97,7 +97,7 @@ export function ManageProductList({ products: initialProducts, categories }: Man
             </TableRow>
         </TableHeader>
         <TableBody>
-            {initialProducts.map((product) => (
+            {products.map((product) => (
             <TableRow key={product.id}>
                 <TableCell>
                   <Link href={`/listings/${product.id}`} target="_blank" rel="noopener noreferrer">
