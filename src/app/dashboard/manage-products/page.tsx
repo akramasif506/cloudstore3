@@ -48,7 +48,7 @@ export default async function ManageProductsPage({
             <ProductFilters categories={categories} />
             <div className="mt-8">
                 <Suspense fallback={<div>Loading products...</div>}>
-                    <ManageProductList initialProducts={products} categories={categories} />
+                    <ManageProductList products={products} categories={categories} />
                 </Suspense>
             </div>
         </CardContent>

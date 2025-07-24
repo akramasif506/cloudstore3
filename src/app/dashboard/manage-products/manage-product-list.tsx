@@ -22,11 +22,11 @@ import { Badge } from '@/components/ui/badge';
 import type { CategoryMap } from '../manage-categories/actions';
 
 interface ManageProductListProps {
-  initialProducts: Product[];
+  products: Product[];
   categories: CategoryMap;
 }
 
-export function ManageProductList({ initialProducts, categories }: ManageProductListProps) {
+export function ManageProductList({ products: initialProducts, categories }: ManageProductListProps) {
   const [products, setProducts] = useState(initialProducts);
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
   const { toast } = useToast();
@@ -72,12 +72,12 @@ export function ManageProductList({ initialProducts, categories }: ManageProduct
   }
 
 
-  if (products.length === 0) {
+  if (initialProducts.length === 0) {
     return (
       <div className="text-center text-muted-foreground py-20 flex flex-col items-center">
         <CheckCircle className="h-12 w-12 mb-4 text-green-500" />
-        <h3 className="text-xl font-semibold">No Products to Manage</h3>
-        <p>There are currently no active or sold products.</p>
+        <h3 className="text-xl font-semibold">No Products Found</h3>
+        <p>Try adjusting your filters or clearing them to see all products.</p>
       </div>
     );
   }
@@ -97,7 +97,7 @@ export function ManageProductList({ initialProducts, categories }: ManageProduct
             </TableRow>
         </TableHeader>
         <TableBody>
-            {products.map((product) => (
+            {initialProducts.map((product) => (
             <TableRow key={product.id}>
                 <TableCell>
                   <Link href={`/listings/${product.id}`} target="_blank" rel="noopener noreferrer">
