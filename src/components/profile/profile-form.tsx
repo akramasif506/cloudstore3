@@ -69,9 +69,7 @@ export function ProfileForm() {
 
     const result = await updateUserProfile({
         userId: user.id,
-        name: values.name,
-        mobileNumber: values.mobileNumber,
-        address: values.address,
+        ...values, // Send all form values, including the non-editable ones
     });
     
     setIsSubmitting(false);
