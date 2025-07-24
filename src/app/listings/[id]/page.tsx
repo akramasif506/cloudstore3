@@ -9,7 +9,6 @@ import { Separator } from '@/components/ui/separator';
 import { Star, Tag, User, Building, ShieldCheck, Phone, Undo2 } from 'lucide-react';
 import { CustomerFeedback } from '@/components/products/customer-feedback';
 import type { Product } from '@/lib/types';
-import { initializeAdmin } from '@/lib/firebase-admin';
 import { AddToCartButtons } from './add-to-cart-buttons';
 import { ShareButtons } from './share-buttons';
 import { headers } from 'next/headers';
@@ -17,37 +16,11 @@ import { getReturnPolicy } from '@/app/dashboard/manage-returns/actions';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { getCurrentUser } from '@/lib/auth';
-
-
-async function getProduct(id: string): Promise<Product | null> {
-  try {
-    const { db } = initializeAdmin();
-    const productRef = db.ref(`products/${id}`);
-    const snapshot = await productRef.once('value');
-    if (snapshot.exists()) {
-      const productData = snapshot.val();
-      
-      // Convert reviews from object to array if they exist
-      let reviewsArray = [];
-      if (productData.reviews) {
-        reviewsArray = Object.keys(productData.reviews).map(key => ({
-            ...productData.reviews[key],
-            id: key,
-        }));
-      }
-
-      return { ...productData, id, condition: productData.condition || 'Used', reviews: reviewsArray };
-    }
-    return null;
-  } catch (error) {
-    console.error("Error fetching product with Admin SDK:", error);
-    return null;
-  }
-}
+import { getProductForDisplay } from './actions';
 
 
 export default async function ListingDetailPage({ params }: { params: { id:string } }) {
-  const productPromise = getProduct(params.id);
+  const productPromise = getProductForDisplay(params.id);
   const returnPolicyPromise = getReturnPolicy();
   const userPromise = getCurrentUser();
 
@@ -59,6 +32,7 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
     notFound();
   }
 
+  // Enforce access control: only active products are public
   if (product.status !== 'active' && !canViewNonActiveProduct) {
     notFound();
   }
@@ -138,7 +112,7 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
                         <div className="flex items-center gap-4">
                             <Undo2 className="h-8 w-8 text-primary" />
                             <div>
-                            <h3 className="font-semibold">{returnPolicy.returnWindowDays}-Day Returns</h3>
+                            <h3 className="font-semibold">{returnPolicy.returnWindowDays > 0 ? `${returnPolicy.returnWindowDays}-Day Returns` : 'Returns Accepted'}</h3>
                             <Popover>
                                 <PopoverTrigger asChild>
                                 <Button variant="link" className="text-sm p-0 h-auto">View Policy</Button>

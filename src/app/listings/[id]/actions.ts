@@ -4,7 +4,7 @@
 import { z } from 'zod';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { getCurrentUser } from '@/lib/auth';
-import type { Review } from '@/lib/types';
+import type { Review, Product } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
 const reviewSchema = z.object({
@@ -12,6 +12,38 @@ const reviewSchema = z.object({
   rating: z.coerce.number().min(1, "Rating is required.").max(5),
   comment: z.string().min(10, "Comment must be at least 10 characters."),
 });
+
+/**
+ * Fetches a single product for display. This action uses the Admin SDK
+ * and should only be called from server components.
+ * @param id The product ID to fetch.
+ * @returns A Product object or null if not found.
+ */
+export async function getProductForDisplay(id: string): Promise<Product | null> {
+  try {
+    const { db } = initializeAdmin();
+    const productRef = db.ref(`products/${id}`);
+    const snapshot = await productRef.once('value');
+    if (snapshot.exists()) {
+      const productData = snapshot.val();
+      
+      // Convert reviews from object to array if they exist
+      let reviewsArray = [];
+      if (productData.reviews) {
+        reviewsArray = Object.keys(productData.reviews).map(key => ({
+            ...productData.reviews[key],
+            id: key,
+        }));
+      }
+
+      return { ...productData, id, condition: productData.condition || 'Used', reviews: reviewsArray };
+    }
+    return null;
+  } catch (error) {
+    console.error("Error fetching product with Admin SDK:", error);
+    return null;
+  }
+}
 
 export async function submitReview(
   values: z.infer<typeof reviewSchema>
