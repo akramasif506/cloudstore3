@@ -4,6 +4,7 @@
 import { z } from 'zod';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { getAuth } from 'firebase-admin/auth';
+import type { getDatabase } from 'firebase-admin/database';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -16,14 +17,15 @@ const registerSchema = z.object({
 
 export async function registerUser(values: z.infer<typeof registerSchema>) {
   try {
-    const { db } = initializeAdmin();
+    // Ensure admin SDK is initialized for this action
+    const { db, adminAuth } = initializeAdmin();
     
     // Check if any users exist to determine if this is the first user
     const usersRef = db.ref('users');
     const snapshot = await usersRef.limitToFirst(1).once('value');
     const isFirstUser = !snapshot.exists();
     
-    const userRecord = await getAuth().createUser({
+    const userRecord = await adminAuth.createUser({
         email: values.email,
         password: values.password,
         displayName: values.name,
