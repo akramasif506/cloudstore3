@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import type { VariantSetMap, VariantSet, VariantOption } from './actions';
 import { saveVariantSets } from './actions';
+import { Label } from '@/components/ui/label';
 
 const variantOptionSchema = z.object({
   value: z.string().min(1, 'Option value cannot be empty.'),
