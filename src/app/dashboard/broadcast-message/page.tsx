@@ -3,12 +3,15 @@
 import { ShieldAlert, Announce, Megaphone, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BroadcastForm } from './broadcast-form';
-import { getBroadcastMessage } from './actions';
+import { getBroadcastMessage, getCategoriesForBroadcast } from './actions';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
 export default async function BroadcastMessagePage() {
-  const currentMessage = await getBroadcastMessage();
+  const [currentMessage, categories] = await Promise.all([
+    getBroadcastMessage(),
+    getCategoriesForBroadcast()
+  ]);
 
   return (
     <Card>
@@ -34,7 +37,7 @@ export default async function BroadcastMessagePage() {
         </div>
       </CardHeader>
       <CardContent>
-        <BroadcastForm currentMessage={currentMessage} />
+        <BroadcastForm currentMessage={currentMessage} categories={categories} />
       </CardContent>
     </Card>
   );

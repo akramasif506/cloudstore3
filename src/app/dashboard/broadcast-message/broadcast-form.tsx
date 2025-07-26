@@ -2,7 +2,7 @@
 // src/app/dashboard/broadcast-message/broadcast-form.tsx
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -23,6 +23,15 @@ import { setBroadcastMessage, clearBroadcastMessage } from './actions';
 import { Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
+import type { CategoryMap } from '../manage-categories/actions';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from '@/components/ui/separator';
 
 const broadcastSchema = z.object({
   message: z.string().min(3, 'Message must be at least 3 characters.'),
@@ -30,12 +39,15 @@ const broadcastSchema = z.object({
 });
 
 interface BroadcastFormProps {
-    currentMessage: { id: number; message: string; link: string | null; } | null
+    currentMessage: { id: number; message: string; link: string | null; } | null;
+    categories: CategoryMap;
 }
 
-export function BroadcastForm({ currentMessage: initialMessage }: BroadcastFormProps) {
+export function BroadcastForm({ currentMessage: initialMessage, categories }: BroadcastFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentMessage, setCurrentMessage] = useState(initialMessage);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedSubcategory, setSelectedSubcategory] = useState('');
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof broadcastSchema>>({
@@ -45,6 +57,24 @@ export function BroadcastForm({ currentMessage: initialMessage }: BroadcastFormP
       link: currentMessage?.link || '',
     },
   });
+
+  useEffect(() => {
+    if (!selectedCategory) {
+      form.setValue('link', '');
+      return;
+    }
+    
+    const baseUrl = window.location.origin;
+    const params = new URLSearchParams();
+    params.set('category', selectedCategory);
+
+    if (selectedSubcategory) {
+        params.set('subcategory', selectedSubcategory);
+    }
+    
+    form.setValue('link', `${baseUrl}/?${params.toString()}`);
+
+  }, [selectedCategory, selectedSubcategory, form]);
 
   async function onSubmit(values: z.infer<typeof broadcastSchema>) {
     setIsSubmitting(true);
@@ -78,6 +108,8 @@ export function BroadcastForm({ currentMessage: initialMessage }: BroadcastFormP
 
     if (result.success) {
       form.reset({ message: '', link: '' });
+      setSelectedCategory('');
+      setSelectedSubcategory('');
       setCurrentMessage(null);
       toast({
         title: "Broadcast Cleared!",
@@ -91,6 +123,8 @@ export function BroadcastForm({ currentMessage: initialMessage }: BroadcastFormP
       });
     }
   }
+  
+  const enabledCategories = Object.entries(categories).filter(([_, catData]) => catData.enabled);
 
   return (
     <>
@@ -98,7 +132,7 @@ export function BroadcastForm({ currentMessage: initialMessage }: BroadcastFormP
         <Info className="h-4 w-4" />
         <AlertTitle>How it works</AlertTitle>
         <AlertDescription>
-          Setting a message here will display a banner at the top of every page for all users. Clearing the message will remove the banner.
+          Setting a message here will display a banner at the top of every page for all users. You can optionally link it to a category.
         </AlertDescription>
       </Alert>
     <Form {...form}>
@@ -120,13 +154,48 @@ export function BroadcastForm({ currentMessage: initialMessage }: BroadcastFormP
             </FormItem>
           )}
         />
+        
+        <Separator />
+        
+        <div>
+            <h3 className="text-lg font-medium">Link to Category (Optional)</h3>
+            <p className="text-sm text-muted-foreground mb-4">Automatically generate a link to a category page.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label>Category</Label>
+                    <Select onValueChange={(value) => { setSelectedCategory(value); setSelectedSubcategory(''); }} value={selectedCategory}>
+                        <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="">None</SelectItem>
+                            {enabledCategories.map(([catName]) => (
+                                <SelectItem key={catName} value={catName}>{catName}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-2">
+                    <Label>Subcategory</Label>
+                    <Select onValueChange={setSelectedSubcategory} value={selectedSubcategory} disabled={!selectedCategory}>
+                        <SelectTrigger><SelectValue placeholder="Select a subcategory" /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="">All Subcategories</SelectItem>
+                            {selectedCategory && categories[selectedCategory as keyof typeof categories]?.subcategories
+                                .filter(sub => sub.enabled)
+                                .map(subcat => (
+                                <SelectItem key={subcat.name} value={subcat.name}>{subcat.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+        </div>
 
         <FormField
           control={form.control}
           name="link"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Link (Optional)</FormLabel>
+              <FormLabel>Generated Link</FormLabel>
               <FormControl>
                 <Input placeholder="https://yourapp.com/electronics" {...field} disabled={isSubmitting} />
               </FormControl>
