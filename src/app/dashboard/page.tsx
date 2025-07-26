@@ -181,13 +181,6 @@ export default async function DashboardPage() {
                     icon={Undo2}
                     href="/dashboard/manage-returns"
                 />
-                 <StatsCard 
-                    title="Data Management"
-                    value={"Reset Data"}
-                    icon={DatabaseZap}
-                    href="/dashboard/data-management"
-                    className="border-destructive/50 text-destructive"
-                />
             </CardContent>
         </Card>
       </div>
