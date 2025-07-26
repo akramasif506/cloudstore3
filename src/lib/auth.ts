@@ -17,10 +17,9 @@ export async function getCurrentUser(): Promise<AppUser | null> {
     return null;
   }
   
-  let decodedIdToken;
   try {
     const { adminAuth, db } = initializeAdmin();
-    decodedIdToken = await adminAuth.verifySessionCookie(session, true);
+    const decodedIdToken = await adminAuth.verifySessionCookie(session, true);
   
     // Fetch the user's profile from the Realtime Database
     const userProfileRef = ref(db, `users/${decodedIdToken.uid}`);
@@ -39,7 +38,7 @@ export async function getCurrentUser(): Promise<AppUser | null> {
   } catch (error) {
     // Session cookie is invalid or another error occurred.
     // This is not a critical error for page rendering, so we log it and return null.
-    console.error("Session verification failed:", error);
+    // The console.error is expected behavior for an invalid session.
     return null;
   }
 }

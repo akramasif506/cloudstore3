@@ -15,25 +15,16 @@ import { headers } from 'next/headers';
 import { getReturnPolicy } from '@/app/dashboard/manage-returns/actions';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { getCurrentUser } from '@/lib/auth';
 import { getProductForDisplay } from './actions';
 
 
 export default async function ListingDetailPage({ params }: { params: { id:string } }) {
   const productPromise = getProductForDisplay(params.id);
   const returnPolicyPromise = getReturnPolicy();
-  const userPromise = getCurrentUser();
 
-  const [product, returnPolicy, user] = await Promise.all([productPromise, returnPolicyPromise, userPromise]);
+  const [product, returnPolicy] = await Promise.all([productPromise, returnPolicyPromise]);
 
-  const canViewNonActiveProduct = user?.role === 'admin' || (product && user && product.seller?.id === user.id);
-
-  if (!product || (product.status === 'pending_image')) {
-    notFound();
-  }
-
-  // Enforce access control: only active products are public
-  if (product.status !== 'active' && !canViewNonActiveProduct) {
+  if (!product || product.status !== 'active') {
     notFound();
   }
   
