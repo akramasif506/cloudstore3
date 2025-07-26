@@ -16,14 +16,19 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, PlusCircle, Trash2, Save } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, Save, Tags } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import type { CategoryMap, Category, Subcategory } from './actions';
+import type { CategoryMap, Category, Subcategory, VariantAttribute } from './actions';
 import { saveCategories } from './actions';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
+import { Separator } from '@/components/ui/separator';
+
+const variantAttributeSchema = z.object({
+  name: z.string().min(1, 'Attribute name cannot be empty.'),
+});
 
 const subcategorySchema = z.object({
   name: z.string().min(1, 'Subcategory name cannot be empty.'),
@@ -34,6 +39,7 @@ const categorySchema = z.object({
   name: z.string().min(1, 'Category name cannot be empty.'),
   enabled: z.boolean(),
   subcategories: z.array(subcategorySchema),
+  variantAttributes: z.array(variantAttributeSchema),
 });
 
 const formSchema = z.object({
@@ -50,6 +56,7 @@ interface CategoryFormProps {
 export function CategoryForm({ initialCategories }: CategoryFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [newSubcategoryValues, setNewSubcategoryValues] = useState<Record<number, string>>({});
+  const [newAttributeValues, setNewAttributeValues] = useState<Record<number, string>>({});
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
@@ -59,6 +66,7 @@ export function CategoryForm({ initialCategories }: CategoryFormProps) {
         name,
         enabled: categoryData.enabled,
         subcategories: categoryData.subcategories,
+        variantAttributes: categoryData.variantAttributes || [],
       })),
       newCategoryName: '',
     },
@@ -76,7 +84,7 @@ export function CategoryForm({ initialCategories }: CategoryFormProps) {
         toast({ variant: 'destructive', title: 'Category already exists.' });
         return;
       }
-      append({ name: newCategoryName, subcategories: [], enabled: true });
+      append({ name: newCategoryName, subcategories: [], enabled: true, variantAttributes: [] });
       form.setValue('newCategoryName', '');
     }
   };
@@ -102,12 +110,34 @@ export function CategoryForm({ initialCategories }: CategoryFormProps) {
     update(categoryIndex, { ...categoryField, subcategories: updatedSubcategories });
   }
 
+  const handleAddAttribute = (categoryIndex: number) => {
+    const newAttribute = newAttributeValues[categoryIndex];
+    if (newAttribute && newAttribute.trim() !== '') {
+      const categoryField = fields[categoryIndex];
+      if (categoryField.variantAttributes.some(attr => attr.name.toLowerCase() === newAttribute.toLowerCase())) {
+        toast({ variant: 'destructive', title: 'Attribute already exists.' });
+        return;
+      }
+      const newAttr: VariantAttribute = { name: newAttribute };
+      const updatedAttributes = [...categoryField.variantAttributes, newAttr];
+      update(categoryIndex, { ...categoryField, variantAttributes: updatedAttributes });
+      setNewAttributeValues(prev => ({ ...prev, [categoryIndex]: '' }));
+    }
+  };
+
+  const handleRemoveAttribute = (categoryIndex: number, attributeIndex: number) => {
+    const categoryField = fields[categoryIndex];
+    const updatedAttributes = categoryField.variantAttributes.filter((_, i) => i !== attributeIndex);
+    update(categoryIndex, { ...categoryField, variantAttributes: updatedAttributes });
+  }
+
   const onSubmit = async (data: FormValues) => {
     setIsSaving(true);
     const categoryMap: CategoryMap = data.categories.reduce((acc, category) => {
       acc[category.name] = {
         enabled: category.enabled,
         subcategories: category.subcategories,
+        variantAttributes: category.variantAttributes,
       };
       return acc;
     }, {} as CategoryMap);
@@ -150,46 +180,82 @@ export function CategoryForm({ initialCategories }: CategoryFormProps) {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="flex flex-wrap gap-2 min-h-[30px]">
-                           {field.subcategories.map((sub, subIndex) => (
-                                <div key={`${field.id}-sub-${subIndex}`} className="flex items-center gap-2">
-                                   <Controller
-                                        control={form.control}
-                                        name={`categories.${index}.subcategories.${subIndex}.enabled`}
-                                        render={({ field: switchField }) => (
-                                            <Switch
-                                                checked={switchField.value}
-                                                onCheckedChange={switchField.onChange}
-                                                className="h-4 w-7 [&>span]:h-3 [&>span]:w-3 data-[state=checked]:translate-x-3 data-[state=unchecked]:translate-x-0.5"
-                                                aria-label={`${sub.name} subcategory status`}
-                                            />
-                                        )}
-                                    />
-                                    <Badge variant="secondary" className={cn("text-sm py-1 px-3", !sub.enabled && 'text-muted-foreground line-through')}>
-                                        {sub.name}
-                                        <Button type="button" variant="ghost" size="icon" className="ml-1 h-5 w-5 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleRemoveSubcategory(index, subIndex)}>
+                        <div>
+                            <Label className="text-muted-foreground">Subcategories</Label>
+                            <div className="flex flex-wrap gap-2 min-h-[30px] mt-2">
+                            {field.subcategories.map((sub, subIndex) => (
+                                    <div key={`${field.id}-sub-${subIndex}`} className="flex items-center gap-2">
+                                    <Controller
+                                            control={form.control}
+                                            name={`categories.${index}.subcategories.${subIndex}.enabled`}
+                                            render={({ field: switchField }) => (
+                                                <Switch
+                                                    checked={switchField.value}
+                                                    onCheckedChange={switchField.onChange}
+                                                    className="h-4 w-7 [&>span]:h-3 [&>span]:w-3 data-[state=checked]:translate-x-3 data-[state=unchecked]:translate-x-0.5"
+                                                    aria-label={`${sub.name} subcategory status`}
+                                                />
+                                            )}
+                                        />
+                                        <Badge variant="secondary" className={cn("text-sm py-1 px-3", !sub.enabled && 'text-muted-foreground line-through')}>
+                                            {sub.name}
+                                            <Button type="button" variant="ghost" size="icon" className="ml-1 h-5 w-5 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleRemoveSubcategory(index, subIndex)}>
+                                                <Trash2 className="h-3 w-3" />
+                                            </Button>
+                                        </Badge>
+                                    </div>
+                            ))}
+                            </div>
+                            <div className="pt-4 border-t mt-4">
+                                <div className="flex items-end gap-4">
+                                <div className="flex-grow">
+                                        <Label htmlFor={`new-subcategory-${index}`}>New Subcategory</Label>
+                                        <Input
+                                            id={`new-subcategory-${index}`}
+                                            placeholder="e.g. Fiction"
+                                            value={newSubcategoryValues[index] || ''}
+                                            onChange={(e) => setNewSubcategoryValues(prev => ({...prev, [index]: e.target.value}))}
+                                        />
+                                    </div>
+                                    <Button type="button" onClick={() => handleAddSubcategory(index)}>
+                                        <PlusCircle className="mr-2 h-4 w-4" /> Add Subcategory
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <Separator />
+
+                        <div>
+                            <Label className="text-muted-foreground flex items-center gap-2"><Tags className="h-4 w-4" />Variant Attributes</Label>
+                             <div className="flex flex-wrap gap-2 min-h-[30px] mt-2">
+                                {field.variantAttributes.map((attr, attrIndex) => (
+                                    <Badge key={`${field.id}-attr-${attrIndex}`} variant="outline" className="text-sm py-1 px-3">
+                                        {attr.name}
+                                        <Button type="button" variant="ghost" size="icon" className="ml-1 h-5 w-5 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleRemoveAttribute(index, attrIndex)}>
                                             <Trash2 className="h-3 w-3" />
                                         </Button>
                                     </Badge>
+                                ))}
+                            </div>
+                            <div className="pt-4 border-t mt-4">
+                                <div className="flex items-end gap-4">
+                                    <div className="flex-grow">
+                                        <Label htmlFor={`new-attribute-${index}`}>New Attribute Name</Label>
+                                        <Input
+                                            id={`new-attribute-${index}`}
+                                            placeholder="e.g. Size, Color"
+                                            value={newAttributeValues[index] || ''}
+                                            onChange={(e) => setNewAttributeValues(prev => ({...prev, [index]: e.target.value}))}
+                                        />
+                                    </div>
+                                    <Button type="button" onClick={() => handleAddAttribute(index)}>
+                                        <PlusCircle className="mr-2 h-4 w-4" /> Add Attribute
+                                    </Button>
                                 </div>
-                           ))}
+                            </div>
                         </div>
-                         <div className="pt-4 border-t">
-                            <div className="flex items-end gap-4">
-                               <div className="flex-grow">
-                                    <Label htmlFor={`new-subcategory-${index}`}>New Subcategory</Label>
-                                    <Input
-                                        id={`new-subcategory-${index}`}
-                                        placeholder="e.g. Fiction"
-                                        value={newSubcategoryValues[index] || ''}
-                                        onChange={(e) => setNewSubcategoryValues(prev => ({...prev, [index]: e.target.value}))}
-                                    />
-                                </div>
-                                <Button type="button" onClick={() => handleAddSubcategory(index)}>
-                                    <PlusCircle className="mr-2 h-4 w-4" /> Add Subcategory
-                                </Button>
-                             </div>
-                         </div>
+
                     </CardContent>
                 </Card>
             ))}

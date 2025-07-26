@@ -10,9 +10,14 @@ export interface Subcategory {
   enabled: boolean;
 }
 
+export interface VariantAttribute {
+  name: string;
+}
+
 export interface Category {
   enabled: boolean;
   subcategories: Subcategory[];
+  variantAttributes: VariantAttribute[];
 }
 
 export type CategoryMap = { [key: string]: Category };
@@ -39,6 +44,7 @@ function convertToNewFormat(oldData: { [key: string]: string[] }): CategoryMap {
         newData[key] = {
             enabled: true, // Assume all existing categories are enabled
             subcategories: oldData[key].map(sub => ({ name: sub, enabled: true })),
+            variantAttributes: [], // Add empty variant attributes
         };
     }
     return newData;
@@ -58,6 +64,12 @@ export async function getCategories(): Promise<CategoryMap> {
           await db.ref(CATEGORIES_PATH).set(newData);
           return newData;
       }
+       // Ensure variantAttributes exists
+      Object.values(data).forEach((cat: any) => {
+        if (!cat.variantAttributes) {
+          cat.variantAttributes = [];
+        }
+      });
       return data;
     }
   } catch (error) {
@@ -66,9 +78,9 @@ export async function getCategories(): Promise<CategoryMap> {
   
   // Return a default structure in the new format if nothing is in the DB
   return {
-    'Furniture': { enabled: true, subcategories: [{name: 'Chairs', enabled: true}, {name: 'Tables', enabled: true}] },
-    'Home Decor': { enabled: true, subcategories: [{name: 'Vases', enabled: true}, {name: 'Lamps', enabled: true}] },
-    'Electronics': { enabled: true, subcategories: [{name: 'Cameras', enabled: true}, {name: 'Audio', enabled: true}] },
+    'Furniture': { enabled: true, subcategories: [{name: 'Chairs', enabled: true}, {name: 'Tables', enabled: true}], variantAttributes: [{name: 'Color'}, {name: 'Material'}] },
+    'Home Decor': { enabled: true, subcategories: [{name: 'Vases', enabled: true}, {name: 'Lamps', enabled: true}], variantAttributes: [{name: 'Color'}] },
+    'Electronics': { enabled: true, subcategories: [{name: 'Cameras', enabled: true}, {name: 'Audio', enabled: true}], variantAttributes: [{name: 'Color'}] },
   };
 }
 
