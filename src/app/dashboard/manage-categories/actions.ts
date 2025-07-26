@@ -4,6 +4,7 @@
 import { z } from 'zod';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
+import type { VariantSetMap } from '../manage-variants/actions';
 
 export interface Subcategory {
   name: string;
@@ -12,6 +13,7 @@ export interface Subcategory {
 
 export interface VariantAttribute {
   name: string;
+  variantSetId: string; // ID of the variant set, e.g., 'apparel-sizes'
 }
 
 export interface Category {
@@ -29,6 +31,8 @@ export interface CategoryInfo {
 
 
 const CATEGORIES_PATH = 'site_config/categories';
+const VARIANTS_PATH = 'site_config/variants';
+
 
 // Helper to check if the data is in the old format (string[])
 function isOldFormat(data: any): boolean {
@@ -64,10 +68,21 @@ export async function getCategories(): Promise<CategoryMap> {
           await db.ref(CATEGORIES_PATH).set(newData);
           return newData;
       }
-       // Ensure variantAttributes exists
+       // Ensure variantAttributes exists and has the correct structure
       Object.values(data).forEach((cat: any) => {
         if (!cat.variantAttributes) {
           cat.variantAttributes = [];
+        } else {
+            // Ensure each attribute has a variantSetId
+            cat.variantAttributes = cat.variantAttributes.map((attr: any) => {
+                if (typeof attr === 'string') { // Handle legacy string-only attributes
+                    return { name: attr, variantSetId: '' };
+                }
+                if (!attr.variantSetId) {
+                    attr.variantSetId = '';
+                }
+                return attr;
+            });
         }
       });
       return data;
@@ -78,9 +93,9 @@ export async function getCategories(): Promise<CategoryMap> {
   
   // Return a default structure in the new format if nothing is in the DB
   return {
-    'Furniture': { enabled: true, subcategories: [{name: 'Chairs', enabled: true}, {name: 'Tables', enabled: true}], variantAttributes: [{name: 'Color'}, {name: 'Material'}] },
-    'Home Decor': { enabled: true, subcategories: [{name: 'Vases', enabled: true}, {name: 'Lamps', enabled: true}], variantAttributes: [{name: 'Color'}] },
-    'Electronics': { enabled: true, subcategories: [{name: 'Cameras', enabled: true}, {name: 'Audio', enabled: true}], variantAttributes: [{name: 'Color'}] },
+    'Furniture': { enabled: true, subcategories: [{name: 'Chairs', enabled: true}, {name: 'Tables', enabled: true}], variantAttributes: [{name: 'Color', variantSetId: 'standard-colors'}, {name: 'Material', variantSetId: ''}] },
+    'Home Decor': { enabled: true, subcategories: [{name: 'Vases', enabled: true}, {name: 'Lamps', enabled: true}], variantAttributes: [{name: 'Color', variantSetId: 'standard-colors'}] },
+    'Electronics': { enabled: true, subcategories: [{name: 'Cameras', enabled: true}, {name: 'Audio', enabled: true}], variantAttributes: [{name: 'Color', variantSetId: 'standard-colors'}] },
   };
 }
 
@@ -102,4 +117,19 @@ export async function saveCategories(
     console.error("Error saving categories to Firebase:", error);
     return { success: false, message: 'Failed to save categories.' };
   }
+}
+
+// Fetch variant sets for use in the category form
+export async function getVariantSetsForCategories(): Promise<VariantSetMap> {
+  try {
+    const { db } = initializeAdmin();
+    const variantsRef = db.ref(VARIANTS_PATH);
+    const snapshot = await variantsRef.once('value');
+    if (snapshot.exists()) {
+      return snapshot.val();
+    }
+  } catch (error) {
+    console.error("Error fetching variant sets for categories:", error);
+  }
+  return {};
 }

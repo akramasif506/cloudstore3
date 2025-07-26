@@ -3,11 +3,14 @@ import { FolderKanban, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { getCategories } from './actions';
+import { getCategories, getVariantSetsForCategories } from './actions';
 import { CategoryForm } from './category-form';
 
 export default async function ManageCategoriesPage() {
-  const categories = await getCategories();
+  const [categories, variantSets] = await Promise.all([
+    getCategories(),
+    getVariantSetsForCategories(),
+  ]);
 
   return (
     <Card>
@@ -33,7 +36,7 @@ export default async function ManageCategoriesPage() {
         </div>
       </CardHeader>
       <CardContent>
-        <CategoryForm initialCategories={categories} />
+        <CategoryForm initialCategories={categories} variantSets={variantSets} />
       </CardContent>
     </Card>
   );

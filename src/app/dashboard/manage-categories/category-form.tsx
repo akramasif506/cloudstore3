@@ -25,9 +25,19 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
+import type { VariantSetMap } from '../manage-variants/actions';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 
 const variantAttributeSchema = z.object({
   name: z.string().min(1, 'Attribute name cannot be empty.'),
+  variantSetId: z.string().optional(),
 });
 
 const subcategorySchema = z.object({
@@ -51,9 +61,10 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface CategoryFormProps {
     initialCategories: CategoryMap;
+    variantSets: VariantSetMap;
 }
 
-export function CategoryForm({ initialCategories }: CategoryFormProps) {
+export function CategoryForm({ initialCategories, variantSets }: CategoryFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [newSubcategoryValues, setNewSubcategoryValues] = useState<Record<number, string>>({});
   const [newAttributeValues, setNewAttributeValues] = useState<Record<number, string>>({});
@@ -118,7 +129,7 @@ export function CategoryForm({ initialCategories }: CategoryFormProps) {
         toast({ variant: 'destructive', title: 'Attribute already exists.' });
         return;
       }
-      const newAttr: VariantAttribute = { name: newAttribute };
+      const newAttr: VariantAttribute = { name: newAttribute, variantSetId: '' };
       const updatedAttributes = [...categoryField.variantAttributes, newAttr];
       update(categoryIndex, { ...categoryField, variantAttributes: updatedAttributes });
       setNewAttributeValues(prev => ({ ...prev, [categoryIndex]: '' }));
@@ -232,14 +243,29 @@ export function CategoryForm({ initialCategories }: CategoryFormProps) {
                             <h4 className="font-semibold mb-1 flex items-center gap-2"><Tags className="h-5 w-5 text-muted-foreground" /> Variant Attributes</h4>
                             <p className="text-sm text-muted-foreground mb-4">Define product options like 'Color' or 'Size' for this category.</p>
 
-                             <div className="flex flex-wrap gap-2 min-h-[40px]">
+                             <div className="space-y-4">
                                 {field.variantAttributes.map((attr, attrIndex) => (
-                                    <Badge key={`${field.id}-attr-${attrIndex}`} variant="outline" className="text-sm py-1.5 px-3">
-                                        {attr.name}
-                                        <button type="button" className="ml-2 text-destructive hover:text-destructive/80" onClick={() => handleRemoveAttribute(index, attrIndex)}>
-                                            <Trash2 className="h-3 w-3" />
-                                        </button>
-                                    </Badge>
+                                    <div key={`${field.id}-attr-${attrIndex}`} className="flex items-center gap-2 p-2 border rounded-md">
+                                        <span className="font-medium flex-shrink-0">{attr.name}</span>
+                                        <Controller
+                                          control={form.control}
+                                          name={`categories.${index}.variantAttributes.${attrIndex}.variantSetId`}
+                                          render={({ field: selectField }) => (
+                                            <Select onValueChange={selectField.onChange} value={selectField.value}>
+                                              <SelectTrigger><SelectValue placeholder="Link a variant set..." /></SelectTrigger>
+                                              <SelectContent>
+                                                <SelectItem value="">None</SelectItem>
+                                                {Object.entries(variantSets).map(([setId, set]) => (
+                                                  <SelectItem key={setId} value={setId}>{set.name}</SelectItem>
+                                                ))}
+                                              </SelectContent>
+                                            </Select>
+                                          )}
+                                        />
+                                        <Button type="button" variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleRemoveAttribute(index, attrIndex)}>
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                 ))}
                             </div>
                             <div className="pt-4 border-t mt-4">
