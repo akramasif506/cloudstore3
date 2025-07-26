@@ -18,17 +18,10 @@ export async function getCurrentUser(): Promise<AppUser | null> {
   }
   
   let decodedIdToken;
-  const { adminAuth, db } = initializeAdmin();
-  
   try {
+    const { adminAuth, db } = initializeAdmin();
     decodedIdToken = await adminAuth.verifySessionCookie(session, true);
-  } catch (error) {
-    // Session cookie is invalid.
-    console.error("Session verification failed:", error);
-    return null;
-  }
   
-  try {
     // Fetch the user's profile from the Realtime Database
     const userProfileRef = ref(db, `users/${decodedIdToken.uid}`);
     const snapshot = await get(userProfileRef);
@@ -36,17 +29,17 @@ export async function getCurrentUser(): Promise<AppUser | null> {
     if (snapshot.exists()) {
       const userProfileData = snapshot.val();
       // Combine the ID from the token with the profile data from the DB
-      // This is the correct way to merge auth and db user info.
       return { 
         id: decodedIdToken.uid,
         ...userProfileData
       };
     }
     // This case means user exists in Auth, but not in our Realtime DB.
-    // They should not be considered a valid user of the app.
     return null; 
-  } catch (dbError) {
-    console.error("Failed to fetch user profile from database:", dbError);
+  } catch (error) {
+    // Session cookie is invalid or another error occurred.
+    // This is not a critical error for page rendering, so we log it and return null.
+    console.error("Session verification failed:", error);
     return null;
   }
 }
