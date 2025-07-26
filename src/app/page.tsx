@@ -11,6 +11,8 @@ import { CategoryBrowser } from '@/components/products/category-browser';
 import { ProductShowcase } from '@/components/products/product-showcase';
 import { ProductFilters } from '@/components/products/product-filters';
 import { ProductGrid } from '@/components/products/product-grid';
+import { getPromoBanner } from './dashboard/manage-promo-banner/actions';
+import { PromoBanner } from '@/components/products/promo-banner';
 
 async function getProducts(): Promise<Product[]> {
   try {
@@ -50,6 +52,7 @@ export default async function Home({
   const allProducts = await getProducts();
   const featuredProductInfo = await getFeaturedProduct();
   const categoryMap: CategoryMap = await getCategories();
+  const promoBanner = await getPromoBanner();
   
   const categories = Object.entries(categoryMap)
     .filter(([_, catData]) => catData.enabled) // Filter for enabled categories
@@ -100,6 +103,10 @@ export default async function Home({
 
   return (
     <div className="space-y-8">
+      {promoBanner && !hasActiveFilters && (
+        <PromoBanner banner={promoBanner} />
+      )}
+
       {featuredProductInfo?.product && !hasActiveFilters && (
         <FeaturedProductBanner 
             product={featuredProductInfo.product} 

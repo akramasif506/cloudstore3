@@ -1,4 +1,5 @@
 
+
 import { DatabaseZap, ArrowLeft, Package, ShoppingCart, MessageSquare, Undo2, ShieldAlert } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import { deleteAllProducts, deleteAllOrders, deleteAllMessages, deleteAllReturnR
 
 export default async function DataManagementPage() {
   return (
-    <Card>
+    <Card className="border-destructive">
       <CardHeader>
         <div className="flex justify-between items-start">
           <div className="flex items-center gap-4">
@@ -41,7 +42,7 @@ export default async function DataManagementPage() {
         </Alert>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="border-destructive">
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2"><Package/> All Products</CardTitle>
               <CardDescription>Deletes all product listings from the database.</CardDescription>
@@ -56,7 +57,7 @@ export default async function DataManagementPage() {
             </CardFooter>
           </Card>
 
-          <Card className="border-destructive">
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2"><ShoppingCart/> All Orders</CardTitle>
               <CardDescription>Deletes all order records for all users.</CardDescription>
@@ -71,7 +72,7 @@ export default async function DataManagementPage() {
             </CardFooter>
           </Card>
 
-           <Card className="border-destructive">
+           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2"><MessageSquare/> All Messages</CardTitle>
               <CardDescription>Deletes all messages from the contact form.</CardDescription>
@@ -86,7 +87,7 @@ export default async function DataManagementPage() {
             </CardFooter>
           </Card>
           
-           <Card className="border-destructive">
+           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2"><Undo2/> All Return Requests</CardTitle>
               <CardDescription>Deletes all return request records.</CardDescription>
