@@ -17,26 +17,13 @@ export async function getCurrentUser(): Promise<AppUser | null> {
   }
   
   let decodedIdToken;
-  let adminAuth, db;
-
-  try {
-    ({ adminAuth, db } = initializeAdmin());
-  } catch (initError) {
-      const errorMessage = initError instanceof Error ? initError.message : 'An unknown initialization error occurred.';
-      console.error("Firebase Admin SDK initialization failed in getCurrentUser:", errorMessage);
-      return null;
-  }
+  const { adminAuth, db } = initializeAdmin();
   
   try {
     decodedIdToken = await adminAuth.verifySessionCookie(session, true);
-  } catch (error: any) {
-    // Session cookie is invalid, expired, or something else went wrong.
-    if (error.code === 'auth/session-cookie-expired') {
-        // Silently handle expired cookies as a logged-out state.
-        return null;
-    }
-    // For other verification errors, log them but still treat as logged-out.
-    console.error("Session verification failed:", error.message || error);
+  } catch (error) {
+    // Session cookie is invalid.
+    console.error("Session verification failed:", error);
     return null;
   }
   
