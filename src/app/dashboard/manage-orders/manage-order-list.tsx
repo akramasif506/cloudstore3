@@ -236,9 +236,9 @@ export function ManageOrderList({ initialOrders }: ManageOrderListProps) {
   if (initialOrders.length === 0) {
     return (
       <div className="text-center text-muted-foreground py-20 flex flex-col items-center">
-        <CheckCircle className="h-12 w-12 mb-4 text-green-500" />
+        <Frown className="h-12 w-12 mb-4 text-muted-foreground" />
         <h3 className="text-xl font-semibold">No Orders Found</h3>
-        <p>There are currently no orders to manage.</p>
+        <p>Try adjusting your filters or clearing them to see all orders.</p>
       </div>
     );
   }

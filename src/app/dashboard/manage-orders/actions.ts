@@ -5,21 +5,50 @@ import type { Order, User, ProductSeller } from '@/lib/types';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
 
-export async function getAllOrders(): Promise<Order[]> {
+interface OrderFilters {
+    q?: string;
+    status?: Order['status'];
+    from?: string;
+    to?: string;
+}
+
+export async function getAllOrders(filters?: OrderFilters): Promise<Order[]> {
   try {
     const { db } = initializeAdmin();
     // Fetch from the denormalized 'all_orders' path for a complete list
     const ordersRef = db.ref('all_orders');
     const snapshot = await ordersRef.once('value');
     
+    let allOrders: Order[] = [];
     if (snapshot.exists()) {
       const ordersData = snapshot.val();
-      const allOrders: Order[] = Object.keys(ordersData).map(key => ({ ...ordersData[key], internalId: key }));
-      
-      // Sort all orders by creation date, newest first
-      return allOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      allOrders = Object.keys(ordersData).map(key => ({ ...ordersData[key], internalId: key }));
     }
-    return [];
+
+    if (filters) {
+        const { q, status, from, to } = filters;
+        const searchQuery = q?.toLowerCase();
+
+        allOrders = allOrders.filter(order => {
+            const searchMatch = searchQuery ? order.id.toLowerCase().includes(searchQuery) : true;
+            const statusMatch = status ? order.status === status : true;
+            
+            const createdAt = new Date(order.createdAt);
+            const fromDate = from ? new Date(from) : null;
+            const toDate = to ? new Date(to) : null;
+
+            if (fromDate) fromDate.setHours(0, 0, 0, 0);
+            if (toDate) toDate.setHours(23, 59, 59, 999);
+            
+            const dateMatch = (!fromDate || createdAt >= fromDate) && (!toDate || createdAt <= toDate);
+
+            return searchMatch && statusMatch && dateMatch;
+        });
+    }
+    
+    // Sort all orders by creation date, newest first
+    return allOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
   } catch (error) {
     console.error("Error fetching all orders:", error);
     return [];

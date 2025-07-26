@@ -6,9 +6,20 @@ import { getAllOrders } from './actions';
 import { ManageOrderList } from './manage-order-list';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { OrderFilters } from './order-filters';
+import type { Order } from '@/lib/types';
 
-export default async function ManageOrdersPage() {
-  const orders = await getAllOrders();
+export default async function ManageOrdersPage({
+  searchParams
+}: {
+  searchParams?: {
+    q?: string;
+    status?: Order['status'];
+    from?: string;
+    to?: string;
+  };
+}) {
+  const orders = await getAllOrders(searchParams);
 
   return (
     <Card>
@@ -32,7 +43,10 @@ export default async function ManageOrdersPage() {
         </div>
       </CardHeader>
       <CardContent>
-        <ManageOrderList initialOrders={orders} />
+        <OrderFilters />
+        <div className="mt-8">
+            <ManageOrderList initialOrders={orders} />
+        </div>
       </CardContent>
     </Card>
   );
