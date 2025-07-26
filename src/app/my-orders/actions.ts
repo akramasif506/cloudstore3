@@ -41,10 +41,9 @@ export async function getMyOrdersReturnPolicy(): Promise<ReturnPolicy> {
 }
 
 
-export async function getMyOrders(): Promise<Order[]> {
-  const user = await getCurrentUser();
-  if (!user) {
-    return []; // Not logged in
+export async function getMyOrders(userId: string): Promise<Order[]> {
+  if (!userId) {
+    return [];
   }
 
   let db;
@@ -56,26 +55,23 @@ export async function getMyOrders(): Promise<Order[]> {
   }
   
   try {
-    const userId = user.id;
-
-    // Fetch orders directly from the user's node.
-    const userOrdersRef = db.ref(`orders/${userId}`);
-    const snapshot = await userOrdersRef.once('value');
+    const ordersRef = db.ref('all_orders');
+    const snapshot = await ordersRef.once('value');
     
+    let allOrders: Order[] = [];
     if (snapshot.exists()) {
         const ordersData = snapshot.val();
-        // The data is an object of orders, convert it to an array
-        const userOrders = Object.keys(ordersData)
-            .map(key => ({ ...ordersData[key], internalId: key }))
-            // Sort by creation date, newest first
-            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        
-        return userOrders;
+        allOrders = Object.keys(ordersData).map(key => ({ ...ordersData[key], internalId: key }));
     }
-    return [];
+    
+    // Filter orders for the specific user
+    const userOrders = allOrders.filter(order => order.userId === userId);
+    
+    // Sort by creation date, newest first
+    return userOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
   } catch (error) {
     console.error("Error fetching user orders from Firebase:", error);
-    // This could be a verification error or a database error
     return [];
   }
 }

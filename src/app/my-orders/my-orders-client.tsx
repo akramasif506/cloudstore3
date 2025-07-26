@@ -80,11 +80,11 @@ export function MyOrdersClient() {
 
     useEffect(() => {
         async function loadData() {
-            if (user) {
+            if (user?.id) {
                 setIsLoading(true);
                 try {
                     const [userOrders, policy] = await Promise.all([
-                        getMyOrders(),
+                        getMyOrders(user.id),
                         getMyOrdersReturnPolicy()
                     ]);
                     setOrders(userOrders);
