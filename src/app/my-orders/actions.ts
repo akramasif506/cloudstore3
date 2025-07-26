@@ -58,9 +58,9 @@ export async function getMyOrders(): Promise<Order[]> {
     const decodedClaims = await adminAuth.verifySessionCookie(session, true);
     const userId = decodedClaims.uid;
 
-    // Fetch orders directly from the user's node, which is much more efficient.
+    // Fetch orders directly from the user's node.
     const userOrdersRef = db.ref(`orders/${userId}`);
-    const snapshot = await userOrdersRef.orderByChild('createdAt').once('value');
+    const snapshot = await userOrdersRef.once('value');
     
     if (snapshot.exists()) {
         const ordersData = snapshot.val();
