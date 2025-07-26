@@ -29,11 +29,15 @@ export async function getCurrentUser(): Promise<AppUser | null> {
   
   try {
     decodedIdToken = await adminAuth.verifySessionCookie(session, true);
-  } catch (error) {
+  } catch (error: any) {
     // Session cookie is invalid, expired, or something else went wrong.
-    const errorMessage = error instanceof Error ? error.message : 'An unknown session verification error occurred.';
-    console.error("Session verification failed:", errorMessage);
-    // It's safe to return null here as it's an expected condition for invalid sessions.
+    // This is an expected condition for invalid sessions, not a server error.
+    if (error.code === 'auth/session-cookie-expired') {
+        // Silently handle expired cookies as a logged-out state.
+        return null;
+    }
+    // For other verification errors, log them but still treat as logged-out.
+    console.error("Session verification failed:", error.message || error);
     return null;
   }
   
