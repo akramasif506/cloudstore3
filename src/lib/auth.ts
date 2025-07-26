@@ -31,7 +31,6 @@ export async function getCurrentUser(): Promise<AppUser | null> {
     decodedIdToken = await adminAuth.verifySessionCookie(session, true);
   } catch (error: any) {
     // Session cookie is invalid, expired, or something else went wrong.
-    // This is an expected condition for invalid sessions, not a server error.
     if (error.code === 'auth/session-cookie-expired') {
         // Silently handle expired cookies as a logged-out state.
         return null;
