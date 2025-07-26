@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, PlusCircle, Trash2, Save, Tags } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, Save, Tags, GripVertical } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { CategoryMap, Category, Subcategory, VariantAttribute } from './actions';
@@ -157,7 +157,7 @@ export function CategoryForm({ initialCategories }: CategoryFormProps) {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="space-y-6">
             {fields.map((field, index) => (
-                <Card key={field.id} className={cn(!field.enabled && 'bg-muted/50')}>
+                <Card key={field.id} className={cn(!field.enabled && 'bg-muted/50 border-dashed')}>
                     <CardHeader>
                         <CardTitle className="flex justify-between items-center">
                            <div className="flex items-center gap-4">
@@ -172,20 +172,24 @@ export function CategoryForm({ initialCategories }: CategoryFormProps) {
                                     />
                                 )}
                             />
-                            <span className={cn(!field.enabled && 'text-muted-foreground line-through')}>{field.name}</span>
+                            <span className={cn("text-2xl font-headline", !field.enabled && 'text-muted-foreground line-through')}>{field.name}</span>
                            </div>
-                           <Button type="button" variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => remove(index)}>
-                               <Trash2 className="h-5 w-5" />
+                           <Button type="button" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => remove(index)}>
+                               <Trash2 className="h-5 w-5 mr-2" />
+                               Remove Category
                            </Button>
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div>
-                            <Label className="text-muted-foreground">Subcategories</Label>
-                            <div className="flex flex-wrap gap-2 min-h-[30px] mt-2">
+                    <CardContent className="space-y-6">
+                        {/* SUBCATEGORIES SECTION */}
+                        <div className="border rounded-lg p-4">
+                            <h4 className="font-semibold mb-1 flex items-center gap-2"><GripVertical className="h-5 w-5 text-muted-foreground" /> Subcategories</h4>
+                            <p className="text-sm text-muted-foreground mb-4">Manage the subcategories for {field.name}.</p>
+                            
+                            <div className="flex flex-wrap gap-2 min-h-[40px]">
                             {field.subcategories.map((sub, subIndex) => (
-                                    <div key={`${field.id}-sub-${subIndex}`} className="flex items-center gap-2">
-                                    <Controller
+                                    <Badge key={`${field.id}-sub-${subIndex}`} variant="secondary" className={cn("text-sm py-1.5 px-3 flex items-center gap-2", !sub.enabled && 'text-muted-foreground line-through bg-muted/50')}>
+                                        <Controller
                                             control={form.control}
                                             name={`categories.${index}.subcategories.${subIndex}.enabled`}
                                             render={({ field: switchField }) => (
@@ -197,60 +201,60 @@ export function CategoryForm({ initialCategories }: CategoryFormProps) {
                                                 />
                                             )}
                                         />
-                                        <Badge variant="secondary" className={cn("text-sm py-1 px-3", !sub.enabled && 'text-muted-foreground line-through')}>
-                                            {sub.name}
-                                            <Button type="button" variant="ghost" size="icon" className="ml-1 h-5 w-5 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleRemoveSubcategory(index, subIndex)}>
-                                                <Trash2 className="h-3 w-3" />
-                                            </Button>
-                                        </Badge>
-                                    </div>
+                                        <span>{sub.name}</span>
+                                        <button type="button" className="ml-1 text-destructive hover:text-destructive/80" onClick={() => handleRemoveSubcategory(index, subIndex)}>
+                                            <Trash2 className="h-3 w-3" />
+                                        </button>
+                                    </Badge>
                             ))}
                             </div>
+
                             <div className="pt-4 border-t mt-4">
-                                <div className="flex items-end gap-4">
-                                <div className="flex-grow">
-                                        <Label htmlFor={`new-subcategory-${index}`}>New Subcategory</Label>
+                                <div className="flex items-end gap-2">
+                                    <div className="flex-grow">
+                                        <Label htmlFor={`new-subcategory-${index}`} className="text-xs text-muted-foreground">New Subcategory Name</Label>
                                         <Input
                                             id={`new-subcategory-${index}`}
-                                            placeholder="e.g. Fiction"
+                                            placeholder="e.g. Fiction Books"
                                             value={newSubcategoryValues[index] || ''}
                                             onChange={(e) => setNewSubcategoryValues(prev => ({...prev, [index]: e.target.value}))}
                                         />
                                     </div>
-                                    <Button type="button" onClick={() => handleAddSubcategory(index)}>
-                                        <PlusCircle className="mr-2 h-4 w-4" /> Add Subcategory
+                                    <Button type="button" variant="outline" onClick={() => handleAddSubcategory(index)}>
+                                        <PlusCircle className="mr-2 h-4 w-4" /> Add
                                     </Button>
                                 </div>
                             </div>
                         </div>
 
-                        <Separator />
+                        {/* VARIANT ATTRIBUTES SECTION */}
+                        <div className="border rounded-lg p-4">
+                            <h4 className="font-semibold mb-1 flex items-center gap-2"><Tags className="h-5 w-5 text-muted-foreground" /> Variant Attributes</h4>
+                            <p className="text-sm text-muted-foreground mb-4">Define product options like 'Color' or 'Size' for this category.</p>
 
-                        <div>
-                            <Label className="text-muted-foreground flex items-center gap-2"><Tags className="h-4 w-4" />Variant Attributes</Label>
-                             <div className="flex flex-wrap gap-2 min-h-[30px] mt-2">
+                             <div className="flex flex-wrap gap-2 min-h-[40px]">
                                 {field.variantAttributes.map((attr, attrIndex) => (
-                                    <Badge key={`${field.id}-attr-${attrIndex}`} variant="outline" className="text-sm py-1 px-3">
+                                    <Badge key={`${field.id}-attr-${attrIndex}`} variant="outline" className="text-sm py-1.5 px-3">
                                         {attr.name}
-                                        <Button type="button" variant="ghost" size="icon" className="ml-1 h-5 w-5 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleRemoveAttribute(index, attrIndex)}>
+                                        <button type="button" className="ml-2 text-destructive hover:text-destructive/80" onClick={() => handleRemoveAttribute(index, attrIndex)}>
                                             <Trash2 className="h-3 w-3" />
-                                        </Button>
+                                        </button>
                                     </Badge>
                                 ))}
                             </div>
                             <div className="pt-4 border-t mt-4">
-                                <div className="flex items-end gap-4">
+                                <div className="flex items-end gap-2">
                                     <div className="flex-grow">
-                                        <Label htmlFor={`new-attribute-${index}`}>New Attribute Name</Label>
+                                        <Label htmlFor={`new-attribute-${index}`} className="text-xs text-muted-foreground">New Attribute Name</Label>
                                         <Input
                                             id={`new-attribute-${index}`}
-                                            placeholder="e.g. Size, Color"
+                                            placeholder="e.g. Size"
                                             value={newAttributeValues[index] || ''}
                                             onChange={(e) => setNewAttributeValues(prev => ({...prev, [index]: e.target.value}))}
                                         />
                                     </div>
-                                    <Button type="button" onClick={() => handleAddAttribute(index)}>
-                                        <PlusCircle className="mr-2 h-4 w-4" /> Add Attribute
+                                    <Button type="button" variant="outline" onClick={() => handleAddAttribute(index)}>
+                                        <PlusCircle className="mr-2 h-4 w-4" /> Add
                                     </Button>
                                 </div>
                             </div>
@@ -285,8 +289,7 @@ export function CategoryForm({ initialCategories }: CategoryFormProps) {
 
         <div className="mt-8 flex justify-end">
           <Button type="submit" size="lg" disabled={isSaving}>
-            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            <Save className="mr-2 h-4 w-4" />
+            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
             Save All Changes
           </Button>
         </div>
