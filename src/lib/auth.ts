@@ -1,3 +1,4 @@
+
 // src/lib/auth.ts
 import { initializeAdmin } from '@/lib/firebase-admin';
 import type { User as AppUser } from '@/lib/types';
