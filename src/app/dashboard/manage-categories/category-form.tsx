@@ -163,6 +163,8 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
     }
   };
 
+  const NONE_VALUE = '_none_';
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -251,10 +253,13 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
                                           control={form.control}
                                           name={`categories.${index}.variantAttributes.${attrIndex}.variantSetId`}
                                           render={({ field: selectField }) => (
-                                            <Select onValueChange={selectField.onChange} value={selectField.value}>
+                                            <Select
+                                                onValueChange={(value) => selectField.onChange(value === NONE_VALUE ? '' : value)}
+                                                value={selectField.value || NONE_VALUE}
+                                            >
                                               <SelectTrigger><SelectValue placeholder="Link a variant set..." /></SelectTrigger>
                                               <SelectContent>
-                                                <SelectItem value="">None</SelectItem>
+                                                <SelectItem value={NONE_VALUE}>None</SelectItem>
                                                 {Object.entries(variantSets).map(([setId, set]) => (
                                                   <SelectItem key={setId} value={setId}>{set.name}</SelectItem>
                                                 ))}
