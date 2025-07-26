@@ -18,12 +18,22 @@ export async function getCurrentUser(): Promise<AppUser | null> {
   
   let decodedIdToken;
   let adminAuth, db;
+
   try {
     ({ adminAuth, db } = initializeAdmin());
+  } catch (initError) {
+      const errorMessage = initError instanceof Error ? initError.message : 'An unknown initialization error occurred.';
+      console.error("Firebase Admin SDK initialization failed in getCurrentUser:", errorMessage);
+      return null;
+  }
+  
+  try {
     decodedIdToken = await adminAuth.verifySessionCookie(session, true);
   } catch (error) {
-    // Session cookie is invalid or expired.
-    console.error("Session verification failed:", error);
+    // Session cookie is invalid, expired, or something else went wrong.
+    const errorMessage = error instanceof Error ? error.message : 'An unknown session verification error occurred.';
+    console.error("Session verification failed:", errorMessage);
+    // It's safe to return null here as it's an expected condition for invalid sessions.
     return null;
   }
   
