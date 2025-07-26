@@ -52,27 +52,34 @@ export async function createListingDraft(
     const displayId = await getNextProductId(db);
     const { productName, productDescription, seller, ...restOfData } = validatedFields.data;
 
-    const newProductData = {
+    const newProductData: any = {
       id: productId,
       displayId: displayId,
       name: productName,
       description: productDescription,
       price: restOfData.price,
-      originalPrice: restOfData.originalPrice,
       category: restOfData.category,
       subcategory: restOfData.subcategory,
       condition: restOfData.condition,
-      variants: restOfData.variants || [],
       imageUrl: '', // Intentionally blank for now
       reviews: [],
-      seller: { // Use the seller data passed directly from the form
+      seller: {
         id: seller.id,
         name: seller.name,
         contactNumber: seller.contactNumber,
       },
       createdAt: new Date().toISOString(),
-      status: 'pending_image' as const, // New status for draft
+      status: 'pending_image' as const,
     };
+    
+    // Conditionally add optional fields to avoid saving 'undefined'
+    if (restOfData.originalPrice) {
+        newProductData.originalPrice = restOfData.originalPrice;
+    }
+    if (restOfData.variants && restOfData.variants.length > 0) {
+        newProductData.variants = restOfData.variants;
+    }
+
 
     const productRef = ref(db, `products/${productId}`);
     await set(productRef, newProductData);
