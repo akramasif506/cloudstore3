@@ -79,6 +79,7 @@ export function ListingForm({ categories, variantSets }: ListingFormProps) {
       subcategory: '',
       condition: 'Used',
       variants: [],
+      seller: { id: '', name: '', contactNumber: '' }, // Initial empty seller
     },
   });
   
@@ -88,6 +89,16 @@ export function ListingForm({ categories, variantSets }: ListingFormProps) {
   });
 
   const selectedCategory = form.watch('category');
+  
+  useEffect(() => {
+    if (user) {
+      form.setValue('seller', {
+        id: user.id,
+        name: user.name || 'CloudStore Seller',
+        contactNumber: user.mobileNumber || ''
+      });
+    }
+  }, [user, form]);
   
   useEffect(() => {
     const categoryData = categories[selectedCategory as keyof typeof categories];
@@ -109,18 +120,9 @@ export function ListingForm({ categories, variantSets }: ListingFormProps) {
       return;
     }
 
-    // Add user details directly to the data being sent
-    const submissionValues = {
-      ...values,
-      seller: {
-        id: user.id,
-        name: user.name || 'Unknown Seller',
-        contactNumber: user.mobileNumber || ''
-      }
-    };
-
     setSubmissionStep('saving_draft');
-    const draftResult = await createListingDraft(submissionValues);
+    // The seller info is already in `values` due to the useEffect hook
+    const draftResult = await createListingDraft(values);
 
     if (!draftResult.success || !draftResult.productId) {
       toast({ variant: "destructive", title: 'Failed to Save Draft', description: draftResult.message || "Could not save your listing details." });
