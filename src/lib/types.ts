@@ -35,6 +35,11 @@ export interface ProductSeller {
   contactNumber?: string;
 }
 
+export interface ProductVariant {
+  name: string; // e.g., 'Color'
+  value: string; // e.g., 'Red'
+}
+
 export interface Product {
   id: string;
   displayId: string;
@@ -51,6 +56,7 @@ export interface Product {
   rejectionReason?: string;
   createdAt: string;
   seller: ProductSeller;
+  variants?: ProductVariant[];
 }
 
 export interface OrderItem {

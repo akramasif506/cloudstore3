@@ -3,9 +3,13 @@ import { ListingForm } from './listing-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FilePlus2 } from 'lucide-react';
 import { getCategories } from '@/app/dashboard/manage-categories/actions';
+import { getVariantSets } from '@/app/dashboard/manage-variants/actions';
 
 export default async function NewListingPage() {
-  const categories = await getCategories();
+  const [categories, variantSets] = await Promise.all([
+    getCategories(),
+    getVariantSets(),
+  ]);
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -22,7 +26,7 @@ export default async function NewListingPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <ListingForm categories={categories} />
+          <ListingForm categories={categories} variantSets={variantSets} />
         </CardContent>
       </Card>
     </div>

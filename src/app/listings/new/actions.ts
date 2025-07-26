@@ -66,6 +66,7 @@ export async function createListingDraft(
       category: restOfData.category,
       subcategory: restOfData.subcategory,
       condition: restOfData.condition,
+      variants: restOfData.variants || [],
       imageUrl: '', // Intentionally blank for now
       reviews: [],
       seller: {

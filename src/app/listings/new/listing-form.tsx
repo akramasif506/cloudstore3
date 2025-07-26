@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2, Frown, Image as ImageIcon, CheckCircle, Sparkles } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,6 +36,8 @@ import { uploadImageAndGetUrl } from '@/lib/storage';
 import imageCompression from 'browser-image-compression';
 import { generateDescription } from '@/ai/flows/generate-description-flow';
 import type { CategoryMap } from '@/app/dashboard/manage-categories/actions';
+import type { VariantSetMap } from '@/app/dashboard/manage-variants/actions';
+import { Separator } from '@/components/ui/separator';
 
 const conditions = ['New', 'Like New', 'Used'];
 
@@ -53,9 +55,10 @@ const fileToDataUri = (file: File): Promise<string> => {
 
 interface ListingFormProps {
   categories: CategoryMap;
+  variantSets: VariantSetMap;
 }
 
-export function ListingForm({ categories }: ListingFormProps) {
+export function ListingForm({ categories, variantSets }: ListingFormProps) {
   const { toast } = useToast();
   const router = useRouter();
   const { user } = useAuth();
@@ -75,10 +78,25 @@ export function ListingForm({ categories }: ListingFormProps) {
       category: '',
       subcategory: '',
       condition: 'Used',
+      variants: [],
     },
+  });
+  
+  const { fields, replace } = useFieldArray({
+    control: form.control,
+    name: "variants",
   });
 
   const selectedCategory = form.watch('category');
+  
+  useEffect(() => {
+    const categoryData = categories[selectedCategory as keyof typeof categories];
+    const newVariantFields = categoryData?.variantAttributes?.map(attr => ({
+      name: attr.name,
+      value: '', // Default to empty
+    })) || [];
+    replace(newVariantFields);
+  }, [selectedCategory, categories, replace]);
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -333,6 +351,7 @@ export function ListingForm({ categories }: ListingFormProps) {
                   onValueChange={(value) => {
                     field.onChange(value);
                     form.setValue('subcategory', '');
+                    form.setValue('variants', []);
                   }}
                   defaultValue={field.value}
                   disabled={isSubmitting}
@@ -373,6 +392,48 @@ export function ListingForm({ categories }: ListingFormProps) {
             )}
           />
         </div>
+
+        {fields.length > 0 && (
+          <Card className="bg-muted/50">
+            <CardHeader><CardTitle>Product Options</CardTitle></CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {fields.map((field, index) => {
+                const attribute = categories[selectedCategory as keyof typeof categories]?.variantAttributes?.[index];
+                const variantSetId = attribute?.variantSetId;
+                const options = variantSetId ? variantSets[variantSetId]?.options : [];
+                return (
+                  <FormField
+                    key={field.id}
+                    control={form.control}
+                    name={`variants.${index}.value`}
+                    render={({ field: formField }) => (
+                      <FormItem>
+                        <FormLabel>{attribute?.name}</FormLabel>
+                        {options && options.length > 0 ? (
+                           <Select onValueChange={formField.onChange} defaultValue={formField.value} disabled={isSubmitting}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder={`Select ${attribute?.name}`} /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {options.map(option => (
+                                  <SelectItem key={option.value} value={option.value}>{option.value}</SelectItem>
+                                ))}
+                              </SelectContent>
+                           </Select>
+                        ) : (
+                          <FormControl>
+                            <Input placeholder={`Enter ${attribute?.name}`} {...formField} disabled={isSubmitting}/>
+                          </FormControl>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )
+              })}
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <FormField
