@@ -109,8 +109,18 @@ export function ListingForm({ categories, variantSets }: ListingFormProps) {
       return;
     }
 
+    // Add user details directly to the data being sent
+    const submissionValues = {
+      ...values,
+      seller: {
+        id: user.id,
+        name: user.name || 'Unknown Seller',
+        contactNumber: user.mobileNumber || ''
+      }
+    };
+
     setSubmissionStep('saving_draft');
-    const draftResult = await createListingDraft(values);
+    const draftResult = await createListingDraft(submissionValues);
 
     if (!draftResult.success || !draftResult.productId) {
       toast({ variant: "destructive", title: 'Failed to Save Draft', description: draftResult.message || "Could not save your listing details." });

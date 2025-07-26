@@ -1,8 +1,15 @@
+
 import { z } from 'zod';
 
 const variantSchema = z.object({
   name: z.string(),
   value: z.string(),
+});
+
+const sellerSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    contactNumber: z.string(),
 });
 
 export const listingSchema = z.object({
@@ -16,4 +23,5 @@ export const listingSchema = z.object({
     required_error: 'Please select the item condition.',
   }),
   variants: z.array(variantSchema).optional(),
+  seller: sellerSchema, // Add seller to the schema
 });

@@ -7,7 +7,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { revalidatePath } from 'next/cache';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { listingSchema } from '@/lib/schemas';
-import { getCurrentUser } from '@/lib/auth';
 import { ref, set, update } from 'firebase/database';
 
 
@@ -35,14 +34,9 @@ async function getNextProductId(db: any): Promise<string> {
 export async function createListingDraft(
   values: z.infer<typeof listingSchema>
 ): Promise<{ success: boolean; message: string; productId?: string; errors?: any }> {
-  const currentUser = await getCurrentUser();
-  if (!currentUser) {
-    return { success: false, message: 'Authorization failed. Please log in and try again.' };
-  }
-
-  const { db } = initializeAdmin();
+  
   const validatedFields = listingSchema.safeParse(values);
-
+  
   if (!validatedFields.success) {
     return {
       success: false,
@@ -50,11 +44,13 @@ export async function createListingDraft(
       errors: validatedFields.error.flatten().fieldErrors,
     };
   }
+  
+  const { db } = initializeAdmin();
 
   try {
     const productId = uuidv4();
     const displayId = await getNextProductId(db);
-    const { productName, productDescription, ...restOfData } = validatedFields.data;
+    const { productName, productDescription, seller, ...restOfData } = validatedFields.data;
 
     const newProductData = {
       id: productId,
@@ -69,10 +65,10 @@ export async function createListingDraft(
       variants: restOfData.variants || [],
       imageUrl: '', // Intentionally blank for now
       reviews: [],
-      seller: {
-        id: currentUser.id,
-        name: currentUser.name || 'Unknown User',
-        contactNumber: currentUser.mobileNumber || '',
+      seller: { // Use the seller data passed directly from the form
+        id: seller.id,
+        name: seller.name,
+        contactNumber: seller.contactNumber,
       },
       createdAt: new Date().toISOString(),
       status: 'pending_image' as const, // New status for draft
