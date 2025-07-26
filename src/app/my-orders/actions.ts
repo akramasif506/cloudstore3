@@ -8,6 +8,7 @@ import { cookies } from 'next/headers';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { revalidatePath } from 'next/cache';
+import { getCurrentUser } from '@/lib/auth';
 
 const returnSchema = z.object({
   orderId: z.string().min(1, 'Order ID is required.'),
@@ -41,22 +42,21 @@ export async function getMyOrdersReturnPolicy(): Promise<ReturnPolicy> {
 
 
 export async function getMyOrders(): Promise<Order[]> {
-  const session = cookies().get('session')?.value;
-  if (!session) {
+  const user = await getCurrentUser();
+  if (!user) {
     return []; // Not logged in
   }
 
-  let db, adminAuth;
+  let db;
   try {
-    ({ db, adminAuth } = initializeAdmin());
+    ({ db } = initializeAdmin());
   } catch (error) {
     console.error("Admin SDK init failed:", error);
     return [];
   }
   
   try {
-    const decodedClaims = await adminAuth.verifySessionCookie(session, true);
-    const userId = decodedClaims.uid;
+    const userId = user.id;
 
     // Fetch orders directly from the user's node.
     const userOrdersRef = db.ref(`orders/${userId}`);
@@ -84,8 +84,8 @@ export async function getMyOrders(): Promise<Order[]> {
 export async function requestReturn(
   values: z.infer<typeof returnSchema>
 ): Promise<{ success: boolean; message: string }> {
-    const session = cookies().get('session')?.value;
-    if (!session) {
+    const user = await getCurrentUser();
+    if (!user) {
         return { success: false, message: 'You must be logged in.' };
     }
 
@@ -95,11 +95,10 @@ export async function requestReturn(
     }
 
     const { orderId, reason } = validatedFields.data;
-    const { db, adminAuth } = initializeAdmin();
+    const { db } = initializeAdmin();
 
     try {
-        const decodedClaims = await adminAuth.verifySessionCookie(session, true);
-        const userId = decodedClaims.uid;
+        const userId = user.id;
         
         // 1. Fetch the original order to ensure it belongs to the user and to store a snapshot
         const orderRef = db.ref(`orders/${userId}/${orderId}`);
