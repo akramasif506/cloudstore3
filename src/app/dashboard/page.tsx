@@ -139,6 +139,7 @@ export default async function DashboardPage() {
                     title="Users" 
                     value={totalUsers} 
                     icon={Users}
+                    href="/dashboard/manage-users"
                     />
             </CardContent>
         </Card>
@@ -192,6 +193,12 @@ export default async function DashboardPage() {
                     value={"Set Terms"}
                     icon={Undo2}
                     href="/dashboard/manage-returns"
+                />
+                  <StatsCard 
+                    title="Manage Users"
+                    value={"View All"}
+                    icon={Users}
+                    href="/dashboard/manage-users"
                 />
             </CardContent>
         </Card>
