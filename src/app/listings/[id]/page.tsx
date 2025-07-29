@@ -16,15 +16,29 @@ import { getReturnPolicy } from '@/app/dashboard/manage-returns/actions';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { getProductForDisplay } from './actions';
+import { getCurrentUser } from '@/lib/auth';
 
 
 export default async function ListingDetailPage({ params }: { params: { id:string } }) {
   const productPromise = getProductForDisplay(params.id);
   const returnPolicyPromise = getReturnPolicy();
+  const userPromise = getCurrentUser();
 
-  const [product, returnPolicy] = await Promise.all([productPromise, returnPolicyPromise]);
+  const [product, returnPolicy, currentUser] = await Promise.all([productPromise, returnPolicyPromise, userPromise]);
 
-  if (!product || product.status !== 'active') {
+  if (!product) {
+    notFound();
+  }
+  
+  // Allow access if:
+  // 1. The product is active.
+  // 2. The viewer is an admin.
+  // 3. The viewer is the seller of the product.
+  const isOwner = currentUser?.id === product.seller?.id;
+  const isAdmin = currentUser?.role === 'admin';
+  const isActive = product.status === 'active';
+
+  if (!isActive && !isOwner && !isAdmin) {
     notFound();
   }
   
