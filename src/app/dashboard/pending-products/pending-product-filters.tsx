@@ -1,11 +1,12 @@
 // src/app/dashboard/pending-products/pending-product-filters.tsx
 "use client"
 
+import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon, X, Phone } from "lucide-react";
+import { Calendar as CalendarIcon, X, Phone, Filter } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
@@ -18,47 +19,45 @@ export function PendingProductFilters() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   
-  // Directly read from URL params to ensure component is always in sync
-  const fromDate = searchParams.get('from');
-  const toDate = searchParams.get('to');
-  const contactNumber = searchParams.get('contactNumber') || '';
-  
-  const date: DateRange | undefined = {
-    from: fromDate ? new Date(fromDate) : undefined,
-    to: toDate ? new Date(toDate) : undefined,
-  };
-  
-  const createQueryString = (params: Record<string, string | null>) => {
-    const newParams = new URLSearchParams(searchParams.toString());
-    for (const [key, value] of Object.entries(params)) {
-      if (value === null || value === '') {
-        newParams.delete(key);
-      } else {
-        newParams.set(key, value);
-      }
-    }
-    return newParams.toString();
-  };
-  
-  const handleFilterChange = (key: string, value: string | DateRange | undefined | null) => {
-    let newQueryString = '';
-    if (key === 'date') {
-        const dateRange = value as DateRange | undefined;
-        newQueryString = createQueryString({ 
-            from: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : null,
-            to: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : null
-        });
-    } else {
-        newQueryString = createQueryString({ [key]: value as string | null });
-    }
-    router.push(pathname + '?' + newQueryString);
+  // Use state to manage the form inputs before applying them
+  const [date, setDate] = useState<DateRange | undefined>(() => {
+    const from = searchParams.get('from');
+    const to = searchParams.get('to');
+    return { from: from ? new Date(from) : undefined, to: to ? new Date(to) : undefined };
+  });
+  const [contactNumber, setContactNumber] = useState(searchParams.get('contactNumber') || '');
+
+  // Effect to update the state if the URL changes (e.g. back button)
+  useEffect(() => {
+    const from = searchParams.get('from');
+    const to = searchParams.get('to');
+    setDate({ from: from ? new Date(from) : undefined, to: to ? new Date(to) : undefined });
+    setContactNumber(searchParams.get('contactNumber') || '');
+  }, [searchParams]);
+
+  const handleApplyFilters = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    
+    if (date?.from) params.set('from', format(date.from, 'yyyy-MM-dd'));
+    else params.delete('from');
+    
+    if (date?.to) params.set('to', format(date.to, 'yyyy-MM-dd'));
+    else params.delete('to');
+
+    if (contactNumber) params.set('contactNumber', contactNumber);
+    else params.delete('contactNumber');
+
+    router.push(`${pathname}?${params.toString()}`);
   };
 
   const handleResetFilters = () => {
+    // Clear state and navigate to the base page
+    setDate(undefined);
+    setContactNumber('');
     router.push(pathname);
   }
   
-  const hasActiveFilters = !!(fromDate || toDate || contactNumber);
+  const hasActiveFilters = searchParams.has('from') || searchParams.has('to') || searchParams.has('contactNumber');
 
   return (
     <Card className="bg-muted/50 mb-8">
@@ -71,7 +70,7 @@ export function PendingProductFilters() {
                     <Button
                         id="date"
                         variant={"outline"}
-                        className={cn("w-full justify-start text-left font-normal", !date?.from && "text-muted-foreground")}
+                        className={cn("w-full justify-start text-left font-normal", !date && "text-muted-foreground")}
                     >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {date?.from ? (
@@ -91,7 +90,7 @@ export function PendingProductFilters() {
                         mode="range"
                         defaultMonth={date?.from}
                         selected={date}
-                        onSelect={(newDate) => handleFilterChange('date', newDate)}
+                        onSelect={setDate}
                         numberOfMonths={2}
                     />
                 </PopoverContent>
@@ -105,20 +104,23 @@ export function PendingProductFilters() {
                     id="contact-search"
                     placeholder="Search by contact..."
                     className="pl-9"
-                    defaultValue={contactNumber}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                            handleFilterChange('contactNumber', e.currentTarget.value);
-                        }
-                    }}
+                    value={contactNumber}
+                    onChange={(e) => setContactNumber(e.target.value)}
                 />
             </div>
           </div>
-          {hasActiveFilters && (
-            <div className="flex gap-2">
-                <Button onClick={handleResetFilters} variant="ghost" className="w-full"><X className="mr-2 h-4 w-4"/>Reset All Filters</Button>
-            </div>
-          )}
+           <div className="flex gap-2">
+              <Button onClick={handleApplyFilters} className="w-full">
+                <Filter className="mr-2 h-4 w-4"/>
+                Apply Filters
+              </Button>
+              {hasActiveFilters && (
+                <Button onClick={handleResetFilters} variant="ghost" className="w-full">
+                    <X className="mr-2 h-4 w-4"/>
+                    Reset
+                </Button>
+              )}
+          </div>
         </div>
       </CardContent>
     </Card>
