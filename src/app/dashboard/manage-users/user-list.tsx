@@ -22,9 +22,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Loader2, Search, Shield, User as UserIcon } from 'lucide-react';
+import { MoreHorizontal, Loader2, Search, Shield, User as UserIcon, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { updateUserRole } from './actions';
+import { updateUserRole, getAllUsers } from './actions';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 
@@ -35,6 +35,7 @@ interface UserListProps {
 export function UserList({ initialUsers }: UserListProps) {
   const [users, setUsers] = useState(initialUsers);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -64,20 +65,43 @@ export function UserList({ initialUsers }: UserListProps) {
       router.push(`${pathname}?${params.toString()}`);
   }
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+        const currentQuery = searchParams.get('q');
+        const freshUsers = await getAllUsers(currentQuery || undefined);
+        setUsers(freshUsers);
+        toast({
+            title: "Users Refreshed",
+            description: "The user list has been updated."
+        });
+    } catch (error) {
+        toast({
+            variant: "destructive",
+            title: "Refresh Failed",
+            description: "Could not fetch the latest user data."
+        });
+    } finally {
+        setIsRefreshing(false);
+    }
+  }
+
   return (
     <div className="space-y-4">
-      <div className="w-full max-w-sm">
-        <form onSubmit={handleSearch}>
-            <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                    placeholder="Search by name, email, or contact..."
-                    className="pl-9"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
-            </div>
+      <div className="flex items-center gap-4">
+        <form onSubmit={handleSearch} className="relative flex-grow max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+                placeholder="Search by name, email, or contact..."
+                className="pl-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+            />
         </form>
+        <Button variant="outline" size="icon" onClick={handleRefresh} disabled={isRefreshing}>
+            {isRefreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            <span className="sr-only">Refresh Users</span>
+        </Button>
       </div>
       <div className="border rounded-lg">
         <Table>

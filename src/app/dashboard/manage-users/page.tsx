@@ -8,11 +8,9 @@ import { getAllUsers } from './actions';
 import { UserList } from './user-list';
 import { Suspense } from 'react';
 
-// Force this page to be dynamically rendered on every request
-// and prevent data from being cached.
+// Let's keep this dynamic to ensure fresh data on first load.
+// The refresh button will handle subsequent updates.
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 
 export default async function ManageUsersPage({
   searchParams
