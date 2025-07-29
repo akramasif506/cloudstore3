@@ -143,13 +143,6 @@ export async function placeOrder(values: {
     const globalOrderRef = db.ref(`all_orders/${internalId}`);
     await globalOrderRef.set(orderData);
 
-    // After successfully creating the order, mark items as 'sold'
-    const productUpdates: { [key: string]: any } = {};
-    items.forEach(item => {
-      productUpdates[`/products/${item.id}/status`] = 'sold';
-    });
-    await db.ref().update(productUpdates);
-
     return { success: true, orderId: internalId };
   } catch (error) {
     console.error('Error saving order to Firebase:', error);
