@@ -8,7 +8,13 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { updateProductSchema } from '@/lib/schemas/product';
 
-export async function getPendingProducts(): Promise<Product[]> {
+interface PendingProductFilters {
+    from?: string;
+    to?: string;
+}
+
+
+export async function getPendingProducts(filters?: PendingProductFilters): Promise<Product[]> {
   try {
     const { db } = initializeAdmin();
     const productsRef = ref(db, 'products');
@@ -23,9 +29,26 @@ export async function getPendingProducts(): Promise<Product[]> {
       }));
     }
     
-    return allProducts
-        .filter(p => p.status === 'pending_review')
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    let pendingProducts = allProducts.filter(p => p.status === 'pending_review');
+
+    if (filters) {
+        const { from, to } = filters;
+        
+        pendingProducts = pendingProducts.filter(product => {
+            const createdAt = new Date(product.createdAt);
+            const fromDate = from ? new Date(from) : null;
+            const toDate = to ? new Date(to) : null;
+
+            if (fromDate) fromDate.setHours(0, 0, 0, 0);
+            if (toDate) toDate.setHours(23, 59, 59, 999);
+
+            const dateMatch = (!fromDate || createdAt >= fromDate) && (!toDate || createdAt <= toDate);
+
+            return dateMatch;
+        });
+    }
+
+    return pendingProducts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   } catch (error) {
     console.error("Error fetching pending products from Firebase:", error);
