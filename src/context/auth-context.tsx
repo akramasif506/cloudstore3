@@ -16,6 +16,16 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Helper to clear cart data from localStorage
+function clearCartData() {
+    try {
+        localStorage.removeItem('cartItems');
+        localStorage.removeItem('cartSelections');
+    } catch (error) {
+        console.error("Could not clear cart data from localStorage", error);
+    }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [user, setUser] = useState<AppUser | null>(null);
@@ -24,24 +34,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let dbUnsubscribe: Unsubscribe | undefined;
 
-    const authUnsubscribe = onAuthStateChanged(auth, (fbUser) => {
-      setFirebaseUser(fbUser);
+    const authUnsubscribe = onAuthStateChanged(auth, (newFirebaseUser) => {
+      // Check if the user has changed (login/logout)
+      if (newFirebaseUser?.uid !== firebaseUser?.uid) {
+        clearCartData();
+      }
+      
+      setFirebaseUser(newFirebaseUser);
       
       // If the user logs out, clear profile and stop listening
       if (dbUnsubscribe) {
         dbUnsubscribe();
       }
 
-      if (fbUser) {
+      if (newFirebaseUser) {
         // User is logged in, fetch their profile
         if (db) {
-          const userProfileRef = ref(db, `users/${fbUser.uid}`);
+          const userProfileRef = ref(db, `users/${newFirebaseUser.uid}`);
           dbUnsubscribe = onValue(
             userProfileRef,
             (snapshot) => {
               const userProfile = snapshot.val();
               if (userProfile) {
-                setUser({ id: fbUser.uid, ...userProfile });
+                setUser({ id: newFirebaseUser.uid, ...userProfile });
               } else {
                 // Handle case where user exists in Auth but not DB
                 setUser(null); 
@@ -73,13 +88,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         dbUnsubscribe();
       }
     };
-  }, []);
+  }, [firebaseUser?.uid]); // Add firebaseUser.uid to dependency array to correctly detect changes
 
 
   const logout = async () => {
     if (auth) {
       await auth.signOut();
       await fetch('/api/auth/logout', { method: 'POST' });
+      // The onAuthStateChanged listener will handle clearing cart data.
       // Full page refresh after logout to ensure all server state is cleared
       window.location.href = '/login';
     }
