@@ -30,15 +30,15 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
     notFound();
   }
   
-  // Allow access if:
-  // 1. The product is active.
-  // 2. The viewer is an admin.
-  // 3. The viewer is the seller of the product.
+  // Refined access control logic:
+  // Allow access if the product is active, or if the viewer is the owner or an admin.
   const isOwner = currentUser?.id === product.seller?.id;
   const isAdmin = currentUser?.role === 'admin';
   const isActive = product.status === 'active';
 
-  if (!isActive && !isOwner && !isAdmin) {
+  const canView = isActive || isOwner || isAdmin;
+
+  if (!canView) {
     notFound();
   }
   
