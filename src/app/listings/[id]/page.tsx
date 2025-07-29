@@ -4,9 +4,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Star, Tag, User, Building, ShieldCheck, Phone, Undo2 } from 'lucide-react';
+import { Star, Tag, User, Building, ShieldCheck, Phone, Undo2, ArrowLeft, FilePlus2 } from 'lucide-react';
 import { CustomerFeedback } from '@/components/products/customer-feedback';
 import type { Product } from '@/lib/types';
 import { AddToCartButtons } from './add-to-cart-buttons';
@@ -139,6 +139,20 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
                             </div>
                         )}
                     </CardContent>
+                    <CardFooter className="flex-col items-stretch gap-2">
+                        <Button asChild variant="outline">
+                            <Link href="/my-listings">
+                                <ArrowLeft className="mr-2 h-4 w-4" />
+                                Back to My Listings
+                            </Link>
+                        </Button>
+                        <Button asChild>
+                            <Link href="/listings/new">
+                                <FilePlus2 className="mr-2 h-4 w-4" />
+                                Submit Another Item
+                            </Link>
+                        </Button>
+                    </CardFooter>
                 </Card>
             )}
         </div>
