@@ -5,7 +5,7 @@
 import { z } from 'zod';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
-import type { CartItem, FeeConfig } from '@/context/cart-context';
+import type { CartItem, FeeConfig, Product } from '@/context/cart-context';
 import { ServerValue } from 'firebase-admin/database';
 
 const placeOrderSchema = z.object({
@@ -73,6 +73,30 @@ export async function placeOrder(values: {
 
   const { userId, customerName, items, shippingAddress, contactNumber } = validatedFields.data;
 
+  // --- Server-side validation for item availability ---
+  try {
+    const itemIds = items.map(item => item.id);
+    const productRefs = itemIds.map(id => db.ref(`products/${id}`));
+    const productSnapshots = await Promise.all(productRefs.map(ref => ref.once('value')));
+    
+    const unavailableItems: string[] = [];
+    productSnapshots.forEach((snapshot, index) => {
+      const product = snapshot.val() as Product;
+      if (!product || product.status !== 'active') {
+        unavailableItems.push(items[index].name);
+      }
+    });
+
+    if (unavailableItems.length > 0) {
+      const message = `Some items are no longer available: ${unavailableItems.join(', ')}. Please remove them from your cart.`;
+      return { success: false, message: message };
+    }
+  } catch (error) {
+    console.error('Error validating product status:', error);
+    return { success: false, message: 'Could not verify items in your cart. Please try again.' };
+  }
+  // ---
+
   // --- Recalculate total on the server ---
   const feeConfig = await getFeeConfigServer();
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -118,6 +142,13 @@ export async function placeOrder(values: {
     // Also store a copy for direct lookup by admins or for the order detail page
     const globalOrderRef = db.ref(`all_orders/${internalId}`);
     await globalOrderRef.set(orderData);
+
+    // After successfully creating the order, mark items as 'sold'
+    const productUpdates: { [key: string]: any } = {};
+    items.forEach(item => {
+      productUpdates[`/products/${item.id}/status`] = 'sold';
+    });
+    await db.ref().update(productUpdates);
 
     return { success: true, orderId: internalId };
   } catch (error) {

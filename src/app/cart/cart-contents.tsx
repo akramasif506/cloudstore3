@@ -17,10 +17,25 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
-
+import { Checkbox } from '@/components/ui/checkbox';
 
 export function CartContents() {
-  const { items, removeFromCart, updateQuantity, subtotal, clearCart, platformFee, handlingFee, total } = useCart();
+  const { 
+    items, 
+    removeFromCart, 
+    updateQuantity, 
+    clearCart,
+    subtotal, 
+    platformFee, 
+    handlingFee, 
+    total,
+    selectedItems,
+    toggleItemSelection,
+    toggleSelectAll,
+    removeSelectedFromCart,
+    isAllSelected,
+  } = useCart();
+  
   const { user } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
@@ -28,6 +43,9 @@ export function CartContents() {
   const [shippingAddress, setShippingAddress] = useState('');
   const [contactNumber, setContactNumber] = useState('');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  
+  const itemsToOrder = items.filter(item => selectedItems.has(item.id));
+  const hasSelection = itemsToOrder.length > 0;
 
   useEffect(() => {
     if (user) {
@@ -36,14 +54,14 @@ export function CartContents() {
     }
   }, [user]);
 
-  const isOrderReady = shippingAddress.trim().length >= 10 && contactNumber.trim().length >= 10 && user;
+  const isOrderReady = hasSelection && shippingAddress.trim().length >= 10 && contactNumber.trim().length >= 10 && user;
 
   const handlePlaceOrder = async () => {
     if (!isOrderReady || !user) {
         toast({
             variant: "destructive",
             title: "Cannot place order",
-            description: "Please log in and fill in all shipping information.",
+            description: "Please log in, select at least one item, and fill in all shipping information.",
         });
         return;
     }
@@ -53,7 +71,7 @@ export function CartContents() {
     const result = await placeOrder({
         userId: user.id,
         customerName: user.name || 'Valued Customer',
-        items,
+        items: itemsToOrder,
         shippingAddress: shippingAddress,
         contactNumber,
     });
@@ -64,7 +82,7 @@ export function CartContents() {
             title: "Order Placed Successfully!",
             description: "Your order is now being processed.",
         });
-        clearCart();
+        removeSelectedFromCart();
         router.push(`/my-orders/${result.orderId}`);
     } else {
         toast({
@@ -99,13 +117,27 @@ export function CartContents() {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
       <div className="lg:col-span-2 space-y-8">
         <Card>
-          <CardHeader>
-            <CardTitle>Cart Items ({items.reduce((sum, item) => sum + item.quantity, 0)})</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Checkbox 
+                id="select-all" 
+                checked={isAllSelected} 
+                onCheckedChange={toggleSelectAll} 
+              />
+              <Label htmlFor="select-all" className="text-lg cursor-pointer">
+                Cart Items ({items.reduce((sum, item) => sum + item.quantity, 0)})
+              </Label>
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y">
               {items.map((item) => (
-                <div key={item.id} className="flex items-center gap-4 p-4">
+                <div key={item.id} className="flex items-start gap-4 p-4">
+                  <Checkbox 
+                    className="mt-8 flex-shrink-0"
+                    checked={selectedItems.has(item.id)}
+                    onCheckedChange={() => toggleItemSelection(item.id)}
+                  />
                   <div className="relative h-24 w-24 rounded-md overflow-hidden flex-shrink-0">
                     <Image
                       src={item.imageUrl}
@@ -189,7 +221,7 @@ export function CartContents() {
         
         <Card>
           <CardHeader>
-            <CardTitle>Order Summary</CardTitle>
+            <CardTitle>Order Summary ({itemsToOrder.length} item{itemsToOrder.length !== 1 ? 's' : ''})</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="flex justify-between text-sm">

@@ -2,12 +2,16 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import type { Product } from '@/lib/types';
+import type { Product as BaseProduct } from '@/lib/types';
 import { getFeeConfig } from '@/app/dashboard/manage-fees/actions';
 
-export interface CartItem extends Product {
+// The CartItem extends the base Product type
+export interface CartItem extends BaseProduct {
   quantity: number;
 }
+
+// The Product type in this context is the same as the base Product
+export type Product = BaseProduct;
 
 export interface FeeConfig {
     platformFeePercent: number;
@@ -25,6 +29,11 @@ interface CartContextType {
   handlingFee: number;
   total: number;
   feeConfig: FeeConfig | null;
+  selectedItems: Set<string>;
+  toggleItemSelection: (productId: string) => void;
+  toggleSelectAll: () => void;
+  removeSelectedFromCart: () => void;
+  isAllSelected: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -32,16 +41,21 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [feeConfig, setFeeConfig] = useState<FeeConfig | null>(null);
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
-  // Load cart from localStorage on initial render
+  // Load cart and selections from localStorage on initial render
   useEffect(() => {
     try {
       const savedItems = localStorage.getItem('cartItems');
+      const savedSelections = localStorage.getItem('cartSelections');
       if (savedItems) {
         setItems(JSON.parse(savedItems));
       }
+      if (savedSelections) {
+        setSelectedItems(new Set(JSON.parse(savedSelections)));
+      }
     } catch (error) {
-      console.error("Failed to parse cart items from localStorage", error);
+      console.error("Failed to parse cart data from localStorage", error);
     }
 
     // Fetch fee configuration
@@ -50,27 +64,36 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  // Save cart to localStorage whenever it changes
+  // Save cart and selections to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('cartItems', JSON.stringify(items));
   }, [items]);
+
+  useEffect(() => {
+    localStorage.setItem('cartSelections', JSON.stringify(Array.from(selectedItems)));
+  }, [selectedItems]);
 
   const addToCart = (product: Product, quantity: number = 1) => {
     setItems((prevItems) => {
       const existingItem = prevItems.find((item) => item.id === product.id);
       if (existingItem) {
-        // Increment quantity if item already exists
         return prevItems.map((item) =>
           item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item
         );
       }
-      // Add new item to cart
       return [...prevItems, { ...product, quantity }];
     });
+    // Automatically select the newly added item
+    setSelectedItems(prev => new Set(prev).add(product.id));
   };
 
   const removeFromCart = (productId: string) => {
     setItems((prevItems) => prevItems.filter((item) => item.id !== productId));
+    setSelectedItems(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(productId);
+      return newSet;
+    });
   };
 
   const updateQuantity = (productId: string, quantity: number) => {
@@ -87,11 +110,40 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = () => {
     setItems([]);
+    setSelectedItems(new Set());
   };
 
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const removeSelectedFromCart = () => {
+    setItems(prev => prev.filter(item => !selectedItems.has(item.id)));
+    setSelectedItems(new Set());
+  }
+
+  const toggleItemSelection = (productId: string) => {
+    setSelectedItems(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(productId)) {
+            newSet.delete(productId);
+        } else {
+            newSet.add(productId);
+        }
+        return newSet;
+    });
+  };
+
+  const isAllSelected = items.length > 0 && selectedItems.size === items.length;
+
+  const toggleSelectAll = () => {
+    if (isAllSelected) {
+        setSelectedItems(new Set());
+    } else {
+        setSelectedItems(new Set(items.map(item => item.id)));
+    }
+  }
+
+  const selectedItemsDetails = items.filter(item => selectedItems.has(item.id));
+  const subtotal = selectedItemsDetails.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const platformFee = feeConfig ? subtotal * (feeConfig.platformFeePercent / 100) : 0;
-  const handlingFee = feeConfig ? feeConfig.handlingFeeFixed : 0;
+  const handlingFee = feeConfig && subtotal > 0 ? feeConfig.handlingFeeFixed : 0;
   const total = subtotal + platformFee + handlingFee;
 
   const value = {
@@ -105,6 +157,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     handlingFee,
     total,
     feeConfig,
+    selectedItems,
+    toggleItemSelection,
+    toggleSelectAll,
+    removeSelectedFromCart,
+    isAllSelected,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
