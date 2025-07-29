@@ -15,6 +15,7 @@ export default async function PendingProductsPage({
   searchParams?: {
     from?: string;
     to?: string;
+    contactNumber?: string;
   };
 }) {
   const pendingProducts = await getPendingProducts(searchParams);

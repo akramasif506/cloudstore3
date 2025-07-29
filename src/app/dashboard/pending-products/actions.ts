@@ -11,6 +11,7 @@ import { updateProductSchema } from '@/lib/schemas/product';
 interface PendingProductFilters {
     from?: string;
     to?: string;
+    contactNumber?: string;
 }
 
 
@@ -32,7 +33,7 @@ export async function getPendingProducts(filters?: PendingProductFilters): Promi
     let pendingProducts = allProducts.filter(p => p.status === 'pending_review');
 
     if (filters) {
-        const { from, to } = filters;
+        const { from, to, contactNumber } = filters;
         
         pendingProducts = pendingProducts.filter(product => {
             const createdAt = new Date(product.createdAt);
@@ -43,8 +44,10 @@ export async function getPendingProducts(filters?: PendingProductFilters): Promi
             if (toDate) toDate.setHours(23, 59, 59, 999);
 
             const dateMatch = (!fromDate || createdAt >= fromDate) && (!toDate || createdAt <= toDate);
+            
+            const contactMatch = contactNumber ? product.seller?.contactNumber?.includes(contactNumber) : true;
 
-            return dateMatch;
+            return dateMatch && contactMatch;
         });
     }
 
