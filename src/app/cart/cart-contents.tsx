@@ -11,12 +11,27 @@ import { Separator } from '@/components/ui/separator';
 import { Trash2, Frown, Home, Phone, Loader2, LogIn, Percent, Package } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { useState, useEffect } from 'react';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { placeOrder } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+
+// Helper to parse the full address string into parts
+const parseAddress = (fullAddress: string) => {
+    const parts = fullAddress.split(',').map(part => part.trim());
+    const state = parts.find(p => p.toLowerCase() === 'assam') || 'Assam';
+    const city = parts.find(p => p.toLowerCase().includes('city:'))?.replace('City:', '').trim() || parts[1] || '';
+    const district = parts.find(p => p.toLowerCase().includes('dist:'))?.replace('Dist:', '').trim() || parts[2] || '';
+    const addressLine1 = parts[0] || '';
+    
+    // A more robust parsing for pre-filled data
+    if (fullAddress && !fullAddress.includes(',')) {
+      return { addressLine1: fullAddress, city: '', district: '', state: 'Assam' };
+    }
+
+    return { addressLine1, city, district, state };
+};
 
 export function CartContents() {
   const { items, removeFromCart, updateQuantity, subtotal, clearCart, platformFee, handlingFee, total } = useCart();
@@ -24,18 +39,27 @@ export function CartContents() {
   const { toast } = useToast();
   const router = useRouter();
 
-  const [address, setAddress] = useState('');
+  const [addressLine1, setAddressLine1] = useState('');
+  const [city, setCity] = useState('');
+  const [district, setDistrict] = useState('');
+  const [state, setState] = useState('Assam');
   const [contactNumber, setContactNumber] = useState('');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   useEffect(() => {
     if (user) {
-      setAddress(user.address || '');
+      if (user.address) {
+          const { addressLine1, city, district, state } = parseAddress(user.address);
+          setAddressLine1(addressLine1);
+          setCity(city);
+          setDistrict(district);
+          setState(state);
+      }
       setContactNumber(user.mobileNumber || '');
     }
   }, [user]);
 
-  const isOrderReady = address.trim() !== '' && contactNumber.trim() !== '' && user;
+  const isOrderReady = addressLine1.trim() !== '' && city.trim() !== '' && district.trim() !== '' && contactNumber.trim() !== '' && user;
 
   const handlePlaceOrder = async () => {
     if (!isOrderReady || !user) {
@@ -48,11 +72,14 @@ export function CartContents() {
     }
 
     setIsPlacingOrder(true);
+    // Combine address fields into a single string
+    const fullShippingAddress = `${addressLine1}, City: ${city}, Dist: ${district}, ${state}, India`;
+    
     const result = await placeOrder({
         userId: user.id,
         customerName: user.name || 'Valued Customer',
         items,
-        shippingAddress: address,
+        shippingAddress: fullShippingAddress,
         contactNumber,
     });
     setIsPlacingOrder(false);
@@ -164,14 +191,27 @@ export function CartContents() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="shipping-address">Shipping Address</Label>
-              <Textarea 
-                id="shipping-address"
-                placeholder="Enter your full shipping address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                rows={4}
+              <Label htmlFor="addressLine1">Address Line 1</Label>
+              <Input
+                id="addressLine1"
+                placeholder="Street address, P.O. box, company name"
+                value={addressLine1}
+                onChange={(e) => setAddressLine1(e.target.value)}
               />
+            </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="city">City</Label>
+                    <Input id="city" placeholder="e.g. Guwahati" value={city} onChange={(e) => setCity(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="district">District</Label>
+                    <Input id="district" placeholder="e.g. Kamrup" value={district} onChange={(e) => setDistrict(e.target.value)} />
+                </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="state">State</Label>
+              <Input id="state" value={state} readOnly disabled />
             </div>
              <div className="space-y-2">
               <Label htmlFor="contact-number">Contact Number</Label>

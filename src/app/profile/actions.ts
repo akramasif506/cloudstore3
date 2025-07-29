@@ -8,7 +8,6 @@ import { revalidatePath } from 'next/cache';
 const updateProfileSchema = z.object({
   userId: z.string().min(1, 'User ID is required.'),
   name: z.string().min(3, 'Name must be at least 3 characters.'),
-  // Email and gender are not editable, but need to be in the schema for validation
   email: z.string().email(),
   gender: z.enum(['male', 'female', 'other']),
   mobileNumber: z.string().regex(/^\d{10}$/, 'Please enter a valid 10-digit mobile number.'),
@@ -36,8 +35,12 @@ export async function updateUserProfile(values: z.infer<typeof updateProfileSche
 
   try {
     const userRef = db.ref(`users/${userId}`);
-    // We only update the fields that can be changed, ignoring email and gender
-    await userRef.update(profileData);
+    // We only update the fields that can be changed
+    await userRef.update({
+        name: profileData.name,
+        mobileNumber: profileData.mobileNumber,
+        address: profileData.address,
+    });
 
     // Revalidate the profile page to ensure the data is fresh.
     revalidatePath('/profile');

@@ -32,7 +32,10 @@ const registerSchema = z.object({
   gender: z.enum(['male', 'female', 'other'], {
     required_error: "Please select your gender."
   }),
-  address: z.string().optional(),
+  addressLine1: z.string().optional(),
+  city: z.string().optional(),
+  district: z.string().optional(),
+  state: z.string().default('Assam'),
 });
 
 export function RegisterForm() {
@@ -47,7 +50,10 @@ export function RegisterForm() {
       email: '',
       password: '',
       mobileNumber: '',
-      address: '',
+      addressLine1: '',
+      city: '',
+      district: '',
+      state: 'Assam',
     },
   });
 
@@ -55,8 +61,21 @@ export function RegisterForm() {
     setIsLoading(true);
 
     try {
-      // 1. Call the unified server action to create user in Auth and DB
-      const result = await registerUser(values);
+      // Combine address fields into a single string for the server action
+      const fullAddress = (values.addressLine1 || values.city || values.district) 
+        ? `${values.addressLine1}, City: ${values.city}, Dist: ${values.district}, ${values.state}, India` 
+        : '';
+        
+      const registrationPayload = {
+          name: values.name,
+          email: values.email,
+          password: values.password,
+          mobileNumber: values.mobileNumber,
+          gender: values.gender,
+          address: fullAddress,
+      };
+      
+      const result = await registerUser(registrationPayload);
 
       if (!result.success) {
         throw new Error(result.error || 'Failed to register user.');
@@ -197,19 +216,63 @@ export function RegisterForm() {
           )}
         />
         
-        <FormField
-          control={form.control}
-          name="address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Shipping Address (Optional)</FormLabel>
-              <FormControl>
-                <Textarea placeholder="Enter your full shipping address" {...field} disabled={isLoading} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+         <div className="space-y-4 rounded-md border p-4">
+            <h3 className="text-base font-medium">Shipping Address (Optional)</h3>
+            <FormField
+                control={form.control}
+                name="addressLine1"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Address Line 1</FormLabel>
+                    <FormControl>
+                        <Input placeholder="Street address, P.O. box, etc." {...field} disabled={isLoading} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                    control={form.control}
+                    name="city"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>City</FormLabel>
+                        <FormControl>
+                            <Input placeholder="e.g. Guwahati" {...field} disabled={isLoading} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="district"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>District</FormLabel>
+                        <FormControl>
+                            <Input placeholder="e.g. Kamrup" {...field} disabled={isLoading} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
+             <FormField
+                control={form.control}
+                name="state"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>State</FormLabel>
+                    <FormControl>
+                        <Input {...field} readOnly disabled />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
+        </div>
 
         <Button type="submit" className="w-full" disabled={isLoading}>
            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Create Account'}
