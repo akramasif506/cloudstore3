@@ -18,21 +18,27 @@ import { useRouter } from 'next/navigation';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 // Helper to parse the full address string into parts
-const parseAddress = (fullAddress: string) => {
-    const parts = fullAddress.split(',').map(part => part.trim());
-    const addressLine1 = parts[0] || '';
-    const city = parts.find(p => p.startsWith('City:'))?.replace('City:', '').trim() || '';
-    const district = parts.find(p => p.startsWith('Dist:'))?.replace('Dist:', '').trim() || '';
-    const pinCode = parts.find(p => p.startsWith('PIN:'))?.replace('PIN:', '').trim() || '';
-    const state = parts.find(p => p.toLowerCase() === 'assam') || 'Assam';
-    
-    // A more robust parsing for pre-filled data
-    if (fullAddress && !fullAddress.includes(',')) {
-      return { addressLine1: fullAddress, city: '', district: '', pinCode: '', state: 'Assam' };
+const parseAddress = (fullAddress?: string) => {
+    if (!fullAddress) {
+        return { addressLine1: '', city: '', district: '', pinCode: '', state: 'Assam' };
     }
+
+    const parts = fullAddress.split(',').map(p => p.trim());
+    const addressLine1 = parts[0] || '';
+    
+    // Improved parsing for labeled parts
+    const cityPart = parts.find(p => p.toLowerCase().startsWith('city:'));
+    const distPart = parts.find(p => p.toLowerCase().startsWith('dist:'));
+    const pinPart = parts.find(p => p.toLowerCase().startsWith('pin:'));
+
+    const city = cityPart ? cityPart.substring(5).trim() : '';
+    const district = distPart ? distPart.substring(5).trim() : '';
+    const pinCode = pinPart ? pinPart.substring(4).trim() : '';
+    const state = parts.find(p => p.toLowerCase() === 'assam') || 'Assam';
 
     return { addressLine1, city, district, pinCode, state };
 };
+
 
 export function CartContents() {
   const { items, removeFromCart, updateQuantity, subtotal, clearCart, platformFee, handlingFee, total } = useCart();
