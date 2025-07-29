@@ -20,17 +20,18 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 // Helper to parse the full address string into parts
 const parseAddress = (fullAddress: string) => {
     const parts = fullAddress.split(',').map(part => part.trim());
-    const state = parts.find(p => p.toLowerCase() === 'assam') || 'Assam';
-    const city = parts.find(p => p.toLowerCase().includes('city:'))?.replace('City:', '').trim() || parts[1] || '';
-    const district = parts.find(p => p.toLowerCase().includes('dist:'))?.replace('Dist:', '').trim() || parts[2] || '';
     const addressLine1 = parts[0] || '';
+    const city = parts.find(p => p.startsWith('City:'))?.replace('City:', '').trim() || '';
+    const district = parts.find(p => p.startsWith('Dist:'))?.replace('Dist:', '').trim() || '';
+    const pinCode = parts.find(p => p.startsWith('PIN:'))?.replace('PIN:', '').trim() || '';
+    const state = parts.find(p => p.toLowerCase() === 'assam') || 'Assam';
     
     // A more robust parsing for pre-filled data
     if (fullAddress && !fullAddress.includes(',')) {
-      return { addressLine1: fullAddress, city: '', district: '', state: 'Assam' };
+      return { addressLine1: fullAddress, city: '', district: '', pinCode: '', state: 'Assam' };
     }
 
-    return { addressLine1, city, district, state };
+    return { addressLine1, city, district, pinCode, state };
 };
 
 export function CartContents() {
@@ -42,6 +43,7 @@ export function CartContents() {
   const [addressLine1, setAddressLine1] = useState('');
   const [city, setCity] = useState('');
   const [district, setDistrict] = useState('');
+  const [pinCode, setPinCode] = useState('');
   const [state, setState] = useState('Assam');
   const [contactNumber, setContactNumber] = useState('');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
@@ -49,17 +51,18 @@ export function CartContents() {
   useEffect(() => {
     if (user) {
       if (user.address) {
-          const { addressLine1, city, district, state } = parseAddress(user.address);
+          const { addressLine1, city, district, pinCode, state } = parseAddress(user.address);
           setAddressLine1(addressLine1);
           setCity(city);
           setDistrict(district);
+          setPinCode(pinCode);
           setState(state);
       }
       setContactNumber(user.mobileNumber || '');
     }
   }, [user]);
 
-  const isOrderReady = addressLine1.trim() !== '' && city.trim() !== '' && district.trim() !== '' && contactNumber.trim() !== '' && user;
+  const isOrderReady = addressLine1.trim() !== '' && city.trim() !== '' && district.trim() !== '' && pinCode.trim() !== '' && contactNumber.trim() !== '' && user;
 
   const handlePlaceOrder = async () => {
     if (!isOrderReady || !user) {
@@ -73,7 +76,7 @@ export function CartContents() {
 
     setIsPlacingOrder(true);
     // Combine address fields into a single string
-    const fullShippingAddress = `${addressLine1}, City: ${city}, Dist: ${district}, ${state}, India`;
+    const fullShippingAddress = `${addressLine1}, City: ${city}, Dist: ${district}, PIN: ${pinCode}, ${state}, India`;
     
     const result = await placeOrder({
         userId: user.id,
@@ -209,10 +212,16 @@ export function CartContents() {
                     <Input id="district" placeholder="e.g. Kamrup" value={district} onChange={(e) => setDistrict(e.target.value)} />
                 </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="state">State</Label>
-              <Input id="state" value={state} readOnly disabled />
-            </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="pinCode">PIN Code</Label>
+                    <Input id="pinCode" placeholder="e.g. 781001" value={pinCode} onChange={(e) => setPinCode(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="state">State</Label>
+                    <Input id="state" value={state} readOnly disabled />
+                </div>
+             </div>
              <div className="space-y-2">
               <Label htmlFor="contact-number">Contact Number</Label>
               <Input 

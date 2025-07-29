@@ -33,20 +33,22 @@ const profileSchema = z.object({
   addressLine1: z.string().optional(),
   city: z.string().optional(),
   district: z.string().optional(),
+  pinCode: z.string().regex(/^\d{6}$/, "Please enter a valid 6-digit PIN code.").optional().or(z.literal('')),
   state: z.string().default('Assam'),
 });
 
 // Helper to parse the full address string into parts
 const parseAddress = (fullAddress?: string) => {
     if (!fullAddress) {
-        return { addressLine1: '', city: '', district: '', state: 'Assam' };
+        return { addressLine1: '', city: '', district: '', pinCode: '', state: 'Assam' };
     }
     const parts = fullAddress.split(',').map(part => part.trim());
     const addressLine1 = parts[0] || '';
     const city = parts.find(p => p.startsWith('City:'))?.replace('City:', '').trim() || '';
     const district = parts.find(p => p.startsWith('Dist:'))?.replace('Dist:', '').trim() || '';
+    const pinCode = parts.find(p => p.startsWith('PIN:'))?.replace('PIN:', '').trim() || '';
     const state = parts.find(p => p.toLowerCase() === 'assam') || 'Assam';
-    return { addressLine1, city, district, state };
+    return { addressLine1, city, district, pinCode, state };
 };
 
 export function ProfileForm() {
@@ -65,13 +67,14 @@ export function ProfileForm() {
       addressLine1: '',
       city: '',
       district: '',
+      pinCode: '',
       state: 'Assam',
     },
   });
 
   React.useEffect(() => {
     if (user) {
-        const { addressLine1, city, district, state } = parseAddress(user.address);
+        const { addressLine1, city, district, pinCode, state } = parseAddress(user.address);
         form.reset({
             name: user.name || '',
             email: user.email || '',
@@ -80,6 +83,7 @@ export function ProfileForm() {
             addressLine1: addressLine1,
             city: city,
             district: district,
+            pinCode: pinCode,
             state: state,
         });
     }
@@ -89,8 +93,8 @@ export function ProfileForm() {
     if (!user) return;
     setIsSubmitting(true);
     
-    const fullAddress = (values.addressLine1 || values.city || values.district) 
-        ? `${values.addressLine1}, City: ${values.city}, Dist: ${values.district}, ${values.state}, India` 
+    const fullAddress = (values.addressLine1 || values.city || values.district || values.pinCode) 
+        ? `${values.addressLine1}, City: ${values.city}, Dist: ${values.district}, PIN: ${values.pinCode}, ${values.state}, India` 
         : '';
 
     const result = await updateUserProfile({
@@ -279,19 +283,34 @@ export function ProfileForm() {
                     )}
                 />
             </div>
-             <FormField
-                control={form.control}
-                name="state"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>State</FormLabel>
-                    <FormControl>
-                        <Input {...field} readOnly disabled />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-            />
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <FormField
+                    control={form.control}
+                    name="pinCode"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>PIN Code</FormLabel>
+                        <FormControl>
+                            <Input placeholder="e.g. 781001" {...field} disabled={isSubmitting} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                 <FormField
+                    control={form.control}
+                    name="state"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>State</FormLabel>
+                        <FormControl>
+                            <Input {...field} readOnly disabled />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
              <FormDescription>This will be pre-filled during checkout.</FormDescription>
         </div>
 

@@ -35,6 +35,7 @@ const registerSchema = z.object({
   addressLine1: z.string().optional(),
   city: z.string().optional(),
   district: z.string().optional(),
+  pinCode: z.string().regex(/^\d{6}$/, "Please enter a valid 6-digit PIN code.").optional().or(z.literal('')),
   state: z.string().default('Assam'),
 });
 
@@ -53,6 +54,7 @@ export function RegisterForm() {
       addressLine1: '',
       city: '',
       district: '',
+      pinCode: '',
       state: 'Assam',
     },
   });
@@ -62,8 +64,8 @@ export function RegisterForm() {
 
     try {
       // Combine address fields into a single string for the server action
-      const fullAddress = (values.addressLine1 || values.city || values.district) 
-        ? `${values.addressLine1}, City: ${values.city}, Dist: ${values.district}, ${values.state}, India` 
+      const fullAddress = (values.addressLine1 || values.city || values.district || values.pinCode) 
+        ? `${values.addressLine1}, City: ${values.city}, Dist: ${values.district}, PIN: ${values.pinCode}, ${values.state}, India` 
         : '';
         
       const registrationPayload = {
@@ -259,19 +261,34 @@ export function RegisterForm() {
                     )}
                 />
             </div>
-             <FormField
-                control={form.control}
-                name="state"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>State</FormLabel>
-                    <FormControl>
-                        <Input {...field} readOnly disabled />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-            />
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                    control={form.control}
+                    name="pinCode"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>PIN Code</FormLabel>
+                        <FormControl>
+                            <Input placeholder="e.g. 781001" {...field} disabled={isLoading} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="state"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>State</FormLabel>
+                        <FormControl>
+                            <Input {...field} readOnly disabled />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
         </div>
 
         <Button type="submit" className="w-full" disabled={isLoading}>
