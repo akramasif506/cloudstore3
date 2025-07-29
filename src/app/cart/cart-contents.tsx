@@ -16,28 +16,7 @@ import { placeOrder } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-
-// Helper to parse the full address string into parts
-const parseAddress = (fullAddress?: string) => {
-    if (!fullAddress) {
-        return { addressLine1: '', city: '', district: '', pinCode: '', state: 'Assam' };
-    }
-
-    const parts = fullAddress.split(',').map(p => p.trim());
-    const addressLine1 = parts[0] || '';
-    
-    // Improved parsing for labeled parts
-    const cityPart = parts.find(p => p.toLowerCase().startsWith('city:'));
-    const distPart = parts.find(p => p.toLowerCase().startsWith('dist:'));
-    const pinPart = parts.find(p => p.toLowerCase().startsWith('pin:'));
-
-    const city = cityPart ? cityPart.substring(5).trim() : '';
-    const district = distPart ? distPart.substring(5).trim() : '';
-    const pinCode = pinPart ? pinPart.substring(4).trim() : '';
-    const state = parts.find(p => p.toLowerCase() === 'assam') || 'Assam';
-
-    return { addressLine1, city, district, pinCode, state };
-};
+import { Textarea } from '@/components/ui/textarea';
 
 
 export function CartContents() {
@@ -46,29 +25,18 @@ export function CartContents() {
   const { toast } = useToast();
   const router = useRouter();
 
-  const [addressLine1, setAddressLine1] = useState('');
-  const [city, setCity] = useState('');
-  const [district, setDistrict] = useState('');
-  const [pinCode, setPinCode] = useState('');
-  const [state, setState] = useState('Assam');
+  const [shippingAddress, setShippingAddress] = useState('');
   const [contactNumber, setContactNumber] = useState('');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   useEffect(() => {
     if (user) {
-      if (user.address) {
-          const { addressLine1, city, district, pinCode, state } = parseAddress(user.address);
-          setAddressLine1(addressLine1);
-          setCity(city);
-          setDistrict(district);
-          setPinCode(pinCode);
-          setState(state);
-      }
+      setShippingAddress(user.address || '');
       setContactNumber(user.mobileNumber || '');
     }
   }, [user]);
 
-  const isOrderReady = addressLine1.trim() !== '' && city.trim() !== '' && district.trim() !== '' && pinCode.trim() !== '' && contactNumber.trim() !== '' && user;
+  const isOrderReady = shippingAddress.trim().length >= 10 && contactNumber.trim().length >= 10 && user;
 
   const handlePlaceOrder = async () => {
     if (!isOrderReady || !user) {
@@ -81,14 +49,12 @@ export function CartContents() {
     }
 
     setIsPlacingOrder(true);
-    // Combine address fields into a single string
-    const fullShippingAddress = `${addressLine1}, City: ${city}, Dist: ${district}, PIN: ${pinCode}, ${state}, India`;
     
     const result = await placeOrder({
         userId: user.id,
         customerName: user.name || 'Valued Customer',
         items,
-        shippingAddress: fullShippingAddress,
+        shippingAddress: shippingAddress,
         contactNumber,
     });
     setIsPlacingOrder(false);
@@ -199,35 +165,16 @@ export function CartContents() {
             <CardTitle className="flex items-center gap-2"><Home className="w-5 h-5" /> Shipping Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="addressLine1">Address Line 1</Label>
-              <Input
-                id="addressLine1"
-                placeholder="Street address, P.O. box, company name"
-                value={addressLine1}
-                onChange={(e) => setAddressLine1(e.target.value)}
-              />
+             <div className="space-y-2">
+                <Label htmlFor="shippingAddress">Full Shipping Address</Label>
+                <Textarea
+                    id="shippingAddress"
+                    placeholder="Enter your full shipping address..."
+                    rows={4}
+                    value={shippingAddress}
+                    onChange={(e) => setShippingAddress(e.target.value)}
+                />
             </div>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="city">City</Label>
-                    <Input id="city" placeholder="e.g. Guwahati" value={city} onChange={(e) => setCity(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="district">District</Label>
-                    <Input id="district" placeholder="e.g. Kamrup" value={district} onChange={(e) => setDistrict(e.target.value)} />
-                </div>
-            </div>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="pinCode">PIN Code</Label>
-                    <Input id="pinCode" placeholder="e.g. 781001" value={pinCode} onChange={(e) => setPinCode(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="state">State</Label>
-                    <Input id="state" value={state} readOnly disabled />
-                </div>
-             </div>
              <div className="space-y-2">
               <Label htmlFor="contact-number">Contact Number</Label>
               <Input 

@@ -24,32 +24,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { useRouter } from 'next/navigation';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { updateUserProfile } from '@/app/profile/actions';
+import { Textarea } from '../ui/textarea';
 
 const profileSchema = z.object({
+  userId: z.string(),
   name: z.string().min(3, 'Name must be at least 3 characters.'),
   email: z.string().email('Please enter a valid email address.'),
   mobileNumber: z.string().regex(/^\d{10}$/, 'Please enter a valid 10-digit mobile number.'),
   gender: z.enum(['male', 'female', 'other']),
-  addressLine1: z.string().optional(),
-  city: z.string().optional(),
-  district: z.string().optional(),
-  pinCode: z.string().regex(/^\d{6}$/, "Please enter a valid 6-digit PIN code.").optional().or(z.literal('')),
-  state: z.string().default('Assam'),
+  address: z.string().optional(),
 });
-
-// Helper to parse the full address string into parts
-const parseAddress = (fullAddress?: string) => {
-    if (!fullAddress) {
-        return { addressLine1: '', city: '', district: '', pinCode: '', state: 'Assam' };
-    }
-    const parts = fullAddress.split(',').map(part => part.trim());
-    const addressLine1 = parts[0] || '';
-    const city = parts.find(p => p.startsWith('City:'))?.replace('City:', '').trim() || '';
-    const district = parts.find(p => p.startsWith('Dist:'))?.replace('Dist:', '').trim() || '';
-    const pinCode = parts.find(p => p.startsWith('PIN:'))?.replace('PIN:', '').trim() || '';
-    const state = parts.find(p => p.toLowerCase() === 'assam') || 'Assam';
-    return { addressLine1, city, district, pinCode, state };
-};
 
 export function ProfileForm() {
   const { toast } = useToast();
@@ -60,32 +44,25 @@ export function ProfileForm() {
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
+      userId: '',
       name: '',
       email: '',
       mobileNumber: '',
       gender: undefined,
-      addressLine1: '',
-      city: '',
-      district: '',
-      pinCode: '',
-      state: 'Assam',
+      address: '',
     },
   });
 
   React.useEffect(() => {
     if (user) {
-        const { addressLine1, city, district, pinCode, state } = parseAddress(user.address);
-        form.reset({
-            name: user.name || '',
-            email: user.email || '',
-            mobileNumber: user.mobileNumber || '',
-            gender: user.gender,
-            addressLine1: addressLine1,
-            city: city,
-            district: district,
-            pinCode: pinCode,
-            state: state,
-        });
+      form.reset({
+        userId: user.id,
+        name: user.name || '',
+        email: user.email || '',
+        mobileNumber: user.mobileNumber || '',
+        gender: user.gender,
+        address: user.address || '',
+      });
     }
   }, [user, form]);
 
@@ -93,18 +70,7 @@ export function ProfileForm() {
     if (!user) return;
     setIsSubmitting(true);
     
-    const fullAddress = (values.addressLine1 || values.city || values.district || values.pinCode) 
-        ? `${values.addressLine1}, City: ${values.city}, Dist: ${values.district}, PIN: ${values.pinCode}, ${values.state}, India` 
-        : '';
-
-    const result = await updateUserProfile({
-        userId: user.id,
-        name: values.name,
-        email: values.email,
-        mobileNumber: values.mobileNumber,
-        gender: values.gender,
-        address: fullAddress,
-    });
+    const result = await updateUserProfile(values);
     
     setIsSubmitting(false);
 
@@ -240,79 +206,20 @@ export function ProfileForm() {
           )}
         />
         
-        <div className="space-y-4 rounded-md border p-4">
-            <h3 className="text-base font-medium">Default Shipping Address</h3>
-            <FormField
-                control={form.control}
-                name="addressLine1"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Address Line 1</FormLabel>
-                    <FormControl>
-                        <Input placeholder="Street address, P.O. box, etc." {...field} disabled={isSubmitting} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-            />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                    control={form.control}
-                    name="city"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>City</FormLabel>
-                        <FormControl>
-                            <Input placeholder="e.g. Guwahati" {...field} disabled={isSubmitting} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="district"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>District</FormLabel>
-                        <FormControl>
-                            <Input placeholder="e.g. Kamrup" {...field} disabled={isSubmitting} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
-            </div>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <FormField
-                    control={form.control}
-                    name="pinCode"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>PIN Code</FormLabel>
-                        <FormControl>
-                            <Input placeholder="e.g. 781001" {...field} disabled={isSubmitting} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                 <FormField
-                    control={form.control}
-                    name="state"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>State</FormLabel>
-                        <FormControl>
-                            <Input {...field} readOnly disabled />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
-            </div>
-             <FormDescription>This will be pre-filled during checkout.</FormDescription>
-        </div>
+        <FormField
+          control={form.control}
+          name="address"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Default Shipping Address</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Enter your full shipping address" rows={4} {...field} disabled={isSubmitting}/>
+              </FormControl>
+              <FormDescription>This will be pre-filled during checkout.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
 
         <Button type="submit" disabled={isSubmitting}>
