@@ -31,8 +31,10 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
   const totalRating = product.reviews?.reduce((acc, review) => acc + review.rating, 0) || 0;
   const averageRating = product.reviews?.length > 0 ? (totalRating / product.reviews.length) : 0;
   
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-  const productUrl = `${appUrl}/listings/${product.id}`;
+  const heads = headers();
+  const host = heads.get('host');
+  const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+  const productUrl = `${protocol}://${host}/listings/${product.id}`;
 
 
   return (
