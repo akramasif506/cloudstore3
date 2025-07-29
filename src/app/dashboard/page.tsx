@@ -49,14 +49,14 @@ async function getDashboardStats() {
         const messagesSnapshot = await messagesRef.once('value');
         let totalMessages = 0;
         if (messagesSnapshot.exists()) {
-            totalMessages = messagesSnapshot.size;
+            totalMessages = messagesSnapshot.numChildren();
         }
 
         const usersRef = db.ref('users');
         const usersSnapshot = await usersRef.once('value');
         let totalUsers = 0;
         if (usersSnapshot.exists()) {
-            totalUsers = usersSnapshot.size;
+            totalUsers = usersSnapshot.numChildren();
         }
 
         const totalProducts = products.length;
