@@ -8,6 +8,10 @@ import { getAllUsers } from './actions';
 import { UserList } from './user-list';
 import { Suspense } from 'react';
 
+// Force this page to be dynamically rendered on every request
+// to ensure the user list is always up-to-date.
+export const dynamic = 'force-dynamic';
+
 export default async function ManageUsersPage({
   searchParams
 }: {
