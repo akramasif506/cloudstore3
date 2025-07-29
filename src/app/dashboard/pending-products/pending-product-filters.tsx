@@ -5,7 +5,7 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon, X, Filter, Search, Phone } from "lucide-react";
+import { Calendar as CalendarIcon, X, Phone } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
@@ -41,15 +41,17 @@ export function PendingProductFilters() {
   };
   
   const handleFilterChange = (key: string, value: string | DateRange | undefined | null) => {
+    let newQueryString = '';
     if (key === 'date') {
         const dateRange = value as DateRange | undefined;
-        router.push(pathname + '?' + createQueryString({ 
+        newQueryString = createQueryString({ 
             from: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : null,
             to: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : null
-        }));
+        });
     } else {
-        router.push(pathname + '?' + createQueryString({ [key]: value as string | null }));
+        newQueryString = createQueryString({ [key]: value as string | null });
     }
+    router.push(pathname + '?' + newQueryString);
   };
 
   const handleResetFilters = () => {
