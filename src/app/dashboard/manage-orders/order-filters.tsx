@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect, useTransition } from 'react';
+import { useTransition } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -28,8 +28,8 @@ export function OrderFilters() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
   
-  // Use the searchParams directly to derive the state, ensuring UI is always in sync with URL
   const searchQuery = searchParams.get('q') || '';
   const selectedStatus = searchParams.get('status') || 'all';
   const fromDate = searchParams.get('from');
@@ -53,19 +53,23 @@ export function OrderFilters() {
   };
   
   const handleFilterChange = (key: string, value: string | DateRange | undefined | null) => {
-    if (key === 'date') {
-        const dateRange = value as DateRange | undefined;
-        router.push(pathname + '?' + createQueryString({ 
-            from: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : null,
-            to: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : null
-        }));
-    } else {
-        router.push(pathname + '?' + createQueryString({ [key]: value === 'all' ? null : value }));
-    }
+    startTransition(() => {
+        if (key === 'date') {
+            const dateRange = value as DateRange | undefined;
+            router.push(pathname + '?' + createQueryString({ 
+                from: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : null,
+                to: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : null
+            }));
+        } else {
+            router.push(pathname + '?' + createQueryString({ [key]: value === 'all' ? null : value }));
+        }
+    });
   };
 
   const handleResetFilters = () => {
-    router.push(pathname);
+    startTransition(() => {
+        router.push(pathname);
+    });
   }
 
   return (
@@ -86,12 +90,13 @@ export function OrderFilters() {
                             handleFilterChange('q', e.currentTarget.value)
                         }
                     }}
+                    disabled={isPending}
                 />
             </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="status">Status</Label>
-            <Select onValueChange={(value) => handleFilterChange('status', value)} value={selectedStatus}>
+            <Select onValueChange={(value) => handleFilterChange('status', value)} value={selectedStatus} disabled={isPending}>
               <SelectTrigger id="status"><SelectValue placeholder="All" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
@@ -109,6 +114,7 @@ export function OrderFilters() {
                         id="date"
                         variant={"outline"}
                         className={cn("w-full justify-start text-left font-normal", !date?.from && "text-muted-foreground")}
+                        disabled={isPending}
                     >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {date?.from ? (
@@ -135,7 +141,7 @@ export function OrderFilters() {
             </Popover>
           </div>
           <div className="flex gap-2 lg:col-start-4">
-              <Button onClick={handleResetFilters} variant="ghost" className="w-full"><X className="mr-2 h-4 w-4"/>Reset All Filters</Button>
+              <Button onClick={handleResetFilters} variant="ghost" className="w-full" disabled={isPending}><X className="mr-2 h-4 w-4"/>Reset All Filters</Button>
           </div>
         </div>
       </CardContent>

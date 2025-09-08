@@ -4,48 +4,43 @@
 import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
 import React, { useState, useTransition } from 'react';
-import { useSearchParams } from "next/navigation";
-import { getAllOrders } from "./actions";
 import { useToast } from "@/hooks/use-toast";
 import { generateOrderSummaryPdf } from "@/lib/pdf-generator";
+import type { Order } from "@/lib/types";
 
-export function DownloadReportButton() {
+interface DownloadReportButtonProps {
+    allOrders: Order[];
+}
+
+export function DownloadReportButton({ allOrders }: DownloadReportButtonProps) {
     const [isPending, startTransition] = useTransition();
-    const searchParams = useSearchParams();
     const { toast } = useToast();
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
     const handleDownload = () => {
         startTransition(async () => {
-            const from = searchParams.get('from');
-            const to = searchParams.get('to');
-            const status = searchParams.get('status') as any;
-            const q = searchParams.get('q') || undefined;
-
-            if (!from || !to) {
+            const ordersToReport = allOrders.filter(o => selectedIds.has(o.internalId!));
+            
+            if (ordersToReport.length === 0) {
                 toast({
                     variant: "destructive",
-                    title: "Date Range Required",
-                    description: "Please select a 'from' and 'to' date in the filter to generate a report."
+                    title: "No Orders Selected",
+                    description: "Please select at least one order using the checkboxes to generate a report."
                 });
                 return;
             }
 
             try {
-                const ordersToReport = await getAllOrders({ from, to, status, q });
-
-                if (ordersToReport.length === 0) {
-                     toast({
-                        title: "No Orders Found",
-                        description: "There are no orders matching the selected filters."
-                    });
-                    return;
-                }
-
+                // Assuming we want a title for the report, we'll find min/max dates from selected orders
+                const dates = ordersToReport.map(o => new Date(o.createdAt).getTime());
+                const from = new Date(Math.min(...dates)).toISOString().split('T')[0];
+                const to = new Date(Math.max(...dates)).toISOString().split('T')[0];
+                
                 await generateOrderSummaryPdf(ordersToReport, { from, to });
                 
                 toast({
                     title: "Report Generated",
-                    description: "Your order summary PDF is being downloaded."
+                    description: `Your PDF summary for ${ordersToReport.length} order(s) is being downloaded.`
                 });
 
             } catch (error) {

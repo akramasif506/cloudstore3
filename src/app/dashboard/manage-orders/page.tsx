@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { OrderFilters } from './order-filters';
 import type { Order } from '@/lib/types';
 import { DownloadReportButton } from './download-report-button';
+import { Suspense } from 'react';
 
 export default async function ManageOrdersPage({
   searchParams
@@ -36,7 +37,7 @@ export default async function ManageOrdersPage({
               </div>
             </div>
             <div className="flex gap-2">
-                <DownloadReportButton />
+                <DownloadReportButton allOrders={orders} />
                 <Button asChild variant="outline">
                     <Link href="/dashboard">
                         <ArrowLeft className="mr-2 h-4 w-4" />
@@ -47,7 +48,9 @@ export default async function ManageOrdersPage({
         </div>
       </CardHeader>
       <CardContent>
-        <OrderFilters />
+         <Suspense fallback={null}>
+          <OrderFilters />
+        </Suspense>
         <div className="mt-8">
             <ManageOrderList initialOrders={orders} />
         </div>

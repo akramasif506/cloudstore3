@@ -28,12 +28,14 @@ import Image from 'next/image';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
 import { generateSellerOrderPdfs } from '@/lib/pdf-generator';
+import { Checkbox } from '@/components/ui/checkbox';
 
-interface ManageOrderListProps {
-  initialOrders: Order[];
+interface OrderRowProps {
+    order: Order;
+    isSelected: boolean;
+    onSelectionChange: (orderId: string) => void;
 }
 
-const statusOptions: Order['status'][] = ['Pending', 'Shipped', 'Delivered', 'Cancelled'];
 const statusStyles = {
     Pending: 'bg-amber-100 text-amber-800',
     Shipped: 'bg-blue-100 text-blue-800',
@@ -47,8 +49,8 @@ const statusIcons = {
     Cancelled: <Frown className="h-4 w-4" />,
 };
 
-function OrderRow({ order: initialOrder }: { order: Order }) {
-    const [order, setOrder] = useState(initialOrder);
+function OrderRow({ order, isSelected, onSelectionChange }: OrderRowProps) {
+    const [currentOrder, setCurrentOrder] = useState(order);
     const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
     const [isDownloading, setIsDownloading] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
@@ -60,10 +62,10 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
         setUpdatingStatusId(null);
 
         if (result.success) {
-            setOrder(o => ({ ...o, status: newStatus }));
+            setCurrentOrder(o => ({ ...o, status: newStatus }));
             toast({
                 title: "Order Status Updated",
-                description: `Order #${order.id} is now ${newStatus}.`,
+                description: `Order #${currentOrder.id} is now ${newStatus}.`,
             });
         } else {
             toast({
@@ -77,10 +79,7 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
     const handleDownloadSlips = async () => {
         setIsDownloading(true);
         try {
-            // Fetch the full order details including seller addresses etc. from the server action
-            const fullOrderDetails = await getOrderWithSellerDetails(order);
-            
-            // Now pass the complete data to the client-side PDF generator
+            const fullOrderDetails = await getOrderWithSellerDetails(currentOrder);
             await generateSellerOrderPdfs(fullOrderDetails);
             
             toast({
@@ -102,8 +101,15 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
 
     return (
         <Collapsible asChild>
-            <tbody data-state={isExpanded ? 'open' : 'closed'}>
-                <TableRow className="bg-background hover:bg-muted/50">
+            <tbody data-state={isExpanded ? 'open' : 'closed'} className="bg-background">
+                <TableRow className="hover:bg-muted/50">
+                    <TableCell>
+                         <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => onSelectionChange(order.internalId!)}
+                            aria-label={`Select order ${order.id}`}
+                        />
+                    </TableCell>
                     <TableCell>
                         <CollapsibleTrigger asChild>
                             <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)}>
@@ -112,20 +118,20 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
                             </Button>
                         </CollapsibleTrigger>
                     </TableCell>
-                    <TableCell className="font-medium">#{order.id}</TableCell>
-                    <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
-                    <TableCell>{order.customerName}</TableCell>
-                    <TableCell>Rs {typeof order.total === 'number' ? order.total.toFixed(2) : '0.00'}</TableCell>
+                    <TableCell className="font-medium">#{currentOrder.id}</TableCell>
+                    <TableCell>{new Date(currentOrder.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell>{currentOrder.customerName}</TableCell>
+                    <TableCell>Rs {typeof currentOrder.total === 'number' ? currentOrder.total.toFixed(2) : '0.00'}</TableCell>
                     <TableCell>
-                        <Badge variant="secondary" className={`capitalize ${statusStyles[order.status]}`}>
+                        <Badge variant="secondary" className={`capitalize ${statusStyles[currentOrder.status]}`}>
                             <div className="flex items-center gap-2">
-                                {statusIcons[order.status]}
-                                {order.status}
+                                {statusIcons[currentOrder.status]}
+                                {currentOrder.status}
                             </div>
                         </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                        {updatingStatusId === order.internalId ? (
+                        {updatingStatusId === currentOrder.internalId ? (
                         <Loader2 className="h-5 w-5 animate-spin ml-auto" />
                         ) : (
                         <div className="flex justify-end gap-2">
@@ -138,7 +144,7 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuItem asChild>
-                                    <Link href={`/my-orders/${order.internalId}`} target="_blank" className="flex items-center">
+                                    <Link href={`/my-orders/${currentOrder.internalId}`} target="_blank" className="flex items-center">
                                         <Eye className="mr-2 h-4 w-4" />
                                         View Details
                                     </Link>
@@ -152,11 +158,11 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
                                     Download Seller Slips
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                {statusOptions.map(status => (
+                                {['Pending', 'Shipped', 'Delivered', 'Cancelled'].map(status => (
                                 <DropdownMenuItem
                                     key={status}
-                                    disabled={order.status === status}
-                                    onClick={() => handleStatusChange(order.internalId!, status)}
+                                    disabled={currentOrder.status === status}
+                                    onClick={() => handleStatusChange(currentOrder.internalId!, status as Order['status'])}
                                 >
                                     Mark as {status}
                                 </DropdownMenuItem>
@@ -169,13 +175,13 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
                 </TableRow>
                 <CollapsibleContent asChild>
                     <TableRow>
-                        <TableCell colSpan={7} className="p-0">
+                        <TableCell colSpan={8} className="p-0">
                            <div className="p-4 bg-muted space-y-4">
                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                    <div>
                                        <h4 className="font-semibold mb-2">Items</h4>
                                        <div className="space-y-3">
-                                        {order.items.map((item: OrderItem) => (
+                                        {currentOrder.items.map((item: OrderItem) => (
                                             <div key={item.id} className="flex justify-between items-center bg-background p-3 rounded-md">
                                                 <div className="flex items-center gap-4">
                                                     <Image src={item.imageUrl} alt={item.name} width={48} height={48} className="rounded-md object-cover"/>
@@ -203,10 +209,10 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
                                         <div className="bg-background p-3 rounded-md text-sm">
                                             <div className="flex justify-between items-center">
                                                 <div className="flex items-center gap-2 font-medium">
-                                                    {order.returnStatus === 'Return Requested' && <Undo2 className="h-4 w-4 text-amber-600" />}
-                                                    {order.returnStatus === 'Return Approved' && <CheckCircle className="h-4 w-4 text-green-600" />}
-                                                    {order.returnStatus === 'Return Rejected' && <Ban className="h-4 w-4 text-red-600" />}
-                                                    <span>Status: {order.returnStatus || 'Not Requested'}</span>
+                                                    {currentOrder.returnStatus === 'Return Requested' && <Undo2 className="h-4 w-4 text-amber-600" />}
+                                                    {currentOrder.returnStatus === 'Return Approved' && <CheckCircle className="h-4 w-4 text-green-600" />}
+                                                    {currentOrder.returnStatus === 'Return Rejected' && <Ban className="h-4 w-4 text-red-600" />}
+                                                    <span>Status: {currentOrder.returnStatus || 'Not Requested'}</span>
                                                 </div>
                                                 <Button size="sm" variant="outline" asChild>
                                                     <Link href="/dashboard/manage-returns">
@@ -231,7 +237,8 @@ function OrderRow({ order: initialOrder }: { order: Order }) {
 }
 
 
-export function ManageOrderList({ initialOrders }: ManageOrderListProps) {
+export function ManageOrderList({ initialOrders }: { initialOrders: Order[] }) {
+  const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
 
   if (initialOrders.length === 0) {
     return (
@@ -243,11 +250,41 @@ export function ManageOrderList({ initialOrders }: ManageOrderListProps) {
     );
   }
 
+  const handleSelectionChange = (orderId: string) => {
+    setSelectedOrders(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(orderId)) {
+            newSet.delete(orderId);
+        } else {
+            newSet.add(orderId);
+        }
+        return newSet;
+    });
+  }
+  
+  const handleSelectAll = (checked: boolean | 'indeterminate') => {
+      if (checked) {
+          setSelectedOrders(new Set(initialOrders.map(o => o.internalId!)));
+      } else {
+          setSelectedOrders(new Set());
+      }
+  }
+
+  const isAllSelected = selectedOrders.size === initialOrders.length;
+  const isIndeterminate = selectedOrders.size > 0 && !isAllSelected;
+
   return (
     <div className="border rounded-lg overflow-hidden">
       <Table>
         <TableHeader className="bg-muted/50">
           <TableRow>
+            <TableHead className="w-12">
+                 <Checkbox
+                    checked={isAllSelected || isIndeterminate}
+                    onCheckedChange={handleSelectAll}
+                    aria-label="Select all orders"
+                />
+            </TableHead>
             <TableHead className="w-12"></TableHead>
             <TableHead>Order ID</TableHead>
             <TableHead>Date</TableHead>
@@ -258,7 +295,12 @@ export function ManageOrderList({ initialOrders }: ManageOrderListProps) {
           </TableRow>
         </TableHeader>
         {initialOrders.map((order) => (
-            <OrderRow key={order.internalId} order={order} />
+            <OrderRow 
+                key={order.internalId} 
+                order={order}
+                isSelected={selectedOrders.has(order.internalId!)}
+                onSelectionChange={handleSelectionChange}
+            />
         ))}
       </Table>
     </div>
