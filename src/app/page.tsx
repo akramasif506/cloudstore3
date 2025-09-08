@@ -13,6 +13,9 @@ import { ProductFilters } from '@/components/products/product-filters';
 import { ProductGrid } from '@/components/products/product-grid';
 import { getPromoBanner } from './dashboard/manage-promo-banner/actions';
 import { PromoBanner } from '@/components/products/promo-banner';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { SlidersHorizontal } from 'lucide-react';
 
 async function getProducts(): Promise<Product[]> {
   try {
@@ -117,7 +120,7 @@ export default async function Home({
       {!hasActiveFilters && <CategoryBrowser categories={categories} />}
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-        <div className="lg:col-span-1 lg:sticky lg:top-24">
+        <div className="hidden lg:block lg:sticky lg:top-24">
            <ProductFilters categories={categoryMap} />
         </div>
         <div className="lg:col-span-3">
@@ -125,8 +128,23 @@ export default async function Home({
                 <div className="w-full sm:flex-grow">
                     <ProductSearch />
                 </div>
-                <div className="w-full sm:w-auto">
-                    <ProductSort />
+                 <div className="flex gap-4 w-full sm:w-auto">
+                    <div className="lg:hidden w-1/2 sm:w-auto">
+                        <Sheet>
+                            <SheetTrigger asChild>
+                                <Button variant="outline" className="w-full">
+                                    <SlidersHorizontal className="mr-2 h-4 w-4" />
+                                    Filters
+                                </Button>
+                            </SheetTrigger>
+                            <SheetContent>
+                                <ProductFilters categories={categoryMap} />
+                            </SheetContent>
+                        </Sheet>
+                    </div>
+                    <div className="w-1/2 sm:w-auto">
+                        <ProductSort />
+                    </div>
                 </div>
             </div>
           {hasActiveFilters ? (
