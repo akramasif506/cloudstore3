@@ -37,7 +37,6 @@ export default async function ManageOrdersPage({
               </div>
             </div>
             <div className="flex gap-2">
-                <DownloadReportButton allOrders={orders} />
                 <Button asChild variant="outline">
                     <Link href="/dashboard">
                         <ArrowLeft className="mr-2 h-4 w-4" />

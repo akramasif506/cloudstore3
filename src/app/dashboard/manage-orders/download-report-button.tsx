@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -9,38 +10,34 @@ import { generateOrderSummaryPdf } from "@/lib/pdf-generator";
 import type { Order } from "@/lib/types";
 
 interface DownloadReportButtonProps {
-    allOrders: Order[];
+    selectedOrders: Order[];
 }
 
-export function DownloadReportButton({ allOrders }: DownloadReportButtonProps) {
+export function DownloadReportButton({ selectedOrders }: DownloadReportButtonProps) {
     const [isPending, startTransition] = useTransition();
     const { toast } = useToast();
-    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
     const handleDownload = () => {
-        startTransition(async () => {
-            const ordersToReport = allOrders.filter(o => selectedIds.has(o.internalId!));
-            
-            if (ordersToReport.length === 0) {
-                toast({
-                    variant: "destructive",
-                    title: "No Orders Selected",
-                    description: "Please select at least one order using the checkboxes to generate a report."
-                });
-                return;
-            }
+        if (selectedOrders.length === 0) {
+            toast({
+                variant: "destructive",
+                title: "No Orders Selected",
+                description: "Please select at least one order using the checkboxes to generate a report."
+            });
+            return;
+        }
 
+        startTransition(async () => {
             try {
-                // Assuming we want a title for the report, we'll find min/max dates from selected orders
-                const dates = ordersToReport.map(o => new Date(o.createdAt).getTime());
+                const dates = selectedOrders.map(o => new Date(o.createdAt).getTime());
                 const from = new Date(Math.min(...dates)).toISOString().split('T')[0];
                 const to = new Date(Math.max(...dates)).toISOString().split('T')[0];
                 
-                await generateOrderSummaryPdf(ordersToReport, { from, to });
+                await generateOrderSummaryPdf(selectedOrders, { from, to });
                 
                 toast({
                     title: "Report Generated",
-                    description: `Your PDF summary for ${ordersToReport.length} order(s) is being downloaded.`
+                    description: `Your PDF summary for ${selectedOrders.length} order(s) is being downloaded.`
                 });
 
             } catch (error) {
@@ -56,9 +53,9 @@ export function DownloadReportButton({ allOrders }: DownloadReportButtonProps) {
     };
 
     return (
-        <Button onClick={handleDownload} disabled={isPending}>
+        <Button onClick={handleDownload} disabled={isPending || selectedOrders.length === 0} variant="outline">
             {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-            Download Report
+            Download Summary
         </Button>
     );
 }

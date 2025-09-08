@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState } from 'react';
@@ -29,6 +30,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Separator } from '@/components/ui/separator';
 import { generateSellerOrderPdfs } from '@/lib/pdf-generator';
 import { Checkbox } from '@/components/ui/checkbox';
+import { DownloadReportButton } from './download-report-button';
 
 interface OrderRowProps {
     order: Order;
@@ -80,7 +82,7 @@ function OrderRow({ order, isSelected, onSelectionChange }: OrderRowProps) {
         setIsDownloading(true);
         try {
             const fullOrderDetails = await getOrderWithSellerDetails(currentOrder);
-            await generateSellerOrderPdfs(fullOrderDetails);
+            await generateSellerOrderPdfs([fullOrderDetails]);
             
             toast({
                 title: "Seller Slips Generated",
@@ -155,7 +157,7 @@ function OrderRow({ order, isSelected, onSelectionChange }: OrderRowProps) {
                                     ) : (
                                         <Download className="mr-2 h-4 w-4" />
                                     )}
-                                    Download Seller Slips
+                                    Download Fulfillment Slip
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 {['Pending', 'Shipped', 'Delivered', 'Cancelled'].map(status => (
@@ -272,37 +274,46 @@ export function ManageOrderList({ initialOrders }: { initialOrders: Order[] }) {
 
   const isAllSelected = selectedOrders.size === initialOrders.length;
   const isIndeterminate = selectedOrders.size > 0 && !isAllSelected;
+  const selectedOrdersData = initialOrders.filter(o => selectedOrders.has(o.internalId!));
 
   return (
-    <div className="border rounded-lg overflow-hidden">
-      <Table>
-        <TableHeader className="bg-muted/50">
-          <TableRow>
-            <TableHead className="w-12">
-                 <Checkbox
-                    checked={isAllSelected || isIndeterminate}
-                    onCheckedChange={handleSelectAll}
-                    aria-label="Select all orders"
-                />
-            </TableHead>
-            <TableHead className="w-12"></TableHead>
-            <TableHead>Order ID</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Customer</TableHead>
-            <TableHead>Total</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        {initialOrders.map((order) => (
-            <OrderRow 
-                key={order.internalId} 
-                order={order}
-                isSelected={selectedOrders.has(order.internalId!)}
-                onSelectionChange={handleSelectionChange}
-            />
-        ))}
-      </Table>
+    <div className="space-y-4">
+      <div className="flex items-center gap-4">
+          <p className="text-sm text-muted-foreground">
+              {selectedOrders.size} of {initialOrders.length} order(s) selected.
+          </p>
+          <DownloadReportButton selectedOrders={selectedOrdersData} />
+      </div>
+      <div className="border rounded-lg overflow-hidden">
+        <Table>
+          <TableHeader className="bg-muted/50">
+            <TableRow>
+              <TableHead className="w-12">
+                  <Checkbox
+                      checked={isAllSelected || isIndeterminate}
+                      onCheckedChange={handleSelectAll}
+                      aria-label="Select all orders"
+                  />
+              </TableHead>
+              <TableHead className="w-12"></TableHead>
+              <TableHead>Order ID</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Customer</TableHead>
+              <TableHead>Total</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          {initialOrders.map((order) => (
+              <OrderRow 
+                  key={order.internalId} 
+                  order={order}
+                  isSelected={selectedOrders.has(order.internalId!)}
+                  onSelectionChange={handleSelectionChange}
+              />
+          ))}
+        </Table>
+      </div>
     </div>
   );
 }
