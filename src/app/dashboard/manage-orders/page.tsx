@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { OrderFilters } from './order-filters';
 import type { Order } from '@/lib/types';
+import { DownloadReportButton } from './download-report-button';
 
 export default async function ManageOrdersPage({
   searchParams
@@ -24,7 +25,7 @@ export default async function ManageOrdersPage({
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-start flex-wrap gap-4">
             <div className="flex items-center gap-4">
               <div className="flex-shrink-0 bg-primary/10 text-primary rounded-lg p-3">
                 <ShoppingBag className="h-6 w-6" />
@@ -34,12 +35,15 @@ export default async function ManageOrdersPage({
                 <CardDescription>View all orders and update their fulfillment status.</CardDescription>
               </div>
             </div>
-            <Button asChild variant="outline">
-                <Link href="/dashboard">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Dashboard
-                </Link>
-            </Button>
+            <div className="flex gap-2">
+                <DownloadReportButton />
+                <Button asChild variant="outline">
+                    <Link href="/dashboard">
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Back to Dashboard
+                    </Link>
+                </Button>
+            </div>
         </div>
       </CardHeader>
       <CardContent>
