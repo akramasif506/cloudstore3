@@ -177,19 +177,33 @@ export function ProductFilters({ categories, conditions }: ProductFiltersProps) 
               className="[&>span:first-child]:h-2 [&>span>span]:h-5 [&>span>span]:w-5 [&>span>span]:border-2"
             />
           </div>
+          
+           {/* This footer is now only visible on desktop */}
+           <div className="pt-6 hidden lg:block">
+             <div className="flex flex-col gap-2">
+                <Button variant="destructive" className="w-full" onClick={handleApplyFilters}>
+                  Apply Filters
+                </Button>
+                <Button className="w-full" variant="ghost" onClick={handleResetFilters}>
+                  Reset Filters
+                </Button>
+              </div>
+           </div>
+
       </CardContent>
-       <CardFooter className="flex flex-col gap-2 !p-4 border-t">
-          <SheetClose asChild>
-            <Button variant="destructive" className="w-full" onClick={handleApplyFilters}>
-              Apply Filters
-            </Button>
-          </SheetClose>
-          <SheetClose asChild>
-            <Button className="w-full" variant="ghost" onClick={handleResetFilters}>
-              Reset Filters
-            </Button>
-          </SheetClose>
-        </CardFooter>
+       {/* This footer is for the mobile sheet view */}
+       <SheetFooter className="lg:hidden p-4 border-t">
+            <SheetClose asChild>
+                <Button className="w-full" variant="ghost" onClick={handleResetFilters}>
+                Reset Filters
+                </Button>
+            </SheetClose>
+            <SheetClose asChild>
+                <Button variant="destructive" className="w-full" onClick={handleApplyFilters}>
+                Apply Filters
+                </Button>
+            </SheetClose>
+        </SheetFooter>
     </Card>
   );
 }

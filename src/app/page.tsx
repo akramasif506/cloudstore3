@@ -14,7 +14,7 @@ import { ProductGrid } from '@/components/products/product-grid';
 import { getPromoBanner } from './dashboard/manage-promo-banner/actions';
 import { getProductConditions } from './dashboard/manage-product-conditions/actions';
 import { PromoBanner } from '@/components/products/promo-banner';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetFooter, SheetClose } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { SlidersHorizontal } from 'lucide-react';
 
@@ -87,7 +87,7 @@ export default async function Home({
       : true;
     
     const categoryMatch = selectedCategory ? product.category === selectedCategory : true;
-    const subcategoryMatch = selectedSubcategory ? product.subcategory === subcategory : true;
+    const subcategoryMatch = subcategory ? product.subcategory === subcategory : true;
     const conditionMatch = selectedCondition ? product.condition === selectedCondition : true;
     const priceMatch = product.price >= minPrice && (maxPrice ? product.price <= maxPrice : true);
 
@@ -139,7 +139,7 @@ export default async function Home({
                                     Filters
                                 </Button>
                             </SheetTrigger>
-                            <SheetContent>
+                            <SheetContent className="flex flex-col">
                                 <ProductFilters categories={categoryMap} conditions={conditions} />
                             </SheetContent>
                         </Sheet>
