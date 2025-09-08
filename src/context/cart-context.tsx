@@ -1,9 +1,10 @@
 
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import type { Product as BaseProduct } from '@/lib/types';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import type { Product as BaseProduct, Discount, DiscountMap } from '@/lib/types';
 import { getFeeConfig } from '@/app/dashboard/manage-fees/actions';
+import { getDiscounts } from '@/app/dashboard/manage-discounts/actions';
 
 // The CartItem extends the base Product type
 export interface CartItem extends BaseProduct {
@@ -29,6 +30,8 @@ interface CartContextType {
   handlingFee: number;
   total: number;
   feeConfig: FeeConfig | null;
+  setPinCode: (pinCode: string) => void;
+  appliedDiscount: { name: string; value: number } | null;
   selectedItems: Set<string>;
   toggleItemSelection: (productId: string) => void;
   toggleSelectAll: () => void;
@@ -41,6 +44,9 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [feeConfig, setFeeConfig] = useState<FeeConfig | null>(null);
+  const [discounts, setDiscounts] = useState<DiscountMap | null>(null);
+  const [pinCode, setPinCode] = useState<string>('');
+  const [appliedDiscount, setAppliedDiscount] = useState<{ name: string; value: number } | null>(null);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
   // Load cart and selections from localStorage on initial render
@@ -58,10 +64,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
       console.error("Failed to parse cart data from localStorage", error);
     }
 
-    // Fetch fee configuration
+    // Fetch fee and discount configurations
     getFeeConfig().then(config => {
       setFeeConfig(config || { platformFeePercent: 0, handlingFeeFixed: 0 });
     });
+    getDiscounts().then(setDiscounts);
   }, []);
 
   // Save cart and selections to localStorage whenever they change
@@ -142,9 +149,52 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const selectedItemsDetails = items.filter(item => selectedItems.has(item.id));
   const subtotal = selectedItemsDetails.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  
+  // Calculate discount based on PIN code and subtotal
+  useEffect(() => {
+    if (!discounts || !pinCode || subtotal === 0) {
+      setAppliedDiscount(null);
+      return;
+    }
+
+    let bestDiscount = 0;
+    let bestDiscountRule: { name: string, value: number } | null = null;
+    
+    Object.values(discounts).forEach(rule => {
+      if (rule.enabled && rule.pincodes.includes(pinCode)) {
+        let currentDiscountValue = 0;
+        if (rule.type === 'percentage') {
+          currentDiscountValue = subtotal * (rule.value / 100);
+        } else { // 'fixed'
+          currentDiscountValue = rule.value;
+        }
+
+        if (currentDiscountValue > bestDiscount) {
+          bestDiscount = currentDiscountValue;
+          bestDiscountRule = { name: rule.name, value: bestDiscount };
+        }
+      }
+    });
+    
+    // Ensure discount does not exceed subtotal
+    if (bestDiscount > subtotal) {
+        bestDiscount = subtotal;
+        if(bestDiscountRule) bestDiscountRule.value = bestDiscount;
+    }
+    
+    if (bestDiscountRule) {
+        setAppliedDiscount(bestDiscountRule);
+    } else {
+        setAppliedDiscount(null);
+    }
+
+  }, [pinCode, subtotal, discounts]);
+  
+  
+  const discountValue = appliedDiscount?.value || 0;
   const platformFee = feeConfig ? subtotal * (feeConfig.platformFeePercent / 100) : 0;
   const handlingFee = feeConfig && subtotal > 0 ? feeConfig.handlingFeeFixed : 0;
-  const total = subtotal + platformFee + handlingFee;
+  const total = subtotal + platformFee + handlingFee - discountValue;
 
   const value = {
     items,
@@ -157,6 +207,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     handlingFee,
     total,
     feeConfig,
+    setPinCode,
+    appliedDiscount,
     selectedItems,
     toggleItemSelection,
     toggleSelectAll,

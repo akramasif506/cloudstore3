@@ -6,7 +6,7 @@ import type { Order } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import Image from 'next/image';
-import { Package, Truck, CheckCircle, Frown, PackageOpen, Home, Phone, User as UserIcon, Calendar, ShoppingCart, Percent, Download } from 'lucide-react';
+import { Package, Truck, CheckCircle, Frown, PackageOpen, Home, Phone, User as UserIcon, Calendar, ShoppingCart, Percent, Download, Tag } from 'lucide-react';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -74,6 +74,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
     const subtotal = order.subtotal ?? order.total;
     const platformFee = order.platformFee ?? 0;
     const handlingFee = order.handlingFee ?? 0;
+    const discountValue = order.discount?.value ?? 0;
     const total = order.total;
 
 
@@ -119,6 +120,12 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                                     <span className="text-muted-foreground flex items-center gap-1"><Package className="h-3 w-3" /> Handling Fee</span>
                                     <span className="font-medium">Rs {handlingFee.toFixed(2)}</span>
                                 </div>
+                                {order.discount && (
+                                  <div className="flex justify-between text-sm text-green-600">
+                                    <span className="font-medium flex items-center gap-1"><Tag className="h-3 w-3" /> {order.discount.name}</span>
+                                    <span className="font-medium">- Rs {discountValue.toFixed(2)}</span>
+                                  </div>
+                                )}
                                 <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Shipping</span>
                                     <span className="font-medium text-primary">Free</span>

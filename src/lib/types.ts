@@ -80,8 +80,10 @@ export interface Order {
     subtotal: number;
     platformFee: number;
     handlingFee: number;
+    discount?: { name: string; value: number; } | null;
     total: number;
     shippingAddress: string;
+    pinCode?: string;
     contactNumber: string;
     status: 'Pending' | 'Shipped' | 'Delivered' | 'Cancelled';
     createdAt: string;
@@ -104,6 +106,18 @@ export interface FeeConfig {
     platformFeePercent: number;
     handlingFeeFixed: number;
 }
+
+export interface Discount {
+  id: string;
+  name: string;
+  pincodes: string[];
+  type: 'percentage' | 'fixed';
+  value: number;
+  enabled: boolean;
+}
+
+export type DiscountMap = { [id: string]: Omit<Discount, 'id'> };
+
 
 export interface CategoryInfo {
   name: string;

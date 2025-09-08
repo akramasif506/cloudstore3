@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Trash2, Frown, Home, Phone, Loader2, LogIn, Percent, Package } from 'lucide-react';
+import { Trash2, Frown, Home, Phone, Loader2, LogIn, Percent, Package, Tag } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
@@ -29,6 +29,8 @@ export function CartContents() {
     platformFee, 
     handlingFee, 
     total,
+    appliedDiscount,
+    setPinCode,
     selectedItems,
     toggleItemSelection,
     toggleSelectAll,
@@ -42,6 +44,7 @@ export function CartContents() {
 
   const [shippingAddress, setShippingAddress] = useState('');
   const [contactNumber, setContactNumber] = useState('');
+  const [pinCodeValue, setPinCodeValue] = useState('');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   
   const itemsToOrder = items.filter(item => selectedItems.has(item.id));
@@ -53,6 +56,15 @@ export function CartContents() {
       setContactNumber(user.mobileNumber || '');
     }
   }, [user]);
+
+  // Effect to extract PIN code from address and update context
+  useEffect(() => {
+    const pinMatch = shippingAddress.match(/\b\d{6}\b/);
+    const newPinCode = pinMatch ? pinMatch[0] : '';
+    setPinCodeValue(newPinCode);
+    setPinCode(newPinCode);
+  }, [shippingAddress, setPinCode]);
+
 
   const isOrderReady = hasSelection && shippingAddress.trim().length >= 10 && contactNumber.trim().length >= 10 && user;
 
@@ -74,6 +86,7 @@ export function CartContents() {
         items: itemsToOrder,
         shippingAddress: shippingAddress,
         contactNumber,
+        pinCode: pinCodeValue,
     });
     setIsPlacingOrder(false);
 
@@ -201,7 +214,7 @@ export function CartContents() {
                 <Label htmlFor="shippingAddress">Full Shipping Address</Label>
                 <Textarea
                     id="shippingAddress"
-                    placeholder="Enter your full shipping address..."
+                    placeholder="Enter your full shipping address, including PIN code..."
                     rows={4}
                     value={shippingAddress}
                     onChange={(e) => setShippingAddress(e.target.value)}
@@ -236,6 +249,12 @@ export function CartContents() {
               <span className="text-muted-foreground flex items-center gap-1"><Package className="h-3 w-3" /> Handling Fee</span>
               <span className="font-medium">Rs {handlingFee.toFixed(2)}</span>
             </div>
+            {appliedDiscount && (
+              <div className="flex justify-between text-sm text-green-600">
+                <span className="font-medium flex items-center gap-1"><Tag className="h-3 w-3" /> {appliedDiscount.name}</span>
+                <span className="font-medium">- Rs {appliedDiscount.value.toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Shipping</span>
               <span className="font-medium text-primary">Free</span>

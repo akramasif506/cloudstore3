@@ -5,7 +5,7 @@
 import { z } from 'zod';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
-import type { CartItem, FeeConfig, Product } from '@/context/cart-context';
+import type { CartItem, FeeConfig, Product, Discount, DiscountMap } from '@/lib/types';
 import { ServerValue } from 'firebase-admin/database';
 
 const placeOrderSchema = z.object({
@@ -14,6 +14,7 @@ const placeOrderSchema = z.object({
   items: z.array(z.any()), // Not strictly validating cart items from client
   shippingAddress: z.string().min(10, 'Shipping address is required.'),
   contactNumber: z.string().min(10, 'A valid contact number is required.'),
+  pinCode: z.string().optional(),
 });
 
 async function getFeeConfigServer(): Promise<FeeConfig> {
@@ -29,6 +30,20 @@ async function getFeeConfigServer(): Promise<FeeConfig> {
         console.error('Error fetching fee config:', error);
         return { platformFeePercent: 0, handlingFeeFixed: 0 };
     }
+}
+
+async function getDiscountsServer(): Promise<DiscountMap> {
+  const { db } = initializeAdmin();
+  try {
+    const discountsRef = db.ref('site_config/location_discounts');
+    const snapshot = await discountsRef.once('value');
+    if (snapshot.exists()) {
+      return snapshot.val();
+    }
+  } catch (error) {
+    console.error('Error fetching discounts config:', error);
+  }
+  return {};
 }
 
 async function getNextOrderId(db: any): Promise<string> {
@@ -55,6 +70,7 @@ export async function placeOrder(values: {
     items: CartItem[];
     shippingAddress: string;
     contactNumber: string;
+    pinCode?: string;
 }): Promise<{ success: boolean; orderId?: string; message?: string }> {
   
   let db;
@@ -71,7 +87,7 @@ export async function placeOrder(values: {
       return { success: false, message: 'Invalid order data.' };
   }
 
-  const { userId, customerName, items, shippingAddress, contactNumber } = validatedFields.data;
+  const { userId, customerName, items, shippingAddress, contactNumber, pinCode } = validatedFields.data;
 
   // --- Server-side validation for item availability ---
   try {
@@ -98,11 +114,38 @@ export async function placeOrder(values: {
   // ---
 
   // --- Recalculate total on the server ---
-  const feeConfig = await getFeeConfigServer();
+  const [feeConfig, discounts] = await Promise.all([getFeeConfigServer(), getDiscountsServer()]);
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const platformFee = subtotal * (feeConfig.platformFeePercent / 100);
   const handlingFee = feeConfig.handlingFeeFixed;
-  const total = subtotal + platformFee + handlingFee;
+  
+  // --- Calculate Discount ---
+  let appliedDiscount: { name: string, value: number } | null = null;
+  let bestDiscount = 0;
+  
+  if (pinCode) {
+    Object.values(discounts).forEach(discountRule => {
+        if (discountRule.enabled && discountRule.pincodes.includes(pinCode)) {
+            let currentDiscountValue = 0;
+            if (discountRule.type === 'percentage') {
+                currentDiscountValue = subtotal * (discountRule.value / 100);
+            } else { // 'fixed'
+                currentDiscountValue = discountRule.value;
+            }
+            if (currentDiscountValue > bestDiscount) {
+                bestDiscount = currentDiscountValue;
+                appliedDiscount = { name: discountRule.name, value: bestDiscount };
+            }
+        }
+    });
+  }
+  // Ensure discount does not exceed subtotal
+  if (bestDiscount > subtotal) {
+      bestDiscount = subtotal;
+      if(appliedDiscount) appliedDiscount.value = subtotal;
+  }
+  
+  const total = subtotal + platformFee + handlingFee - bestDiscount;
   // ---
 
   try {
@@ -128,8 +171,10 @@ export async function placeOrder(values: {
       subtotal,
       platformFee,
       handlingFee,
+      discount: appliedDiscount, // Save the discount info
       total,
       shippingAddress,
+      pinCode,
       contactNumber,
       status: 'Pending' as const,
       createdAt: new Date().toISOString(),
