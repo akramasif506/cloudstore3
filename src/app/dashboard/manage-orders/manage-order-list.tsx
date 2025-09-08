@@ -273,7 +273,7 @@ export function ManageOrderList({ initialOrders }: { initialOrders: Order[] }) {
       }
   }
 
-  const isAllSelected = selectedOrders.size === initialOrders.length;
+  const isAllSelected = selectedOrders.size > 0 && selectedOrders.size === initialOrders.length;
   const isIndeterminate = selectedOrders.size > 0 && !isAllSelected;
   const selectedOrdersData = initialOrders.filter(o => selectedOrders.has(o.internalId!));
 
