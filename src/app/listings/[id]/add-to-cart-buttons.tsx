@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/cart-context";
 import { useToast } from "@/hooks/use-toast";
 import type { Product } from "@/lib/types";
-import { Minus, Plus, ShoppingCart } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Zap } from "lucide-react";
 import { ToastAction } from "@/components/ui/toast";
 import Link from 'next/link';
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { useRouter } from "next/navigation";
 
 interface AddToCartButtonsProps {
   product: Product;
@@ -18,6 +19,7 @@ interface AddToCartButtonsProps {
 export function AddToCartButtons({ product }: AddToCartButtonsProps) {
   const { addToCart } = useCart();
   const { toast } = useToast();
+  const router = useRouter();
   const [quantity, setQuantity] = useState(1);
 
   const handleAddToCart = () => {
@@ -33,8 +35,13 @@ export function AddToCartButtons({ product }: AddToCartButtonsProps) {
     });
   };
 
+  const handleBuyNow = () => {
+    addToCart(product, quantity);
+    router.push('/cart');
+  };
+
   return (
-    <div className="flex gap-4">
+    <div className="space-y-4">
         <div className="flex items-center gap-1">
             <Button variant="outline" size="icon" className="h-12 w-12" onClick={() => setQuantity(q => Math.max(1, q - 1))}>
                 <Minus className="h-5 w-5" />
@@ -50,9 +57,14 @@ export function AddToCartButtons({ product }: AddToCartButtonsProps) {
                 <Plus className="h-5 w-5" />
             </Button>
         </div>
-      <Button size="lg" className="w-full text-lg h-12" onClick={handleAddToCart}>
-        <ShoppingCart className="mr-2" /> Add to Cart
-      </Button>
+      <div className="flex flex-col sm:flex-row gap-4">
+         <Button size="lg" variant="outline" className="w-full text-lg h-12" onClick={handleAddToCart}>
+            <ShoppingCart className="mr-2" /> Add to Cart
+        </Button>
+        <Button size="lg" className="w-full text-lg h-12" onClick={handleBuyNow}>
+            <Zap className="mr-2" /> Buy Now
+        </Button>
+      </div>
     </div>
   );
 }
