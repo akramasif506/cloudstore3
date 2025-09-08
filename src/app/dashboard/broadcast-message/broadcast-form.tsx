@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from '@/components/ui/separator';
+import { Label } from '@/components/ui/label';
 
 const broadcastSchema = z.object({
   message: z.string().min(3, 'Message must be at least 3 characters.'),
