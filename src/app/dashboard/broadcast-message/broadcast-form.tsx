@@ -44,11 +44,13 @@ interface BroadcastFormProps {
     categories: CategoryMap;
 }
 
+const NONE_VALUE = '_none_';
+
 export function BroadcastForm({ currentMessage: initialMessage, categories }: BroadcastFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentMessage, setCurrentMessage] = useState(initialMessage);
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedSubcategory, setSelectedSubcategory] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState(NONE_VALUE);
+  const [selectedSubcategory, setSelectedSubcategory] = useState(NONE_VALUE);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof broadcastSchema>>({
@@ -60,7 +62,7 @@ export function BroadcastForm({ currentMessage: initialMessage, categories }: Br
   });
 
   useEffect(() => {
-    if (!selectedCategory) {
+    if (selectedCategory === NONE_VALUE) {
       form.setValue('link', '');
       return;
     }
@@ -69,7 +71,7 @@ export function BroadcastForm({ currentMessage: initialMessage, categories }: Br
     const params = new URLSearchParams();
     params.set('category', selectedCategory);
 
-    if (selectedSubcategory) {
+    if (selectedSubcategory !== NONE_VALUE) {
         params.set('subcategory', selectedSubcategory);
     }
     
@@ -109,8 +111,8 @@ export function BroadcastForm({ currentMessage: initialMessage, categories }: Br
 
     if (result.success) {
       form.reset({ message: '', link: '' });
-      setSelectedCategory('');
-      setSelectedSubcategory('');
+      setSelectedCategory(NONE_VALUE);
+      setSelectedSubcategory(NONE_VALUE);
       setCurrentMessage(null);
       toast({
         title: "Broadcast Cleared!",
@@ -164,10 +166,10 @@ export function BroadcastForm({ currentMessage: initialMessage, categories }: Br
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label>Category</Label>
-                    <Select onValueChange={(value) => { setSelectedCategory(value); setSelectedSubcategory(''); }} value={selectedCategory}>
+                    <Select onValueChange={(value) => { setSelectedCategory(value); setSelectedSubcategory(NONE_VALUE); }} value={selectedCategory}>
                         <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="">None</SelectItem>
+                            <SelectItem value={NONE_VALUE}>None</SelectItem>
                             {enabledCategories.map(([catName]) => (
                                 <SelectItem key={catName} value={catName}>{catName}</SelectItem>
                             ))}
@@ -176,11 +178,11 @@ export function BroadcastForm({ currentMessage: initialMessage, categories }: Br
                 </div>
                 <div className="space-y-2">
                     <Label>Subcategory</Label>
-                    <Select onValueChange={setSelectedSubcategory} value={selectedSubcategory} disabled={!selectedCategory}>
+                    <Select onValueChange={setSelectedSubcategory} value={selectedSubcategory} disabled={selectedCategory === NONE_VALUE}>
                         <SelectTrigger><SelectValue placeholder="Select a subcategory" /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="">All Subcategories</SelectItem>
-                            {selectedCategory && categories[selectedCategory as keyof typeof categories]?.subcategories
+                            <SelectItem value={NONE_VALUE}>All Subcategories</SelectItem>
+                            {selectedCategory !== NONE_VALUE && categories[selectedCategory as keyof typeof categories]?.subcategories
                                 .filter(sub => sub.enabled)
                                 .map(subcat => (
                                 <SelectItem key={subcat.name} value={subcat.name}>{subcat.name}</SelectItem>
