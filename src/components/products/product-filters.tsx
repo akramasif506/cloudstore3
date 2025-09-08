@@ -92,14 +92,14 @@ export function ProductFilters({ categories, conditions }: ProductFiltersProps) 
   const enabledCategories = Object.entries(categories).filter(([_, catData]) => catData.enabled);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    <Card className="border-0 shadow-none bg-transparent">
+      <CardHeader className="p-0 mb-4 hidden lg:block">
+        <CardTitle className="flex items-center gap-2 text-base">
           <SlidersHorizontal className="h-5 w-5" />
           <span>Filters</span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 p-0">
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
             <Select onValueChange={handleCategoryChange} value={selectedCategory}>
@@ -140,7 +140,7 @@ export function ProductFilters({ categories, conditions }: ProductFiltersProps) 
             <Label>Condition</Label>
             <div className="grid grid-cols-2 gap-2">
                 <Button
-                    variant={selectedCondition === 'all' ? 'destructive' : 'outline'}
+                    variant={selectedCondition === 'all' ? 'default' : 'outline'}
                     onClick={() => setSelectedCondition('all')}
                     className="w-full col-span-2"
                 >
@@ -149,7 +149,7 @@ export function ProductFilters({ categories, conditions }: ProductFiltersProps) 
                 {enabledConditions.map((condition) => (
                     <Button
                         key={condition}
-                        variant={selectedCondition === condition ? 'destructive' : 'outline'}
+                        variant={selectedCondition === condition ? 'default' : 'outline'}
                         onClick={() => setSelectedCondition(condition)}
                         className="w-full"
                     >
@@ -174,9 +174,9 @@ export function ProductFilters({ categories, conditions }: ProductFiltersProps) 
             />
           </div>
       </CardContent>
-       <CardFooter className="lg:block hidden">
+       <CardFooter className="lg:block hidden p-0 pt-6">
             <div className="flex flex-col gap-2">
-            <Button variant="destructive" className="w-full" onClick={handleApplyFilters}>
+            <Button variant="default" className="w-full" onClick={handleApplyFilters}>
                 Apply Filters
             </Button>
             <Button className="w-full" variant="ghost" onClick={handleResetFilters}>

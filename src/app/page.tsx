@@ -14,7 +14,7 @@ import { ProductGrid } from '@/components/products/product-grid';
 import { getPromoBanner } from './dashboard/manage-promo-banner/actions';
 import { getProductConditions } from './dashboard/manage-product-conditions/actions';
 import { PromoBanner } from '@/components/products/promo-banner';
-import { Sheet, SheetContent, SheetTrigger, SheetFooter, SheetClose } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetFooter, SheetClose, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { SlidersHorizontal } from 'lucide-react';
 
@@ -139,14 +139,22 @@ export default async function Home({
                                     Filters
                                 </Button>
                             </SheetTrigger>
-                            <SheetContent className="flex flex-col p-0">
-                                <ProductFilters categories={categoryMap} conditions={conditions} />
+                            <SheetContent className="flex flex-col">
+                                <SheetHeader className="p-6">
+                                  <SheetTitle>Filter Products</SheetTitle>
+                                  <SheetDescription>
+                                    Refine your search using the options below.
+                                  </SheetDescription>
+                                </SheetHeader>
+                                <div className="p-6 flex-1 overflow-y-auto">
+                                    <ProductFilters categories={categoryMap} conditions={conditions} />
+                                </div>
                                 <SheetFooter className="p-4 border-t">
                                     <SheetClose asChild>
                                         <Button className="w-full" variant="ghost">Reset</Button>
                                     </SheetClose>
                                     <SheetClose asChild>
-                                        <Button variant="destructive" className="w-full">Apply</Button>
+                                        <Button variant="default" className="w-full">Apply</Button>
                                     </SheetClose>
                                 </SheetFooter>
                             </SheetContent>
