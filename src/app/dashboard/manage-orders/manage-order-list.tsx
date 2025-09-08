@@ -31,6 +31,7 @@ import { Separator } from '@/components/ui/separator';
 import { generateSellerOrderPdfs } from '@/lib/pdf-generator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DownloadReportButton } from './download-report-button';
+import { DownloadFulfillmentButton } from './download-fulfillment-button';
 
 interface OrderRowProps {
     order: Order;
@@ -278,11 +279,14 @@ export function ManageOrderList({ initialOrders }: { initialOrders: Order[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 flex-wrap">
           <p className="text-sm text-muted-foreground">
               {selectedOrders.size} of {initialOrders.length} order(s) selected.
           </p>
-          <DownloadReportButton selectedOrders={selectedOrdersData} />
+          <div className="flex items-center gap-2">
+            <DownloadReportButton selectedOrders={selectedOrdersData} />
+            <DownloadFulfillmentButton selectedOrders={selectedOrdersData} />
+          </div>
       </div>
       <div className="border rounded-lg overflow-hidden">
         <Table>
