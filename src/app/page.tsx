@@ -87,7 +87,7 @@ export default async function Home({
       : true;
     
     const categoryMatch = selectedCategory ? product.category === selectedCategory : true;
-    const subcategoryMatch = subcategory ? product.subcategory === subcategory : true;
+    const subcategoryMatch = selectedSubcategory ? product.subcategory === selectedSubcategory : true;
     const conditionMatch = selectedCondition ? product.condition === selectedCondition : true;
     const priceMatch = product.price >= minPrice && (maxPrice ? product.price <= maxPrice : true);
 
@@ -139,7 +139,7 @@ export default async function Home({
                                     Filters
                                 </Button>
                             </SheetTrigger>
-                            <SheetContent className="flex flex-col">
+                            <SheetContent className="flex flex-col p-0">
                                 <ProductFilters categories={categoryMap} conditions={conditions} />
                             </SheetContent>
                         </Sheet>
