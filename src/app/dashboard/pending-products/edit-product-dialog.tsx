@@ -39,20 +39,23 @@ import type { Product } from '@/lib/types';
 import { updateAndApproveProduct } from './actions';
 import { updateProductSchema } from '@/lib/schemas/product';
 import type { CategoryMap } from '../manage-categories/actions';
+import type { ProductConditionMap } from '../manage-product-conditions/actions';
 
 interface EditProductDialogProps {
   product: Product;
   categories: CategoryMap;
+  conditions: ProductConditionMap;
   onSuccess: (productId: string) => void;
   onError: (message: string) => void;
 }
 
-const conditions = ['New', 'Like New', 'Used'];
-
-
-export function EditProductDialog({ product, categories, onSuccess, onError }: EditProductDialogProps) {
+export function EditProductDialog({ product, categories, conditions, onSuccess, onError }: EditProductDialogProps) {
     const [open, setOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    
+    const enabledConditions = Object.entries(conditions)
+        .filter(([_, data]) => data.enabled)
+        .map(([name]) => name);
 
     const form = useForm<z.infer<typeof updateProductSchema>>({
         resolver: zodResolver(updateProductSchema),
@@ -249,7 +252,7 @@ export function EditProductDialog({ product, categories, onSuccess, onError }: E
                                         <SelectTrigger><SelectValue placeholder="Select a condition" /></SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        {conditions.map(con => (
+                                        {enabledConditions.map(con => (
                                         <SelectItem key={con} value={con}>{con}</SelectItem>
                                         ))}
                                     </SelectContent>

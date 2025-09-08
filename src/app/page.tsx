@@ -12,6 +12,7 @@ import { ProductShowcase } from '@/components/products/product-showcase';
 import { ProductFilters } from '@/components/products/product-filters';
 import { ProductGrid } from '@/components/products/product-grid';
 import { getPromoBanner } from './dashboard/manage-promo-banner/actions';
+import { getProductConditions } from './dashboard/manage-product-conditions/actions';
 import { PromoBanner } from '@/components/products/promo-banner';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -56,6 +57,7 @@ export default async function Home({
   const featuredProductInfo = await getFeaturedProduct();
   const categoryMap: CategoryMap = await getCategories();
   const promoBanner = await getPromoBanner();
+  const conditions = await getProductConditions();
   
   const categories = Object.entries(categoryMap)
     .filter(([_, catData]) => catData.enabled) // Filter for enabled categories
@@ -85,7 +87,7 @@ export default async function Home({
       : true;
     
     const categoryMatch = selectedCategory ? product.category === selectedCategory : true;
-    const subcategoryMatch = selectedSubcategory ? product.subcategory === selectedSubcategory : true;
+    const subcategoryMatch = selectedSubcategory ? product.subcategory === subcategory : true;
     const conditionMatch = selectedCondition ? product.condition === selectedCondition : true;
     const priceMatch = product.price >= minPrice && (maxPrice ? product.price <= maxPrice : true);
 
@@ -121,7 +123,7 @@ export default async function Home({
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
         <div className="hidden lg:block lg:sticky lg:top-24">
-           <ProductFilters categories={categoryMap} />
+           <ProductFilters categories={categoryMap} conditions={conditions} />
         </div>
         <div className="lg:col-span-3">
             <div className="flex flex-col sm:flex-row gap-4 items-center mb-8">
@@ -138,7 +140,7 @@ export default async function Home({
                                 </Button>
                             </SheetTrigger>
                             <SheetContent>
-                                <ProductFilters categories={categoryMap} />
+                                <ProductFilters categories={categoryMap} conditions={conditions} />
                             </SheetContent>
                         </Sheet>
                     </div>

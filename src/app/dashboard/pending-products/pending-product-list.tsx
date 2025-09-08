@@ -20,13 +20,15 @@ import Link from 'next/link';
 import { EditProductDialog } from './edit-product-dialog';
 import { RejectProductDialog } from './reject-product-dialog';
 import type { CategoryMap } from '../manage-categories/actions';
+import type { ProductConditionMap } from '../manage-product-conditions/actions';
 
 interface PendingProductListProps {
   initialProducts: Product[];
   categories: CategoryMap;
+  conditions: ProductConditionMap;
 }
 
-export function PendingProductList({ initialProducts, categories }: PendingProductListProps) {
+export function PendingProductList({ initialProducts, categories, conditions }: PendingProductListProps) {
   const [products, setProducts] = useState(initialProducts);
   const { toast } = useToast();
 
@@ -125,6 +127,7 @@ export function PendingProductList({ initialProducts, categories }: PendingProdu
                     <EditProductDialog
                         product={product}
                         categories={categories}
+                        conditions={conditions}
                         onSuccess={handleProductUpdate}
                         onError={handleUpdateError}
                     />

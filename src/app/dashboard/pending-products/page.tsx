@@ -1,3 +1,4 @@
+
 // src/app/dashboard/pending-products/page.tsx
 import { ShieldAlert, CheckCircle, ArrowLeft } from 'lucide-react';
 import { getPendingProducts } from './actions';
@@ -6,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { getCategories } from '../manage-categories/actions';
+import { getProductConditions } from '../manage-product-conditions/actions';
 import { PendingProductFilters } from './pending-product-filters';
 import { Suspense } from 'react';
 
@@ -18,8 +20,11 @@ export default async function PendingProductsPage({
     contactNumber?: string;
   };
 }) {
-  const pendingProducts = await getPendingProducts(searchParams);
-  const categories = await getCategories();
+  const [pendingProducts, categories, conditions] = await Promise.all([
+    getPendingProducts(searchParams),
+    getCategories(),
+    getProductConditions(),
+  ]);
 
   return (
     <Card>
@@ -46,7 +51,7 @@ export default async function PendingProductsPage({
             <Suspense fallback={null}>
                 <PendingProductFilters />
             </Suspense>
-            <PendingProductList initialProducts={pendingProducts} categories={categories} />
+            <PendingProductList initialProducts={pendingProducts} categories={categories} conditions={conditions} />
         </CardContent>
     </Card>
   );

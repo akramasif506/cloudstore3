@@ -38,8 +38,7 @@ import { generateDescription } from '@/ai/flows/generate-description-flow';
 import type { CategoryMap } from '@/app/dashboard/manage-categories/actions';
 import type { VariantSetMap } from '@/app/dashboard/manage-variants/actions';
 import { Separator } from '@/components/ui/separator';
-
-const conditions = ['New', 'Like New', 'Used'];
+import type { ProductConditionMap } from '@/app/dashboard/manage-product-conditions/actions';
 
 const formSchema = listingSchema;
 
@@ -56,9 +55,10 @@ const fileToDataUri = (file: File): Promise<string> => {
 interface ListingFormProps {
   categories: CategoryMap;
   variantSets: VariantSetMap;
+  conditions: ProductConditionMap;
 }
 
-export function ListingForm({ categories, variantSets }: ListingFormProps) {
+export function ListingForm({ categories, variantSets, conditions }: ListingFormProps) {
   const { toast } = useToast();
   const router = useRouter();
   const { user } = useAuth();
@@ -67,6 +67,10 @@ export function ListingForm({ categories, variantSets }: ListingFormProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [compressedImageFile, setCompressedImageFile] = useState<File | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
+
+  const enabledConditions = Object.entries(conditions)
+    .filter(([_, data]) => data.enabled)
+    .map(([name]) => name);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -77,7 +81,7 @@ export function ListingForm({ categories, variantSets }: ListingFormProps) {
       originalPrice: undefined,
       category: '',
       subcategory: '',
-      condition: 'Used',
+      condition: enabledConditions.includes('Used') ? 'Used' : 'New',
       variants: [],
       seller: { id: '', name: '', contactNumber: '' }, // Initial empty seller
     },
@@ -523,7 +527,7 @@ export function ListingForm({ categories, variantSets }: ListingFormProps) {
                     <SelectTrigger><SelectValue placeholder="Select a condition" /></SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {conditions.map(con => (
+                    {enabledConditions.map(con => (
                       <SelectItem key={con} value={con}>{con}</SelectItem>
                     ))}
                   </SelectContent>

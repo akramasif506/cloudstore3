@@ -16,21 +16,25 @@ import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { SlidersHorizontal } from "lucide-react";
 import type { CategoryMap } from '@/app/dashboard/manage-categories/actions';
+import type { ProductConditionMap } from '@/app/dashboard/manage-product-conditions/actions';
 import { cn } from '@/lib/utils';
 import { SheetFooter, SheetClose } from '../ui/sheet';
 import { ScrollArea } from '../ui/scroll-area';
-
-const conditions = ['New', 'Like New', 'Used'];
 
 const MAX_PRICE = 50000;
 
 interface ProductFiltersProps {
   categories: CategoryMap;
+  conditions: ProductConditionMap;
 }
 
-export function ProductFilters({ categories }: ProductFiltersProps) {
+export function ProductFilters({ categories, conditions }: ProductFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  
+  const enabledConditions = Object.entries(conditions)
+    .filter(([_, data]) => data.enabled)
+    .map(([name]) => name);
   
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [selectedSubcategory, setSelectedSubcategory] = useState(searchParams.get('subcategory') || 'all');
@@ -146,7 +150,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
                 >
                     Any Condition
                 </Button>
-                {conditions.map((condition) => (
+                {enabledConditions.map((condition) => (
                     <Button
                         key={condition}
                         variant={selectedCondition === condition ? 'destructive' : 'outline'}

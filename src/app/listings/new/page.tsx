@@ -4,11 +4,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { FilePlus2 } from 'lucide-react';
 import { getCategories } from '@/app/dashboard/manage-categories/actions';
 import { getVariantSets } from '@/app/dashboard/manage-variants/actions';
+import { getProductConditions } from '@/app/dashboard/manage-product-conditions/actions';
 
 export default async function NewListingPage() {
-  const [categories, variantSets] = await Promise.all([
+  const [categories, variantSets, conditions] = await Promise.all([
     getCategories(),
     getVariantSets(),
+    getProductConditions(),
   ]);
 
   return (
@@ -26,7 +28,7 @@ export default async function NewListingPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <ListingForm categories={categories} variantSets={variantSets} />
+          <ListingForm categories={categories} variantSets={variantSets} conditions={conditions} />
         </CardContent>
       </Card>
     </div>
