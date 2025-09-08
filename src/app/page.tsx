@@ -141,6 +141,14 @@ export default async function Home({
                             </SheetTrigger>
                             <SheetContent className="flex flex-col p-0">
                                 <ProductFilters categories={categoryMap} conditions={conditions} />
+                                <SheetFooter className="p-4 border-t">
+                                    <SheetClose asChild>
+                                        <Button className="w-full" variant="ghost">Reset</Button>
+                                    </SheetClose>
+                                    <SheetClose asChild>
+                                        <Button variant="destructive" className="w-full">Apply</Button>
+                                    </SheetClose>
+                                </SheetFooter>
                             </SheetContent>
                         </Sheet>
                     </div>

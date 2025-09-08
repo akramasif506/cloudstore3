@@ -17,9 +17,6 @@ import { Button } from "@/components/ui/button";
 import { SlidersHorizontal } from "lucide-react";
 import type { CategoryMap } from '@/app/dashboard/manage-categories/actions';
 import type { ProductConditionMap } from '@/app/dashboard/manage-product-conditions/actions';
-import { cn } from '@/lib/utils';
-import { SheetFooter, SheetClose } from '../ui/sheet';
-import { ScrollArea } from '../ui/scroll-area';
 
 const MAX_PRICE = 50000;
 
@@ -85,7 +82,6 @@ export function ProductFilters({ categories, conditions }: ProductFiltersProps) 
 
   const handleCategoryChange = (value: string) => {
     setSelectedCategory(value);
-    // When category changes, reset subcategory to prevent invalid combinations
     setSelectedSubcategory('all');
   };
 
@@ -96,14 +92,14 @@ export function ProductFilters({ categories, conditions }: ProductFiltersProps) 
   const enabledCategories = Object.entries(categories).filter(([_, catData]) => catData.enabled);
 
   return (
-    <Card className="flex flex-col h-full">
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <SlidersHorizontal className="h-5 w-5" />
           <span>Filters</span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6 flex-grow">
+      <CardContent className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
             <Select onValueChange={handleCategoryChange} value={selectedCategory}>
@@ -177,33 +173,17 @@ export function ProductFilters({ categories, conditions }: ProductFiltersProps) 
               className="[&>span:first-child]:h-2 [&>span>span]:h-5 [&>span>span]:w-5 [&>span>span]:border-2"
             />
           </div>
-          
-           {/* This footer is now only visible on desktop */}
-           <div className="pt-6 hidden lg:block">
-             <div className="flex flex-col gap-2">
-                <Button variant="destructive" className="w-full" onClick={handleApplyFilters}>
-                  Apply Filters
-                </Button>
-                <Button className="w-full" variant="ghost" onClick={handleResetFilters}>
-                  Reset Filters
-                </Button>
-              </div>
-           </div>
-
       </CardContent>
-       {/* This footer is for the mobile sheet view */}
-       <SheetFooter className="lg:hidden p-4 border-t">
-            <SheetClose asChild>
-                <Button className="w-full" variant="ghost" onClick={handleResetFilters}>
-                Reset Filters
-                </Button>
-            </SheetClose>
-            <SheetClose asChild>
-                <Button variant="destructive" className="w-full" onClick={handleApplyFilters}>
+       <CardFooter className="lg:block hidden">
+            <div className="flex flex-col gap-2">
+            <Button variant="destructive" className="w-full" onClick={handleApplyFilters}>
                 Apply Filters
-                </Button>
-            </SheetClose>
-        </SheetFooter>
+            </Button>
+            <Button className="w-full" variant="ghost" onClick={handleResetFilters}>
+                Reset Filters
+            </Button>
+            </div>
+      </CardFooter>
     </Card>
   );
 }
