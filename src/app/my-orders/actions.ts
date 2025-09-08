@@ -144,3 +144,43 @@ export async function requestReturn(
         return { success: false, message: 'Failed to submit return request.' };
     }
 }
+
+
+export async function cancelOrder(orderInternalId: string): Promise<{ success: boolean; message: string }> {
+    const user = await getCurrentUser();
+    if (!user) {
+        return { success: false, message: 'You must be logged in to cancel an order.' };
+    }
+
+    const { db } = initializeAdmin();
+
+    try {
+        const orderRef = db.ref(`orders/${user.id}/${orderInternalId}`);
+        const globalOrderRef = db.ref(`all_orders/${orderInternalId}`);
+
+        // Fetch the order to verify status and ownership
+        const orderSnapshot = await orderRef.once('value');
+        if (!orderSnapshot.exists()) {
+            return { success: false, message: 'Order not found or you do not have permission.' };
+        }
+
+        const orderData: Order = orderSnapshot.val();
+        if (orderData.status !== 'Pending') {
+            return { success: false, message: `This order cannot be cancelled as it is already ${orderData.status}.` };
+        }
+
+        // Update both the user-specific and global order records
+        await orderRef.update({ status: 'Cancelled' });
+        await globalOrderRef.update({ status: 'Cancelled' });
+
+        revalidatePath('/my-orders');
+        revalidatePath(`/my-orders/${orderInternalId}`);
+        revalidatePath('/dashboard/manage-orders');
+
+        return { success: true, message: 'Your order has been cancelled.' };
+
+    } catch (error) {
+        console.error('Error cancelling order:', error);
+        return { success: false, message: 'Failed to cancel the order. Please try again.' };
+    }
+}

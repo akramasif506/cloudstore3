@@ -1,4 +1,5 @@
 
+
 export interface User {
   id: string;
   name: string;
@@ -68,7 +69,7 @@ export interface OrderItem {
     seller?: ProductSeller;
 }
 
-export type ReturnStatus = 'Return Requested' | 'Return Approved' | 'Return Rejected' | 'Returned';
+export type ReturnStatus = 'Return Requested' | 'Return Approved' | 'Return Rejected' | 'Returned' | 'Cancelled';
 
 export interface Order {
     id: string; // Human-readable e.g., CS-1001

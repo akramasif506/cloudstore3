@@ -1,21 +1,32 @@
 
+
 // src/app/my-orders/my-orders-client.tsx
 "use client";
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, PackageOpen, CheckCircle, Truck, Frown, Loader2, Undo2, Ban, Download } from 'lucide-react';
+import { DollarSign, PackageOpen, CheckCircle, Truck, Frown, Loader2, Undo2, Ban, Download, XCircle } from 'lucide-react';
 import type { Order, ReturnStatus } from '@/lib/types';
 import Link from 'next/link';
 import { useAuth } from '@/context/auth-context';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { getMyOrders, getMyOrdersReturnPolicy } from './actions';
+import { getMyOrders, getMyOrdersReturnPolicy, cancelOrder } from './actions';
 import type { ReturnPolicy } from '../dashboard/manage-returns/actions';
 import { useToast } from '@/hooks/use-toast';
 import { RequestReturnDialog } from './request-return-dialog';
 import { OrderPrintButton } from './[id]/order-print-button';
-
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 function StatusBadge({ status }: { status: Order['status'] }) {
     const baseClasses = "flex items-center gap-2 text-sm font-medium px-3 py-1 rounded-full w-fit";
@@ -76,7 +87,9 @@ export function MyOrdersClient() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [returnPolicy, setReturnPolicy] = useState<ReturnPolicy | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isCancelling, setIsCancelling] = useState<string | null>(null);
     const router = useRouter();
+    const { toast } = useToast();
 
     useEffect(() => {
         async function loadData() {
@@ -135,6 +148,26 @@ export function MyOrdersClient() {
         setOrders(prevOrders => prevOrders.map(o => o.internalId === orderId ? {...o, returnStatus: 'Return Requested'} : o));
     }
 
+    const handleCancelOrder = async (orderId: string) => {
+        setIsCancelling(orderId);
+        const result = await cancelOrder(orderId);
+        setIsCancelling(null);
+
+        if (result.success) {
+            setOrders(prev => prev.map(o => o.internalId === orderId ? { ...o, status: 'Cancelled' } : o));
+            toast({
+                title: "Order Cancelled",
+                description: result.message,
+            });
+        } else {
+            toast({
+                variant: 'destructive',
+                title: "Cancellation Failed",
+                description: result.message,
+            });
+        }
+    }
+
 
     return (
         <div>
@@ -187,11 +220,35 @@ export function MyOrdersClient() {
                                     </Button>
                                 </div>
                             </CardContent>
-                             {returnPolicy && isReturnable(order, returnPolicy) && (
-                                <CardFooter className="bg-muted/30">
-                                   <RequestReturnDialog orderId={order.internalId!} onSuccess={() => handleReturnSuccess(order.internalId!)} />
-                                </CardFooter>
-                            )}
+                            <CardFooter className="bg-muted/30 flex justify-end gap-4">
+                                {order.status === 'Pending' && (
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="destructive" size="sm">
+                                                <XCircle className="mr-2 h-4 w-4"/>Cancel Order
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This will permanently cancel your order #{order.id}. This action cannot be undone.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Go Back</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleCancelOrder(order.internalId!)} disabled={isCancelling === order.internalId}>
+                                                    {isCancelling === order.internalId && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                    Confirm Cancellation
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                )}
+                                {returnPolicy && isReturnable(order, returnPolicy) && (
+                                    <RequestReturnDialog orderId={order.internalId!} onSuccess={() => handleReturnSuccess(order.internalId!)} />
+                                )}
+                            </CardFooter>
                         </Card>
                     ))}
                 </div>
