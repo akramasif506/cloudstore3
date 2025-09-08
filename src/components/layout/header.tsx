@@ -45,9 +45,11 @@ export function Header() {
               <DropdownMenuItem asChild>
                 <Link href="/"><Home className="mr-2 h-4 w-4" />Home</Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/listings/new"><Tag className="mr-2 h-4 w-4" />Sell</Link>
-              </DropdownMenuItem>
+              {user?.role === 'admin' && (
+                <DropdownMenuItem asChild>
+                  <Link href="/listings/new"><Tag className="mr-2 h-4 w-4" />Sell</Link>
+                </DropdownMenuItem>
+              )}
                <DropdownMenuItem asChild>
                 <Link href="/about"><MessageSquare className="mr-2 h-4 w-4" />About</Link>
               </DropdownMenuItem>
@@ -78,9 +80,11 @@ export function Header() {
                 <Link href="/" className="transition-colors hover:text-foreground/80 text-foreground">
                     Home
                 </Link>
-                 <Link href="/listings/new" className="transition-colors hover:text-foreground/80 text-foreground/60">
-                    Sell
-                </Link>
+                 {user?.role === 'admin' && (
+                  <Link href="/listings/new" className="transition-colors hover:text-foreground/80 text-foreground/60">
+                      Sell
+                  </Link>
+                 )}
                 <Link href="/about" className="transition-colors hover:text-foreground/80 text-foreground/60">
                     About
                 </Link>
