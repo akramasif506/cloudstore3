@@ -1,7 +1,7 @@
 
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Package, ShieldAlert, CheckCircle, ShoppingCart, List, MessageSquare, Star, BookUser, Megaphone, Percent, Truck, FolderKanban, Undo2, DatabaseZap, Image as ImageIcon, Palette, Wrench } from 'lucide-react';
+import { Users, Package, ShieldAlert, CheckCircle, ShoppingCart, List, MessageSquare, Star, BookUser, Megaphone, Percent, Truck, FolderKanban, Undo2, DatabaseZap, Image as ImageIcon, Palette, Wrench, MapPin } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { CategoryChart } from '@/components/dashboard/category-chart';
 import { RecentProducts } from '@/components/dashboard/recent-products';
@@ -177,6 +177,12 @@ export default async function DashboardPage() {
                     href="/dashboard/manage-fees"
                 />
                  <StatsCard 
+                    title="Location Discounts"
+                    value={"PIN Codes"}
+                    icon={MapPin}
+                    href="/dashboard/manage-discounts"
+                />
+                 <StatsCard 
                     title="Categories"
                     value={"Manage"}
                     icon={FolderKanban}
@@ -263,5 +269,7 @@ export default async function DashboardPage() {
     </div>
   );
 }
+
+    
 
     
