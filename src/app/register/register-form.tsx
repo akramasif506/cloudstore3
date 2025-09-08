@@ -13,6 +13,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from '@/components/ui/input';
 import { useToast } from "@/hooks/use-toast";
 import { registerUser } from '@/register/actions';
@@ -23,6 +30,18 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Textarea } from '@/components/ui/textarea';
+
+const indianStates = [
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
+    "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka",
+    "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya",
+    "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim",
+    "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand",
+    "West Bengal", "Andaman and Nicobar Islands", "Chandigarh",
+    "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Jammu and Kashmir",
+    "Ladakh", "Lakshadweep", "Puducherry"
+];
+const OTHER_VALUE = 'Other';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -36,7 +55,17 @@ const registerSchema = z.object({
   city: z.string().optional(),
   district: z.string().optional(),
   pinCode: z.string().regex(/^\d{6}$/, "Please enter a valid 6-digit PIN code.").optional().or(z.literal('')),
-  state: z.string().default('Assam'),
+  state: z.string().optional(),
+  otherState: z.string().optional(),
+}).refine(data => {
+    // If state is 'Other', then otherState must not be empty.
+    if (data.state === OTHER_VALUE) {
+        return data.otherState && data.otherState.trim().length > 0;
+    }
+    return true;
+}, {
+    message: "Please specify the state name.",
+    path: ["otherState"],
 });
 
 export function RegisterForm() {
@@ -55,17 +84,21 @@ export function RegisterForm() {
       city: '',
       district: '',
       pinCode: '',
-      state: 'Assam',
+      state: '',
+      otherState: '',
     },
   });
+  
+  const selectedState = form.watch("state");
 
   async function onSubmit(values: z.infer<typeof registerSchema>) {
     setIsLoading(true);
 
     try {
+      const stateValue = values.state === OTHER_VALUE ? values.otherState : values.state;
       // Combine address fields into a single string for the server action
-      const fullAddress = (values.addressLine1 || values.city || values.district || values.pinCode) 
-        ? `${values.addressLine1}, City: ${values.city}, Dist: ${values.district}, PIN: ${values.pinCode}, ${values.state}, India` 
+      const fullAddress = (values.addressLine1 || values.city || values.district || values.pinCode || stateValue) 
+        ? `${values.addressLine1}, City: ${values.city}, Dist: ${values.district}, PIN: ${values.pinCode}, ${stateValue}, India` 
         : '';
         
       const registrationPayload = {
@@ -280,15 +313,38 @@ export function RegisterForm() {
                     name="state"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>State</FormLabel>
+                            <FormLabel>State</FormLabel>
+                             <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoading}>
+                                <FormControl>
+                                    <SelectTrigger><SelectValue placeholder="Select a state" /></SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {indianStates.map(state => (
+                                        <SelectItem key={state} value={state}>{state}</SelectItem>
+                                    ))}
+                                    <SelectItem value={OTHER_VALUE}>Other</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
+            {selectedState === OTHER_VALUE && (
+                <FormField
+                    control={form.control}
+                    name="otherState"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Please Specify State</FormLabel>
                         <FormControl>
-                            <Input {...field} readOnly disabled />
+                            <Input placeholder="Enter state name" {...field} disabled={isLoading} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
                     )}
                 />
-            </div>
+            )}
         </div>
 
         <Button type="submit" className="w-full" disabled={isLoading}>
