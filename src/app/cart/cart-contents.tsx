@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Trash2, Frown, Home, Phone, Loader2, LogIn, Percent, Package, Tag } from 'lucide-react';
+import { Trash2, Frown, Home, Phone, Loader2, LogIn, Percent, Package, Tag, Plus, Minus } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
@@ -167,13 +167,21 @@ export function CartContents() {
                     <p className="text-lg font-bold text-destructive mt-1">Rs {item.price.toFixed(2)}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="1"
-                      value={item.quantity}
-                      onChange={(e) => updateQuantity(item.id, parseInt(e.target.value, 10))}
-                      className="w-16 h-9 text-center"
-                    />
+                     <div className="flex items-center gap-1">
+                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.id, item.quantity - 1)}>
+                            <Minus className="h-4 w-4" />
+                        </Button>
+                        <Input 
+                            type="number"
+                            className="w-12 h-8 text-center"
+                            value={item.quantity}
+                            onChange={(e) => updateQuantity(item.id, parseInt(e.target.value, 10) || 1)}
+                            min="1"
+                        />
+                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                            <Plus className="h-4 w-4" />
+                        </Button>
+                    </div>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -276,3 +284,5 @@ export function CartContents() {
     </div>
   );
 }
+
+    
