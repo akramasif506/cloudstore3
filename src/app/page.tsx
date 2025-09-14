@@ -110,19 +110,14 @@ export default async function Home({
     return searchMatch && categoryMatch && subcategoryMatch && conditionMatch && priceMatch && ratingMatch;
   });
 
-  // Combine featured products with regular products for consistent sorting
-  const featuredProducts = allProducts.filter(p => p.isFeatured && p.id !== featuredProductInfo?.productId);
-  let regularProducts = productsToShow.filter(p => !p.isFeatured);
-
-  // When sorting is active, combine all products and sort them together.
-  // Otherwise, keep featured products at the top.
-  if (sortBy !== 'newest' || hasActiveFilters) {
-      productsToShow = [...featuredProducts, ...regularProducts];
-  } else {
-      productsToShow = [...featuredProducts, ...regularProducts];
-  }
-
+  // Now, combine all products and sort them together.
   productsToShow.sort((a, b) => {
+    // Featured products get a boost only when no other sort is active
+    if (sortBy === 'newest' && !hasActiveFilters) {
+      if (a.isFeatured && !b.isFeatured) return -1;
+      if (!a.isFeatured && b.isFeatured) return 1;
+    }
+
     switch (sortBy) {
       case 'price-asc':
         return a.price - b.price;
@@ -130,9 +125,6 @@ export default async function Home({
         return b.price - a.price;
       case 'newest':
       default:
-        // Give featured items a boost to appear first if no other sort is active
-        if (!hasActiveFilters && a.isFeatured && !b.isFeatured) return -1;
-        if (!hasActiveFilters && !a.isFeatured && b.isFeatured) return 1;
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     }
   });
@@ -180,9 +172,6 @@ export default async function Home({
                                 <div className="p-6 flex-1 overflow-y-auto">
                                     <ProductFilters categories={categoryMap} conditions={conditions} />
                                 </div>
-                                <SheetFooter className="p-4 border-t">
-                                  <FilterActions />
-                                </SheetFooter>
                             </SheetContent>
                         </Sheet>
                     </div>
