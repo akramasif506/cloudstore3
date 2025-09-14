@@ -1,5 +1,4 @@
 
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Package, ShieldAlert, CheckCircle, ShoppingCart, List, MessageSquare, Star, BookUser, Megaphone, Percent, Truck, FolderKanban, Undo2, DatabaseZap, Image as ImageIcon, Palette, Wrench, MapPin } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/stats-card';
@@ -212,6 +211,13 @@ export default async function DashboardPage() {
                     icon={Users}
                     href="/dashboard/manage-users"
                 />
+                 <StatsCard
+                    title="Data Management"
+                    value={"Clear Data"}
+                    icon={DatabaseZap}
+                    href="/dashboard/data-management"
+                    className="border-destructive/50 text-destructive"
+                 />
             </CardContent>
         </Card>
       </div>
@@ -269,7 +275,3 @@ export default async function DashboardPage() {
     </div>
   );
 }
-
-    
-
-    
