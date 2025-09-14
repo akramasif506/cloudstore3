@@ -107,16 +107,8 @@ export default async function Home({
     return searchMatch && categoryMatch && subcategoryMatch && conditionMatch && priceMatch && ratingMatch;
   });
 
-  const featuredProducts = productsToShow.filter(p => p.isFeatured);
-  const regularProducts = productsToShow.filter(p => !p.isFeatured);
-
-  // Now, combine all products and sort them together.
+  // Sort products based on the sortBy parameter.
   productsToShow.sort((a, b) => {
-    // Keep featured products at the top UNLESS a sort order is applied
-    if (sortBy === 'newest' && !hasActiveFilters) {
-      if (a.isFeatured && !b.isFeatured) return -1;
-      if (!a.isFeatured && b.isFeatured) return 1;
-    }
     switch (sortBy) {
       case 'price-asc':
         return a.price - b.price;
@@ -127,6 +119,14 @@ export default async function Home({
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     }
   });
+  
+  // Conditionally keep featured products at the top only if no sort order is specified and no filters are active.
+  if (sortBy === 'newest' && !hasActiveFilters) {
+      const featured = productsToShow.filter(p => p.isFeatured);
+      const regular = productsToShow.filter(p => !p.isFeatured);
+      productsToShow = [...featured, ...regular];
+  }
+
 
   return (
     <div className="space-y-8">
@@ -164,7 +164,7 @@ export default async function Home({
                                 <div className="p-6 flex-1 overflow-y-auto">
                                     <ProductFilters categories={categoryMap} conditions={conditions} />
                                 </div>
-                                <SheetFooter className="p-6 bg-muted/50 lg:hidden">
+                                <SheetFooter className="p-6 bg-muted/50">
                                      <FilterActions />
                                 </SheetFooter>
                             </SheetContent>
