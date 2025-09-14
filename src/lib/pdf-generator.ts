@@ -133,8 +133,7 @@ export async function generateSellerOrderPdfs(orders: Order[]) {
 
 async function addImageToPdf(doc: jsPDF, imageUrl: string, x: number, y: number, width: number, height: number): Promise<void> {
     try {
-        const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-        const response = await fetch(proxyUrl + imageUrl);
+        const response = await fetch(imageUrl);
         if (!response.ok) {
             throw new Error(`Failed to fetch image: ${response.statusText}`);
         }
@@ -187,6 +186,13 @@ export async function generateInvoicesPdf(orders: Order[]) {
         if (i > 0) {
             doc.addPage();
         }
+        
+        // --- Safely access order values with fallbacks ---
+        const subtotal = order.subtotal ?? 0;
+        const platformFee = order.platformFee ?? 0;
+        const handlingFee = order.handlingFee ?? 0;
+        const tax = order.tax ?? 0;
+        const discountValue = order.discount?.value ?? 0;
 
         // --- Invoice Header ---
         doc.addImage('/logo.png', 'PNG', 14, 16, 30, 7.5);
@@ -251,14 +257,14 @@ export async function generateInvoicesPdf(orders: Order[]) {
         }
 
         const totals = [
-            ['Subtotal', `Rs ${order.subtotal.toFixed(2)}`],
-            ['Platform Fee', `Rs ${order.platformFee.toFixed(2)}`],
-            ['Handling Fee', `Rs ${order.handlingFee.toFixed(2)}`],
-            ['Tax', `Rs ${order.tax.toFixed(2)}`],
+            ['Subtotal', `Rs ${subtotal.toFixed(2)}`],
+            ['Platform Fee', `Rs ${platformFee.toFixed(2)}`],
+            ['Handling Fee', `Rs ${handlingFee.toFixed(2)}`],
+            ['Tax', `Rs ${tax.toFixed(2)}`],
         ];
         
-        if (order.discount && order.discount.value > 0) {
-             totals.push([`Discount (${order.discount.name})`, `- Rs ${order.discount.value.toFixed(2)}`]);
+        if (order.discount && discountValue > 0) {
+             totals.push([`Discount (${order.discount.name})`, `- Rs ${discountValue.toFixed(2)}`]);
         }
         
         totals.push(['Shipping', 'Free']);
