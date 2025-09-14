@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 interface ManageProductListProps {
   products: Product[];
@@ -55,6 +56,7 @@ export function ManageProductList({ products, categories }: ManageProductListPro
   const [productList, setProductList] = useState(products);
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
   const { toast } = useToast();
+  const router = useRouter();
 
   const handleProductUpdate = (updatedProduct: Product) => {
     setProductList(currentProducts => currentProducts.map(p => p.id === updatedProduct.id ? updatedProduct : p));
@@ -109,6 +111,9 @@ export function ManageProductList({ products, categories }: ManageProductListPro
             title: `Product ${newFeaturedState ? 'Featured' : 'Unfeatured'}`,
             description: `${product.name} is now ${newFeaturedState ? 'featured' : 'no longer featured'}.`
         });
+        // Force a refresh of the homepage to reflect the change immediately
+        router.refresh();
+
     } else {
         toast({
             variant: "destructive",
