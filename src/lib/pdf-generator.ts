@@ -9,11 +9,11 @@ import type { Order, OrderItem } from "./types";
 async function getImageUrlAsDataUri(url: string): Promise<string | null> {
     if (!url) return null;
     try {
-        // We will attempt to fetch directly. If this fails due to CORS,
-        // it will be caught and a placeholder will be used.
-        const response = await fetch(url);
+        // Use a CORS proxy to get around browser security restrictions
+        const proxyUrl = `https://cors-anywhere.herokuapp.com/${url}`;
+        const response = await fetch(proxyUrl);
         if (!response.ok) {
-            throw new Error(`Failed to fetch image: ${response.statusText}`);
+            throw new Error(`Failed to fetch image via proxy: ${response.statusText}`);
         }
         const blob = await response.blob();
         return new Promise((resolve, reject) => {
