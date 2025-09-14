@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { Product } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building, Eye } from 'lucide-react';
+import { User, Eye } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 
@@ -16,6 +16,7 @@ export function ProductCard({ product, showViewButton = false }: ProductCardProp
   const imageUrl = product.imageUrl || 'https://placehold.co/400x300.png';
   const isDiscounted = product.originalPrice && product.originalPrice > product.price;
   const discountPercent = isDiscounted ? Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100) : 0;
+  const sellerName = product.seller?.name || 'CloudStore';
 
   return (
       <Card className="overflow-hidden h-full flex flex-col group transition-all duration-300 shadow-sm hover:shadow-xl">
@@ -51,8 +52,8 @@ export function ProductCard({ product, showViewButton = false }: ProductCardProp
         </Link>
         <CardFooter className="p-4 bg-background flex justify-between items-center">
              <div className="flex items-center gap-2">
-                <Building className="h-4 w-4 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">CloudStore</span>
+                <User className="h-4 w-4 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground truncate">{sellerName}</span>
             </div>
             {showViewButton && (
               <Button asChild variant="outline" size="sm">
