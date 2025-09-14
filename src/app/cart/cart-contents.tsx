@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import Image from 'next/image';
@@ -8,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Trash2, Frown, Home, Phone, Loader2, LogIn, Percent, Package, Tag, Plus, Minus } from 'lucide-react';
+import { Trash2, Frown, Home, Phone, Loader2, LogIn, Percent, Package, Tag, Plus, Minus, FileText } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
@@ -27,7 +28,8 @@ export function CartContents() {
     clearCart,
     subtotal, 
     platformFee, 
-    handlingFee, 
+    handlingFee,
+    tax, 
     total,
     appliedDiscount,
     setPinCode,
@@ -256,6 +258,10 @@ export function CartContents() {
              <div className="flex justify-between text-sm">
               <span className="text-muted-foreground flex items-center gap-1"><Package className="h-3 w-3" /> Handling Fee</span>
               <span className="font-medium">Rs {handlingFee.toFixed(2)}</span>
+            </div>
+             <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground flex items-center gap-1"><FileText className="h-3 w-3" /> GST / Tax</span>
+              <span className="font-medium">Rs {tax.toFixed(2)}</span>
             </div>
             {appliedDiscount && (
               <div className="flex justify-between text-sm text-green-600">

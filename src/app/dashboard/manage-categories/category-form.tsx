@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState } from 'react';
@@ -13,10 +14,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, PlusCircle, Trash2, Save, Tags, GripVertical } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, Save, Tags, GripVertical, Percent } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { CategoryMap, Category, Subcategory, VariantAttribute } from './actions';
@@ -43,6 +45,7 @@ const variantAttributeSchema = z.object({
 const subcategorySchema = z.object({
   name: z.string().min(1, 'Subcategory name cannot be empty.'),
   enabled: z.boolean(),
+  taxPercent: z.coerce.number().min(0).optional(),
 });
 
 const categorySchema = z.object({
@@ -50,6 +53,7 @@ const categorySchema = z.object({
   enabled: z.boolean(),
   subcategories: z.array(subcategorySchema),
   variantAttributes: z.array(variantAttributeSchema),
+  taxPercent: z.coerce.number().min(0).optional(),
 });
 
 const formSchema = z.object({
@@ -78,6 +82,7 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
         enabled: categoryData.enabled,
         subcategories: categoryData.subcategories,
         variantAttributes: categoryData.variantAttributes || [],
+        taxPercent: categoryData.taxPercent || 0,
       })),
       newCategoryName: '',
     },
@@ -95,7 +100,7 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
         toast({ variant: 'destructive', title: 'Category already exists.' });
         return;
       }
-      append({ name: newCategoryName, subcategories: [], enabled: true, variantAttributes: [] });
+      append({ name: newCategoryName, subcategories: [], enabled: true, variantAttributes: [], taxPercent: 0 });
       form.setValue('newCategoryName', '');
     }
   };
@@ -108,7 +113,7 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
         toast({ variant: 'destructive', title: 'Subcategory already exists.' });
         return;
       }
-      const newSub: Subcategory = { name: newSubcategory, enabled: true };
+      const newSub: Subcategory = { name: newSubcategory, enabled: true, taxPercent: 0 };
       const updatedSubcategories = [...categoryField.subcategories, newSub];
       update(categoryIndex, { ...categoryField, subcategories: updatedSubcategories });
       setNewSubcategoryValues(prev => ({ ...prev, [categoryIndex]: '' }));
@@ -149,6 +154,7 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
         enabled: category.enabled,
         subcategories: category.subcategories,
         variantAttributes: category.variantAttributes,
+        taxPercent: category.taxPercent,
       };
       return acc;
     }, {} as CategoryMap);
@@ -172,7 +178,7 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
             {fields.map((field, index) => (
                 <Card key={field.id} className={cn(!field.enabled && 'bg-muted/50 border-dashed')}>
                     <CardHeader>
-                        <CardTitle className="flex justify-between items-center">
+                        <CardTitle className="flex justify-between items-center flex-wrap gap-4">
                            <div className="flex items-center gap-4">
                             <Controller
                                 control={form.control}
@@ -187,10 +193,29 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
                             />
                             <span className={cn("text-2xl font-headline", !field.enabled && 'text-muted-foreground line-through')}>{field.name}</span>
                            </div>
+                           <div className="flex items-center gap-4">
+                            <FormField
+                                control={form.control}
+                                name={`categories.${index}.taxPercent`}
+                                render={({ field: taxField }) => (
+                                <FormItem className="flex items-center gap-2 space-y-0">
+                                  <FormLabel>Default Tax</FormLabel>
+                                  <div className="relative">
+                                    <Input
+                                      type="number"
+                                      className="w-24"
+                                      {...taxField}
+                                    />
+                                     <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                  </div>
+                                </FormItem>
+                                )}
+                            />
                            <Button type="button" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => remove(index)}>
                                <Trash2 className="h-5 w-5 mr-2" />
-                               Remove Category
+                               Remove
                            </Button>
+                           </div>
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
@@ -199,26 +224,45 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
                             <h4 className="font-semibold mb-1 flex items-center gap-2"><GripVertical className="h-5 w-5 text-muted-foreground" /> Subcategories</h4>
                             <p className="text-sm text-muted-foreground mb-4">Manage the subcategories for {field.name}.</p>
                             
-                            <div className="flex flex-wrap gap-2 min-h-[40px]">
+                            <div className="space-y-2">
                             {field.subcategories.map((sub, subIndex) => (
-                                    <Badge key={`${field.id}-sub-${subIndex}`} variant="secondary" className={cn("text-sm py-1.5 px-3 flex items-center gap-2", !sub.enabled && 'text-muted-foreground line-through bg-muted/50')}>
-                                        <Controller
-                                            control={form.control}
-                                            name={`categories.${index}.subcategories.${subIndex}.enabled`}
-                                            render={({ field: switchField }) => (
-                                                <Switch
-                                                    checked={switchField.value}
-                                                    onCheckedChange={switchField.onChange}
-                                                    className="h-4 w-7 [&>span]:h-3 [&>span]:w-3 data-[state=checked]:translate-x-3 data-[state=unchecked]:translate-x-0.5"
-                                                    aria-label={`${sub.name} subcategory status`}
-                                                />
-                                            )}
-                                        />
-                                        <span>{sub.name}</span>
-                                        <button type="button" className="ml-1 text-destructive hover:text-destructive/80" onClick={() => handleRemoveSubcategory(index, subIndex)}>
-                                            <Trash2 className="h-3 w-3" />
-                                        </button>
-                                    </Badge>
+                                <div key={`${field.id}-sub-${subIndex}`} className="flex items-center gap-4 p-2 border rounded-md bg-background">
+                                    <Controller
+                                        control={form.control}
+                                        name={`categories.${index}.subcategories.${subIndex}.enabled`}
+                                        render={({ field: switchField }) => (
+                                            <Switch
+                                                checked={switchField.value}
+                                                onCheckedChange={switchField.onChange}
+                                                aria-label={`${sub.name} subcategory status`}
+                                            />
+                                        )}
+                                    />
+                                    <span className={cn('flex-grow', !sub.enabled && 'text-muted-foreground line-through')}>{sub.name}</span>
+
+                                    <FormField
+                                        control={form.control}
+                                        name={`categories.${index}.subcategories.${subIndex}.taxPercent`}
+                                        render={({ field: taxField }) => (
+                                        <FormItem className="flex items-center gap-2 space-y-0">
+                                          <FormLabel className="text-xs">Tax</FormLabel>
+                                          <div className="relative">
+                                            <Input
+                                              type="number"
+                                              className="w-20 h-8"
+                                              placeholder="Default"
+                                              {...taxField}
+                                            />
+                                            <Percent className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                                          </div>
+                                        </FormItem>
+                                        )}
+                                    />
+
+                                    <Button type="button" variant="ghost" size="icon" className="text-destructive hover:text-destructive h-8 w-8" onClick={() => handleRemoveSubcategory(index, subIndex)}>
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
                             ))}
                             </div>
 

@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { z } from 'zod';
@@ -9,6 +10,7 @@ import type { VariantSetMap } from '../manage-variants/actions';
 export interface Subcategory {
   name: string;
   enabled: boolean;
+  taxPercent?: number;
 }
 
 export interface VariantAttribute {
@@ -20,6 +22,7 @@ export interface Category {
   enabled: boolean;
   subcategories: Subcategory[];
   variantAttributes: VariantAttribute[];
+  taxPercent?: number;
 }
 
 export type CategoryMap = { [key: string]: Category };
@@ -47,8 +50,9 @@ function convertToNewFormat(oldData: { [key: string]: string[] }): CategoryMap {
     for (const key in oldData) {
         newData[key] = {
             enabled: true, // Assume all existing categories are enabled
-            subcategories: oldData[key].map(sub => ({ name: sub, enabled: true })),
+            subcategories: oldData[key].map(sub => ({ name: sub, enabled: true, taxPercent: 0 })),
             variantAttributes: [], // Add empty variant attributes
+            taxPercent: 0,
         };
     }
     return newData;
@@ -61,14 +65,14 @@ export async function getCategories(): Promise<CategoryMap> {
     const categoriesRef = db.ref(CATEGORIES_PATH);
     const snapshot = await categoriesRef.once('value');
     if (snapshot.exists()) {
-      const data = snapshot.val();
+      let data = snapshot.val();
       // If the data is in the old format, convert it, save it, and return it.
       if (isOldFormat(data)) {
           const newData = convertToNewFormat(data);
           await db.ref(CATEGORIES_PATH).set(newData);
-          return newData;
+          data = newData;
       }
-       // Ensure variantAttributes exists and has the correct structure
+       // Ensure all required fields exist
       Object.values(data).forEach((cat: any) => {
         if (!cat.variantAttributes) {
           cat.variantAttributes = [];
@@ -84,6 +88,14 @@ export async function getCategories(): Promise<CategoryMap> {
                 return attr;
             });
         }
+        if (cat.taxPercent === undefined) {
+            cat.taxPercent = 0;
+        }
+        cat.subcategories.forEach((sub: any) => {
+            if (sub.taxPercent === undefined) {
+                sub.taxPercent = 0;
+            }
+        });
       });
       return data;
     }
@@ -93,9 +105,9 @@ export async function getCategories(): Promise<CategoryMap> {
   
   // Return a default structure in the new format if nothing is in the DB
   return {
-    'Furniture': { enabled: true, subcategories: [{name: 'Chairs', enabled: true}, {name: 'Tables', enabled: true}], variantAttributes: [{name: 'Color', variantSetId: 'standard-colors'}, {name: 'Material', variantSetId: ''}] },
-    'Home Decor': { enabled: true, subcategories: [{name: 'Vases', enabled: true}, {name: 'Lamps', enabled: true}], variantAttributes: [{name: 'Color', variantSetId: 'standard-colors'}] },
-    'Electronics': { enabled: true, subcategories: [{name: 'Cameras', enabled: true}, {name: 'Audio', enabled: true}], variantAttributes: [{name: 'Color', variantSetId: 'standard-colors'}] },
+    'Furniture': { enabled: true, subcategories: [{name: 'Chairs', enabled: true, taxPercent: 0}, {name: 'Tables', enabled: true, taxPercent: 0}], variantAttributes: [{name: 'Color', variantSetId: 'standard-colors'}, {name: 'Material', variantSetId: ''}], taxPercent: 5 },
+    'Home Decor': { enabled: true, subcategories: [{name: 'Vases', enabled: true, taxPercent: 0}, {name: 'Lamps', enabled: true, taxPercent: 0}], variantAttributes: [{name: 'Color', variantSetId: 'standard-colors'}], taxPercent: 5 },
+    'Electronics': { enabled: true, subcategories: [{name: 'Cameras', enabled: true, taxPercent: 0}, {name: 'Audio', enabled: true, taxPercent: 0}], variantAttributes: [{name: 'Color', variantSetId: 'standard-colors'}], taxPercent: 18 },
   };
 }
 
@@ -111,6 +123,7 @@ export async function saveCategories(
     revalidatePath('/listings/new');
     revalidatePath('/'); // For filters
     revalidatePath('/dashboard/manage-categories');
+    revalidatePath('/cart');
 
     return { success: true, message: 'Categories have been saved successfully!' };
   } catch (error) {

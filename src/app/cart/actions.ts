@@ -1,4 +1,5 @@
 
+
 // src/app/cart/actions.ts
 'use server';
 
@@ -7,6 +8,8 @@ import { initializeAdmin } from '@/lib/firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
 import type { CartItem, FeeConfig, Product, Discount, DiscountMap } from '@/lib/types';
 import { ServerValue } from 'firebase-admin/database';
+import { getCategories } from '../dashboard/manage-categories/actions';
+import type { CategoryMap } from '../dashboard/manage-categories/actions';
 
 const placeOrderSchema = z.object({
   userId: z.string().min(1, 'User ID is required.'),
@@ -114,11 +117,30 @@ export async function placeOrder(values: {
   // ---
 
   // --- Recalculate total on the server ---
-  const [feeConfig, discounts] = await Promise.all([getFeeConfigServer(), getDiscountsServer()]);
+  const [feeConfig, discounts, categories] = await Promise.all([
+    getFeeConfigServer(), 
+    getDiscountsServer(),
+    getCategories()
+  ]);
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const platformFee = subtotal * (feeConfig.platformFeePercent / 100);
   const handlingFee = feeConfig.handlingFeeFixed;
   
+  // --- Calculate Tax ---
+  const totalTax = items.reduce((sum, item) => {
+    const category = categories[item.category];
+    let taxPercent = category?.taxPercent || 0;
+    
+    const subcategory = category?.subcategories.find(sub => sub.name === item.subcategory);
+    if (subcategory && subcategory.taxPercent) {
+        taxPercent = subcategory.taxPercent;
+    }
+    
+    const itemTax = (item.price * item.quantity) * (taxPercent / 100);
+    return sum + itemTax;
+  }, 0);
+
+
   // --- Calculate Discount ---
   let appliedDiscount: { name: string, value: number } | null = null;
   let bestDiscount = 0;
@@ -145,7 +167,7 @@ export async function placeOrder(values: {
       if(appliedDiscount) appliedDiscount.value = subtotal;
   }
   
-  const total = subtotal + platformFee + handlingFee - bestDiscount;
+  const total = subtotal + platformFee + handlingFee + totalTax - bestDiscount;
   // ---
 
   try {
@@ -162,6 +184,8 @@ export async function placeOrder(values: {
           price: item.price,
           quantity: item.quantity,
           imageUrl: item.imageUrl,
+          category: item.category,
+          subcategory: item.subcategory,
           seller: {
               id: item.seller?.id || 'unknown',
               name: item.seller?.name || 'CloudStore',
@@ -171,6 +195,7 @@ export async function placeOrder(values: {
       subtotal,
       platformFee,
       handlingFee,
+      tax: totalTax,
       discount: appliedDiscount, // Save the discount info
       total,
       shippingAddress,

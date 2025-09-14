@@ -1,10 +1,13 @@
 
+
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import type { Product as BaseProduct, Discount, DiscountMap } from '@/lib/types';
 import { getFeeConfig } from '@/app/dashboard/manage-fees/actions';
 import { getDiscounts } from '@/app/dashboard/manage-discounts/actions';
+import { getCategories } from '@/app/dashboard/manage-categories/actions';
+import type { CategoryMap } from '@/app/dashboard/manage-categories/actions';
 
 // The CartItem extends the base Product type
 export interface CartItem extends BaseProduct {
@@ -28,6 +31,7 @@ interface CartContextType {
   subtotal: number;
   platformFee: number;
   handlingFee: number;
+  tax: number;
   total: number;
   feeConfig: FeeConfig | null;
   setPinCode: (pinCode: string) => void;
@@ -45,6 +49,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [feeConfig, setFeeConfig] = useState<FeeConfig | null>(null);
   const [discounts, setDiscounts] = useState<DiscountMap | null>(null);
+  const [categories, setCategories] = useState<CategoryMap | null>(null);
   const [pinCode, setPinCode] = useState<string>('');
   const [appliedDiscount, setAppliedDiscount] = useState<{ name: string; value: number } | null>(null);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
@@ -64,11 +69,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       console.error("Failed to parse cart data from localStorage", error);
     }
 
-    // Fetch fee and discount configurations
+    // Fetch fee, discount, and category configurations
     getFeeConfig().then(config => {
       setFeeConfig(config || { platformFeePercent: 0, handlingFeeFixed: 0 });
     });
     getDiscounts().then(setDiscounts);
+    getCategories().then(setCategories);
   }, []);
 
   // Save cart and selections to localStorage whenever they change
@@ -158,7 +164,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
 
     let bestDiscount = 0;
-    let bestDiscountRule: { name: string, value: number } | null = null;
+    let bestDiscountRule: { name: string; value: number } | null = null;
     
     Object.values(discounts).forEach(rule => {
       if (rule.enabled && rule.pincodes.includes(pinCode)) {
@@ -191,10 +197,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [pinCode, subtotal, discounts]);
   
   
+  const tax = selectedItemsDetails.reduce((sum, item) => {
+    if (!categories) return sum;
+    const category = categories[item.category];
+    if (!category) return sum;
+
+    let taxPercent = category.taxPercent || 0;
+    const subcategory = category.subcategories.find(sub => sub.name === item.subcategory);
+    
+    // Subcategory tax overrides category tax if it's explicitly set (and not 0)
+    if (subcategory && subcategory.taxPercent) {
+      taxPercent = subcategory.taxPercent;
+    }
+
+    const itemTax = (item.price * item.quantity) * (taxPercent / 100);
+    return sum + itemTax;
+  }, 0);
+
+
   const discountValue = appliedDiscount?.value || 0;
   const platformFee = feeConfig ? subtotal * (feeConfig.platformFeePercent / 100) : 0;
   const handlingFee = feeConfig && subtotal > 0 ? feeConfig.handlingFeeFixed : 0;
-  const total = subtotal + platformFee + handlingFee - discountValue;
+  const total = subtotal + platformFee + handlingFee + tax - discountValue;
 
   const value = {
     items,
@@ -205,6 +229,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     subtotal,
     platformFee,
     handlingFee,
+    tax,
     total,
     feeConfig,
     setPinCode,

@@ -67,6 +67,8 @@ export interface OrderItem {
     quantity: number;
     imageUrl: string;
     seller?: ProductSeller;
+    category: string; // Add category to item for tax lookup
+    subcategory: string; // Add subcategory to item for tax lookup
 }
 
 export type ReturnStatus = 'Return Requested' | 'Return Approved' | 'Return Rejected' | 'Returned' | 'Cancelled';
@@ -80,6 +82,7 @@ export interface Order {
     subtotal: number;
     platformFee: number;
     handlingFee: number;
+    tax: number; // Add tax field
     discount?: { name: string; value: number; } | null;
     total: number;
     shippingAddress: string;
