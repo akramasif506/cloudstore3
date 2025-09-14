@@ -17,7 +17,7 @@
     --primary-foreground: 0 0% 100%; /* White text */
 
     --secondary: 45 87% 90%; /* Lighter gold for secondary elements */
-    --secondary-foreground: 0 0% 100%;
+    --secondary-foreground: 0 0% 17%; /* Charcoal text for contrast */
 
     --muted: 0 0% 96.1%;
     --muted-foreground: 0 0% 45.1%;
