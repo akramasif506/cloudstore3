@@ -131,3 +131,145 @@ export async function generateSellerOrderPdfs(orders: Order[]) {
     doc.save(`CloudStore_Fulfillment_${sellerName.replace(/\s/g, '')}_${today}.pdf`);
   }
 }
+
+async function addImageToPdf(doc: jsPDF, imageUrl: string, x: number, y: number, width: number, height: number): Promise<void> {
+    try {
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        return new Promise((resolve, reject) => {
+            reader.onloadend = () => {
+                const base64data = reader.result as string;
+                doc.addImage(base64data, 'PNG', x, y, width, height);
+                resolve();
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    } catch (error) {
+        console.error("Error adding image to PDF, skipping:", error);
+        doc.setFillColor(230);
+        doc.rect(x, y, width, height, 'F');
+        doc.setTextColor(150);
+        doc.setFontSize(8);
+        doc.text("Image not found", x + width / 2, y + height / 2, { align: 'center' });
+    }
+}
+
+
+/**
+ * Generates a multi-page PDF containing invoices for each selected order.
+ * @param orders The list of orders to generate invoices for.
+ */
+export async function generateInvoicesPdf(orders: Order[]) {
+    const doc = new jsPDF();
+    const today = new Date().toISOString().split('T')[0];
+
+    for (let i = 0; i < orders.length; i++) {
+        const order = orders[i];
+
+        if (i > 0) {
+            doc.addPage();
+        }
+
+        // --- Invoice Header ---
+        doc.addImage('/logo.png', 'PNG', 14, 16, 30, 7.5);
+        doc.setFontSize(22);
+        doc.text("Tax Invoice", 195, 22, { align: 'right' });
+
+        // --- Order Details ---
+        doc.setFontSize(10);
+        doc.text(`Order ID: #${order.id}`, 14, 40);
+        doc.text(`Order Date: ${new Date(order.createdAt).toLocaleDateString()}`, 14, 46);
+        
+        // --- Shipping Details ---
+        doc.setFontSize(12);
+        doc.text("Ship To:", 14, 56);
+        doc.setFontSize(10);
+        doc.text(order.customerName, 14, 62);
+        const addressLines = doc.splitTextToSize(order.shippingAddress, 90);
+        doc.text(addressLines, 14, 68);
+        const addressHeight = (addressLines.length * 5);
+        doc.text(`Contact: ${order.contactNumber}`, 14, 68 + addressHeight);
+        
+        // --- Items Table ---
+        const tableBody = [];
+        const imagePromises = [];
+
+        for (const item of order.items) {
+            tableBody.push([
+                { content: '' }, // Placeholder for image
+                item.name,
+                item.quantity.toString(),
+                `Rs ${item.price.toFixed(2)}`,
+                `Rs ${(item.price * item.quantity).toFixed(2)}`,
+            ]);
+        }
+
+        let firstRowY = 0;
+        autoTable(doc, {
+            startY: 110,
+            head: [['Item', 'Description', 'Qty', 'Unit Price', 'Total']],
+            body: tableBody,
+            theme: 'grid',
+            headStyles: { fillColor: [37, 25, 40] },
+            didDrawCell: (data) => {
+                 if (data.section === 'body' && data.column.index === 0) {
+                    if (!firstRowY) firstRowY = data.cell.y;
+                    const item = order.items[data.row.index];
+                    const imageSize = 18;
+                    const yPos = data.cell.y + (data.cell.height - imageSize) / 2;
+                    imagePromises.push(addImageToPdf(doc, item.imageUrl, data.cell.x + 2, yPos, imageSize, imageSize));
+                 }
+            }
+        });
+        
+        // Wait for all images to be drawn
+        await Promise.all(imagePromises);
+
+        // --- Totals Section ---
+        let finalY = (doc as any).lastAutoTable.finalY + 10;
+        if (finalY > 260) {
+            doc.addPage();
+            finalY = 20;
+        }
+
+        const totals = [
+            ['Subtotal', `Rs ${order.subtotal.toFixed(2)}`],
+            ['Platform Fee', `Rs ${order.platformFee.toFixed(2)}`],
+            ['Handling Fee', `Rs ${order.handlingFee.toFixed(2)}`],
+            ['Tax', `Rs ${order.tax.toFixed(2)}`],
+        ];
+        
+        if (order.discount && order.discount.value > 0) {
+             totals.push([`Discount (${order.discount.name})`, `- Rs ${order.discount.value.toFixed(2)}`]);
+        }
+        
+        totals.push(['Shipping', 'Free']);
+
+        autoTable(doc, {
+            body: totals,
+            startY: finalY,
+            theme: 'plain',
+            columnStyles: { 0: { cellWidth: 'auto', halign: 'right' }, 1: { cellWidth: 'auto', halign: 'right' } },
+            tableWidth: 'wrap',
+            margin: { left: 120 },
+        });
+        
+        const summaryY = (doc as any).lastAutoTable.finalY;
+        
+        // --- Grand Total ---
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text("Total Paid:", 120, summaryY + 10, { align: 'right' });
+        doc.text(`Rs ${order.total.toFixed(2)}`, 195, summaryY + 10, { align: 'right' });
+
+        // --- Footer ---
+        const pageCount = doc.internal.getNumberOfPages();
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text("Thank you for your business!", 105, 285, { align: 'center' });
+    }
+
+    doc.save(`CloudStore_Invoices_${today}.pdf`);
+}

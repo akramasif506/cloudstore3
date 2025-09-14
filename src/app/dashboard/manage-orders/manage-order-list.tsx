@@ -28,10 +28,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
-import { generateSellerOrderPdfs } from '@/lib/pdf-generator';
+import { generateSellerOrderPdfs, generateInvoicesPdf } from "@/lib/pdf-generator";
 import { Checkbox } from '@/components/ui/checkbox';
 import { DownloadReportButton } from './download-report-button';
 import { DownloadFulfillmentButton } from './download-fulfillment-button';
+import { DownloadInvoicesButton } from './download-invoices-button';
 
 interface OrderRowProps {
     order: Order;
@@ -284,8 +285,9 @@ export function ManageOrderList({ initialOrders }: { initialOrders: Order[] }) {
               {selectedOrders.size} of {initialOrders.length} order(s) selected.
           </p>
           <div className="flex items-center gap-2">
-            <DownloadReportButton selectedOrders={selectedOrdersData} />
+            <DownloadInvoicesButton selectedOrders={selectedOrdersData} />
             <DownloadFulfillmentButton selectedOrders={selectedOrdersData} />
+            <DownloadReportButton selectedOrders={selectedOrdersData} />
           </div>
       </div>
       <div className="border rounded-lg overflow-hidden">
