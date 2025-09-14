@@ -164,7 +164,7 @@ export function CartContents() {
                       {item.name}
                     </Link>
                     <p className="text-sm text-muted-foreground">{item.category}</p>
-                    <p className="text-lg font-bold text-accent mt-1">Rs {item.price.toFixed(2)}</p>
+                    <p className="text-lg font-bold text-destructive mt-1">Rs {item.price.toFixed(2)}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Input
