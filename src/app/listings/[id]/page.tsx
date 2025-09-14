@@ -114,7 +114,7 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
       </div>
       <div className="lg:col-span-1">
         <div className="sticky top-24 space-y-6">
-            {product.status === 'active' && product.stock !== undefined && product.stock > 0 ? (
+            {product.status === 'active' && product.stock !== undefined && product.stock > 0 && (
                 <>
                     <Card>
                         <CardHeader>
@@ -149,36 +149,6 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
                     )}
                     <ShareButtons productName={product.name} productUrl={productUrl} />
                 </>
-            ) : (
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>Listing Status</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex items-center justify-center p-4 bg-muted rounded-md">
-                           <p className="text-lg font-semibold capitalize">{product.status === 'sold' || (product.stock !== undefined && product.stock <= 0) ? 'Sold Out' : product.status.replace('_', ' ')}</p>
-                        </div>
-                        {product.rejectionReason && (
-                            <div className="mt-4 text-sm text-destructive border-l-4 border-destructive pl-3">
-                                <strong>Rejection Reason:</strong> {product.rejectionReason}
-                            </div>
-                        )}
-                    </CardContent>
-                    <CardFooter className="flex-col items-stretch gap-2">
-                        <Button asChild variant="outline">
-                            <Link href="/my-listings">
-                                <ArrowLeft className="mr-2 h-4 w-4" />
-                                Back to My Listings
-                            </Link>
-                        </Button>
-                        <Button asChild>
-                            <Link href="/listings/new">
-                                <FilePlus2 className="mr-2 h-4 w-4" />
-                                Submit Another Item
-                            </Link>
-                        </Button>
-                    </CardFooter>
-                </Card>
             )}
         </div>
       </div>
