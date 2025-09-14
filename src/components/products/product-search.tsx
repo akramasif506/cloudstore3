@@ -12,25 +12,32 @@ export function ProductSearch() {
   const initialQuery = searchParams.get('q') || '';
   const [searchQuery, setSearchQuery] = useState(initialQuery);
 
-  // This effect ensures that if the URL changes (e.g., via back/forward browser buttons),
-  // the input field's state is updated to match.
+  // This effect synchronizes the input field if the URL changes (e.g., back button)
   useEffect(() => {
     setSearchQuery(searchParams.get('q') || '');
   }, [searchParams]);
 
-  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      const params = new URLSearchParams(searchParams);
-      if (searchQuery) {
-        params.set('q', searchQuery);
-      } else {
-        // This is key: if the search query is empty, remove the 'q' param from the URL
-        params.delete('q');
+  // This effect will run when the user stops typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // Only update the URL if the query in the input differs from the URL's query
+      if (searchQuery !== (searchParams.get('q') || '')) {
+        const params = new URLSearchParams(searchParams.toString());
+        if (searchQuery) {
+          params.set('q', searchQuery);
+        } else {
+          // If the search query is empty, remove the 'q' param
+          params.delete('q');
+        }
+        // Pushing the new URL will trigger a re-render
+        router.push(`/?${params.toString()}`);
       }
-      // Pushing the new URL will trigger a re-render and the useEffect hook will re-sync state
-      router.push(`/?${params.toString()}`);
-    }
-  };
+    }, 500); // 500ms delay after user stops typing
+
+    // Cleanup function to clear the timeout if the user types again
+    return () => clearTimeout(timer);
+  }, [searchQuery, searchParams, router]);
+
 
   return (
     <div className="relative w-full">
@@ -41,7 +48,6 @@ export function ProductSearch() {
         className="pl-9 w-full"
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        onKeyDown={handleSearch}
       />
     </div>
   );
