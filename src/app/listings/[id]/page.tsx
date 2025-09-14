@@ -107,7 +107,7 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
                             <h3 className="font-semibold">{returnPolicy.returnWindowDays > 0 ? `${returnPolicy.returnWindowDays}-Day Returns` : 'Returns Accepted'}</h3>
                             <Popover>
                                 <PopoverTrigger asChild>
-                                <Button variant="link" className="text-sm p-0 h-auto">View Policy</Button>
+                                <Button variant="link" className="text-sm">View Policy</Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-80">
                                 <div className="prose prose-sm dark:prose-invert">
