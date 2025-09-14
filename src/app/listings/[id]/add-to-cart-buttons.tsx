@@ -58,7 +58,7 @@ export function AddToCartButtons({ product }: AddToCartButtonsProps) {
             </Button>
         </div>
       <div className="flex flex-col sm:flex-row gap-4">
-         <Button size="lg" variant="outline" className="w-full text-lg h-12" onClick={handleAddToCart}>
+         <Button size="lg" variant="secondary" className="w-full text-lg h-12" onClick={handleAddToCart}>
             <ShoppingCart className="mr-2" /> Add to Cart
         </Button>
         <Button size="lg" className="w-full text-lg h-12" onClick={handleBuyNow}>
