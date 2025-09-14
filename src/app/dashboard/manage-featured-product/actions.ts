@@ -34,6 +34,8 @@ export async function setFeaturedProduct(
     await featuredProductRef.set(validatedFields.data);
 
     revalidatePath('/');
+    revalidatePath('/dashboard/manage-featured-product');
+
 
     return { success: true, message: 'Featured product has been updated.' };
   } catch (error) {
@@ -49,6 +51,7 @@ export async function clearFeaturedProduct(): Promise<{ success: boolean; messag
     await featuredProductRef.remove();
     
     revalidatePath('/');
+    revalidatePath('/dashboard/manage-featured-product');
     
     return { success: true, message: 'Featured product has been cleared.' };
   } catch (error) {
