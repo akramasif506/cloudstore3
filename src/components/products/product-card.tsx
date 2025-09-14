@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { Product } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Eye, ShoppingCart } from 'lucide-react';
+import { User, Eye, ShoppingCart, Star } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { useCart } from '@/context/cart-context';
@@ -40,6 +40,10 @@ export function ProductCard({ product, showViewButton = false }: ProductCardProp
     });
   };
 
+  const reviews = Array.isArray(product.reviews) ? product.reviews : [];
+  const totalRating = reviews.reduce((acc, review) => acc + review.rating, 0);
+  const averageRating = reviews.length > 0 ? (totalRating / reviews.length) : 0;
+
   return (
       <Card className="overflow-hidden h-full flex flex-col group transition-all duration-300 shadow-sm hover:shadow-xl">
         <Link href={`/listings/${product.id}`} className="flex flex-col flex-grow">
@@ -64,7 +68,16 @@ export function ProductCard({ product, showViewButton = false }: ProductCardProp
           </CardHeader>
           <CardContent className="p-4 flex-grow flex flex-col">
             <CardTitle className="text-lg font-headline mb-2 leading-tight flex-grow">{product.name}</CardTitle>
-            <div className="flex flex-col">
+            
+            {reviews.length > 0 && (
+                <div className="flex items-center gap-1 mt-2">
+                    <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                    <span className="font-semibold text-sm">{averageRating.toFixed(1)}</span>
+                    <span className="text-muted-foreground text-xs">({reviews.length})</span>
+                </div>
+            )}
+
+            <div className="flex flex-col mt-2">
                 {isDiscounted && (
                     <p className="text-sm text-muted-foreground line-through">Rs {product.originalPrice!.toFixed(2)}</p>
                 )}
