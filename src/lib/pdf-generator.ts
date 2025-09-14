@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import jsPDF from "jspdf";
@@ -136,21 +135,25 @@ async function addImageToPdf(doc: jsPDF, imageUrl: string, x: number, y: number,
     try {
         const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
         const response = await fetch(proxyUrl + imageUrl);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch image: ${response.statusText}`);
+        }
         const blob = await response.blob();
+        
         const reader = new FileReader();
         return new Promise((resolve, reject) => {
             reader.onloadend = () => {
-                const base64data = reader.result as string;
                 try {
-                    const img = new Image();
-                    img.src = base64data;
-                    img.onload = () => {
-                        const mimeType = base64data.substring(base64data.indexOf(":") + 1, base64data.indexOf(";"));
-                        const imageFormat = mimeType.split('/')[1].toUpperCase();
-                        doc.addImage(base64data, imageFormat, x, y, width, height);
-                        resolve();
+                    const base64data = reader.result as string;
+                    // Extract MIME type and pure Base64 data
+                    const mimeTypeMatch = base64data.match(/^data:(image\/\w+);base64,/);
+                    if (!mimeTypeMatch) {
+                        throw new Error("Could not determine image type from data URL.");
                     }
-                    img.onerror = reject;
+                    const imageFormat = mimeTypeMatch[1].split('/')[1].toUpperCase();
+                    
+                    doc.addImage(base64data, imageFormat, x, y, width, height);
+                    resolve();
                 } catch(e) {
                      reject(e);
                 }
@@ -160,11 +163,12 @@ async function addImageToPdf(doc: jsPDF, imageUrl: string, x: number, y: number,
         });
     } catch (error) {
         console.error("Error adding image to PDF, skipping:", error);
+        // Draw a placeholder if image fetching fails
         doc.setFillColor(230);
         doc.rect(x, y, width, height, 'F');
         doc.setTextColor(150);
         doc.setFontSize(8);
-        doc.text("Image not found", x + width / 2, y + height / 2, { align: 'center' });
+        doc.text("Image N/A", x + width / 2, y + height / 2, { align: 'center' });
     }
 }
 
