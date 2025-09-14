@@ -89,8 +89,16 @@ export default {
           },
         },
         'pulse-badge': {
-          '0%, 100%': { transform: 'scale(1)', opacity: '1' },
-          '50%': { transform: 'scale(1.05)', opacity: '.95' },
+          '0%, 100%': { 
+            transform: 'scale(1)', 
+            opacity: '1',
+            backgroundColor: 'hsl(var(--primary))',
+          },
+          '50%': { 
+            transform: 'scale(1.05)', 
+            opacity: '.95',
+            backgroundColor: 'hsl(var(--accent))',
+           },
         },
       },
       animation: {

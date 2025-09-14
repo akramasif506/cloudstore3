@@ -62,7 +62,7 @@ export function ProductCard({ product, showViewButton = false }: ProductCardProp
               
               <div className="absolute top-2 left-2 flex flex-col gap-1">
                  {product.specialNote && (
-                  <Badge variant="default" className="bg-accent text-accent-foreground animate-pulse-badge">
+                  <Badge variant="default" className="text-primary-foreground animate-pulse-badge">
                       {product.specialNote}
                   </Badge>
                 )}
