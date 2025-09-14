@@ -82,15 +82,15 @@ export default async function OrderDetailPage({ params }: { params: { id: string
     return (
         <div className="max-w-4xl mx-auto" id="invoice-content">
             <Card>
-                <CardHeader className="text-center bg-muted/30 p-6">
-                    <div className="flex justify-between items-center mb-4">
+                <CardHeader className="text-center bg-muted/30 p-6 print:p-2 print:py-4">
+                    <div className="flex justify-between items-center mb-4 print:mb-2">
                         <Image src={`/logo.png?v=${new Date().getTime()}`} alt="CloudStore Logo" width={120} height={30} className="object-contain" />
                         <div className="text-right">
-                           <CardTitle className="text-3xl font-bold mt-4">Order Status: {order.status}</CardTitle>
+                           <CardTitle className="text-3xl font-bold mt-4 print:text-xl print:mt-0">Order Status: {order.status}</CardTitle>
                            <CardDescription>Order #{order.id}</CardDescription>
                         </div>
                     </div>
-                    <div className="mx-auto">
+                    <div className="mx-auto print:hidden">
                         <StatusIcon status={order.status} />
                     </div>
                 </CardHeader>
@@ -167,7 +167,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                         </div>
                     </div>
                 </CardContent>
-                 <CardFooter className="bg-muted/30 p-6 flex justify-center gap-4 no-print">
+                 <CardFooter className="bg-muted/30 p-6 flex justify-center gap-4 print:hidden">
                     <Button asChild>
                         <Link href="/">
                             <ShoppingCart className="mr-2 h-4 w-4" />

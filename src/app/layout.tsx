@@ -51,7 +51,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.3 }}
-          className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8"
+          className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 print:p-0 print:m-0"
         >
           {children}
         </motion.main>

@@ -32,7 +32,7 @@ export function Header() {
   const cartItemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-background/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-background/80 backdrop-blur-md print:hidden">
       <div className="container flex h-20 items-center">
         <div className="mr-4 md:hidden">
           <DropdownMenu>
