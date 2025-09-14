@@ -68,11 +68,11 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
     if (date?.to) params.set('to', format(date.to, 'yyyy-MM-dd')); else params.delete('to');
     
     params.set('page', '1'); // Reset to first page on new filter
-    router.push(`/dashboard/manage-products?${params.toString()}`);
+    window.location.href = `/dashboard/manage-products?${params.toString()}`;
   };
   
   const handleResetFilters = () => {
-    router.push('/dashboard/manage-products');
+    window.location.href = '/dashboard/manage-products';
   }
 
   const handleCategoryChange = (value: string) => {

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
@@ -20,7 +21,8 @@ export function PaginationControls({ currentPage, totalItems, itemsPerPage }: Pa
   const handlePageChange = (newPage: number) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('page', newPage.toString());
-    router.push(`${pathname}?${params.toString()}`);
+    // Use window.location.href to force a full page reload, ensuring server components refetch data
+    window.location.href = `${pathname}?${params.toString()}`;
   }
 
   const canGoPrev = currentPage > 1;
