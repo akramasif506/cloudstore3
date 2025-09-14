@@ -123,46 +123,28 @@ export async function getCategories(): Promise<CategoryMap> {
   
   // Return a default structure in the new format if nothing is in the DB
   const defaultCategories: CategoryMap = {
-    [uuidv4()]: { id: "furniture-id", name: 'Furniture', enabled: true, subcategories: [{name: 'Chairs', enabled: true, taxPercent: 0}, {name: 'Tables', enabled: true, taxPercent: 0}], variantAttributes: [{name: 'Color', variantSetId: 'standard-colors'}, {name: 'Material', variantSetId: ''}], taxPercent: 5 },
-    [uuidv4()]: { id: "home-decor-id", name: 'Home Decor', enabled: true, subcategories: [{name: 'Vases', enabled: true, taxPercent: 0}, {name: 'Lamps', enabled: true, taxPercent: 0}], variantAttributes: [{name: 'Color', variantSetId: 'standard-colors'}], taxPercent: 5 },
-    [uuidv4()]: { id: "electronics-id", name: 'Electronics', enabled: true, subcategories: [{name: 'Cameras', enabled: true, taxPercent: 0}, {name: 'Audio', enabled: true, taxPercent: 0}], variantAttributes: [{name: 'Color', variantSetId: 'standard-colors'}], taxPercent: 18 },
+    'furniture-id': { id: "furniture-id", name: 'Furniture', enabled: true, subcategories: [{name: 'Chairs', enabled: true, taxPercent: 0}, {name: 'Tables', enabled: true, taxPercent: 0}], variantAttributes: [{name: 'Color', variantSetId: 'standard-colors'}, {name: 'Material', variantSetId: ''}], taxPercent: 5 },
+    'home-decor-id': { id: "home-decor-id", name: 'Home Decor', enabled: true, subcategories: [{name: 'Vases', enabled: true, taxPercent: 0}, {name: 'Lamps', enabled: true, taxPercent: 0}], variantAttributes: [{name: 'Color', variantSetId: 'standard-colors'}], taxPercent: 5 },
+    'electronics-id': { id: "electronics-id", name: 'Electronics', enabled: true, subcategories: [{name: 'Cameras', enabled: true, taxPercent: 0}, {name: 'Audio', enabled: true, taxPercent: 0}], variantAttributes: [{name: 'Color', variantSetId: 'standard-colors'}], taxPercent: 18 },
   };
-  // Assign keys to be the same as IDs for the default set
-  Object.keys(defaultCategories).forEach(key => {
-      const id = defaultCategories[key].id;
-      if (key !== id) {
-        defaultCategories[id] = defaultCategories[key];
-        delete defaultCategories[key];
-      }
-  });
+
   return defaultCategories;
 }
 
-export async function saveCategories(
-  categories: CategoryMap
+export async function deleteCategory(
+  categoryId: string
 ): Promise<{ success: boolean; message: string }> {
   try {
     const { db } = initializeAdmin();
-    const categoriesRef = db.ref(CATEGORIES_PATH);
-    
-    // Before saving, ensure the map keys match the object IDs
-    const sanitizedCategories: CategoryMap = {};
-    Object.values(categories).forEach(cat => {
-        sanitizedCategories[cat.id] = cat;
-    });
+    const categoryRef = db.ref(`${CATEGORIES_PATH}/${categoryId}`);
+    await categoryRef.remove();
 
-    await categoriesRef.set(sanitizedCategories);
-
-    // Revalidate paths that use categories
-    revalidatePath('/listings/new');
-    revalidatePath('/'); // For filters
     revalidatePath('/dashboard/manage-categories');
-    revalidatePath('/cart');
+    return { success: true, message: 'Category deleted successfully.' };
 
-    return { success: true, message: 'Categories have been saved successfully!' };
-  } catch (error) {
-    console.error("Error saving categories to Firebase:", error);
-    return { success: false, message: 'Failed to save categories.' };
+  } catch(error) {
+    console.error("Error deleting category from Firebase:", error);
+    return { success: false, message: 'Failed to delete category.' };
   }
 }
 
@@ -190,7 +172,6 @@ export async function saveSingleCategory(
   }
 }
 
-
 // Fetch variant sets for use in the category form
 export async function getVariantSetsForCategories(): Promise<VariantSetMap> {
   try {
@@ -204,4 +185,30 @@ export async function getVariantSetsForCategories(): Promise<VariantSetMap> {
     console.error("Error fetching variant sets for categories:", error);
   }
   return {};
+}
+
+export async function createNewCategory(
+  categoryName: string
+): Promise<{ success: boolean; message: string; newCategory?: Category }> {
+  const newId = uuidv4();
+  const newCategory: Category = {
+    id: newId,
+    name: categoryName,
+    enabled: true,
+    subcategories: [],
+    variantAttributes: [],
+    taxPercent: 0,
+  };
+
+  try {
+    const { db } = initializeAdmin();
+    const categoryRef = db.ref(`${CATEGORIES_PATH}/${newId}`);
+    await categoryRef.set(newCategory);
+
+    revalidatePath('/dashboard/manage-categories');
+    return { success: true, message: 'Category created!', newCategory };
+  } catch(error) {
+    console.error("Error creating new category:", error);
+    return { success: false, message: 'Failed to create new category.' };
+  }
 }

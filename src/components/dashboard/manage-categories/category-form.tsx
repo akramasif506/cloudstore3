@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -13,19 +13,16 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, PlusCircle, Trash2, Save, Tags, GripVertical, Percent } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import type { CategoryMap, Category, Subcategory, VariantAttribute } from '@/app/dashboard/manage-categories/actions';
-import { saveCategories, saveSingleCategory } from '@/app/dashboard/manage-categories/actions';
+import { saveSingleCategory, deleteCategory, createNewCategory } from '@/app/dashboard/manage-categories/actions';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
-import { Separator } from '@/components/ui/separator';
 import type { VariantSetMap } from '@/app/dashboard/manage-variants/actions';
 import {
   Select,
@@ -34,8 +31,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { v4 as uuidv4 } from 'uuid';
-
+import _ from 'lodash';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 const variantAttributeSchema = z.object({
   name: z.string().min(1, 'Attribute name cannot be empty.'),
@@ -70,15 +77,19 @@ interface CategoryFormProps {
 }
 
 export function CategoryForm({ initialCategories, variantSets }: CategoryFormProps) {
-  const [isSaving, setIsSaving] = useState<Record<string, boolean>>({});
+  const [isSavingSingle, setIsSavingSingle] = useState<Record<string, boolean>>({});
+  const [isDeleting, setIsDeleting] = useState<Record<string, boolean>>({});
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newSubcategoryValues, setNewSubcategoryValues] = useState<Record<number, string>>({});
   const [newAttributeValues, setNewAttributeValues] = useState<Record<number, string>>({});
   const { toast } = useToast();
+  
+  const [initialFormState, setInitialFormState] = useState(() => _.cloneDeep(Object.values(initialCategories)));
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      categories: Object.values(initialCategories),
+      categories: _.cloneDeep(initialFormState),
       newCategoryName: '',
     },
   });
@@ -88,17 +99,42 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
     name: 'categories',
   });
   
-  const { formState: { dirtyFields, isSubmitting } } = form;
+  const watchedCategories = form.watch('categories');
 
-  const handleAddCategory = () => {
+  const handleAddCategory = async () => {
     const newCategoryName = form.getValues('newCategoryName');
-    if (newCategoryName && newCategoryName.trim() !== '') {
-      if (fields.some(field => field.name.toLowerCase() === newCategoryName.toLowerCase())) {
+    if (!newCategoryName || newCategoryName.trim() === '') return;
+
+    if (fields.some(field => field.name.toLowerCase() === newCategoryName.toLowerCase())) {
         toast({ variant: 'destructive', title: 'Category already exists.' });
         return;
-      }
-      append({ id: uuidv4(), name: newCategoryName, subcategories: [], enabled: true, variantAttributes: [], taxPercent: 0 });
-      form.setValue('newCategoryName', '');
+    }
+
+    setIsAddingCategory(true);
+    const result = await createNewCategory(newCategoryName);
+    setIsAddingCategory(false);
+
+    if (result.success && result.newCategory) {
+        append(result.newCategory);
+        setInitialFormState(current => [...current, _.cloneDeep(result.newCategory!)]);
+        form.setValue('newCategoryName', '');
+        toast({ title: 'Category Added!', description: `"${newCategoryName}" has been created.`});
+    } else {
+        toast({ variant: 'destructive', title: 'Failed to create category', description: result.message });
+    }
+  };
+
+  const handleDeleteCategory = async (index: number, categoryId: string) => {
+    setIsDeleting(prev => ({ ...prev, [categoryId]: true }));
+    const result = await deleteCategory(categoryId);
+    setIsDeleting(prev => ({ ...prev, [categoryId]: false }));
+
+    if (result.success) {
+      remove(index);
+      setInitialFormState(current => current.filter(c => c.id !== categoryId));
+      toast({ title: 'Category Deleted', description: result.message });
+    } else {
+      toast({ variant: 'destructive', title: 'Deletion Failed', description: result.message });
     }
   };
 
@@ -148,7 +184,6 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
     const categoryData = form.getValues(`categories.${index}`);
     const categoryId = categoryData.id;
     
-    // Trigger validation for only the specific category being saved
     const isValid = await form.trigger(`categories.${index}`);
     if (!isValid) {
       toast({
@@ -159,16 +194,19 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
       return;
     }
 
-    setIsSaving(prev => ({ ...prev, [categoryId]: true }));
+    setIsSavingSingle(prev => ({ ...prev, [categoryId]: true }));
     
     const result = await saveSingleCategory(categoryData);
     
-    setIsSaving(prev => ({ ...prev, [categoryId]: false }));
+    setIsSavingSingle(prev => ({ ...prev, [categoryId]: false }));
 
     if (result.success) {
-      // Reset the dirty state for this specific field after successful save
-      const newCategories = [...form.getValues('categories')];
-      form.reset({ categories: newCategories, newCategoryName: '' });
+      const newInitialState = _.cloneDeep(initialFormState);
+      const stateIndex = newInitialState.findIndex(c => c.id === categoryId);
+      if (stateIndex !== -1) {
+        newInitialState[stateIndex] = _.cloneDeep(categoryData);
+      }
+      setInitialFormState(newInitialState);
       toast({ title: 'Success!', description: result.message });
     } else {
       toast({ variant: 'destructive', title: 'Error', description: result.message });
@@ -182,7 +220,10 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
       <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
         <div className="space-y-6">
             {fields.map((field, index) => {
-                const isCategoryDirty = !!dirtyFields.categories?.[index];
+                const initialCategoryState = initialFormState.find(c => c.id === field.id);
+                const currentCategoryState = watchedCategories[index];
+                const isCardDirty = !_.isEqual(currentCategoryState, initialCategoryState);
+
                 return (
                 <Card key={field.id} className={cn(!field.enabled && 'bg-muted/50 border-dashed')}>
                     <CardHeader>
@@ -230,9 +271,30 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
                                 </FormItem>
                                 )}
                             />
-                           <Button type="button" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => remove(index)}>
-                               <Trash2 className="h-5 w-5" />
-                           </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button type="button" variant="ghost" className="text-destructive hover:text-destructive" disabled={isDeleting[field.id]}>
+                                  {isDeleting[field.id] ? <Loader2 className="h-5 w-5 animate-spin" /> : <Trash2 className="h-5 w-5" />}
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will permanently delete the "{field.name}" category. This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    className={cn("bg-destructive text-destructive-foreground hover:bg-destructive/90")}
+                                    onClick={() => handleDeleteCategory(index, field.id)}
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                            </div>
                         </CardTitle>
                         <CardDescription>ID: {field.id}</CardDescription>
@@ -358,9 +420,9 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
 
                     </CardContent>
                      <CardFooter className="flex justify-end bg-muted/50 p-4">
-                        <Button type="button" onClick={() => handleSaveCategory(index)} disabled={isSaving[field.id] || !isCategoryDirty}>
-                            {isSaving[field.id] ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                            Save Changes
+                        <Button type="button" onClick={() => handleSaveCategory(index)} disabled={isSavingSingle[field.id] || !isCardDirty}>
+                            {isSavingSingle[field.id] ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                            Save This Category
                         </Button>
                     </CardFooter>
                 </Card>
@@ -377,13 +439,14 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
                         render={({ field }) => (
                             <FormItem className="flex-grow">
                                 <FormLabel>New Category Name</FormLabel>
-                                <FormControl><Input placeholder="e.g. Books" {...field} /></FormControl>
+                                <FormControl><Input placeholder="e.g. Books" {...field} disabled={isAddingCategory} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
-                    <Button type="button" onClick={handleAddCategory}>
-                        <PlusCircle className="mr-2 h-4 w-4" /> Add Category
+                    <Button type="button" onClick={handleAddCategory} disabled={isAddingCategory}>
+                        {isAddingCategory ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
+                        Add Category
                     </Button>
                 </div>
             </CardContent>
