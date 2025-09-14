@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
 export default async function ManageFeaturedProductPage() {
-  const allProducts = await getManageableProducts();
+  const { products: allProducts } = await getManageableProducts();
   const featuredProduct = await getFeaturedProduct();
 
   return (
