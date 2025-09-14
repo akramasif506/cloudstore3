@@ -31,7 +31,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import _ from 'lodash';
+import cloneDeep from 'lodash/cloneDeep';
+import isEqual from 'lodash/isEqual';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -84,12 +85,12 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
   const [newAttributeValues, setNewAttributeValues] = useState<Record<number, string>>({});
   const { toast } = useToast();
   
-  const [initialFormState, setInitialFormState] = useState(() => _.cloneDeep(Object.values(initialCategories)));
+  const [initialFormState, setInitialFormState] = useState(() => cloneDeep(Object.values(initialCategories)));
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      categories: _.cloneDeep(initialFormState),
+      categories: cloneDeep(initialFormState),
       newCategoryName: '',
     },
   });
@@ -116,7 +117,7 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
 
     if (result.success && result.newCategory) {
         append(result.newCategory);
-        setInitialFormState(current => [...current, _.cloneDeep(result.newCategory!)]);
+        setInitialFormState(current => [...current, cloneDeep(result.newCategory!)]);
         form.setValue('newCategoryName', '');
         toast({ title: 'Category Added!', description: `"${newCategoryName}" has been created.`});
     } else {
@@ -201,10 +202,10 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
     setIsSavingSingle(prev => ({ ...prev, [categoryId]: false }));
 
     if (result.success) {
-      const newInitialState = _.cloneDeep(initialFormState);
+      const newInitialState = cloneDeep(initialFormState);
       const stateIndex = newInitialState.findIndex(c => c.id === categoryId);
       if (stateIndex !== -1) {
-        newInitialState[stateIndex] = _.cloneDeep(categoryData);
+        newInitialState[stateIndex] = cloneDeep(categoryData);
       }
       setInitialFormState(newInitialState);
       toast({ title: 'Success!', description: result.message });
@@ -222,7 +223,7 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
             {fields.map((field, index) => {
                 const initialCategoryState = initialFormState.find(c => c.id === field.id);
                 const currentCategoryState = watchedCategories[index];
-                const isCardDirty = !_.isEqual(currentCategoryState, initialCategoryState);
+                const isCardDirty = !isEqual(currentCategoryState, initialCategoryState);
 
                 return (
                 <Card key={field.id} className={cn(!field.enabled && 'bg-muted/50 border-dashed')}>

@@ -1,0 +1,7 @@
+diff --git a/node_modules/lodash/index.js b/node_modules/lodash/index.js
+index 7918d30..0638520 100644
+--- a/node_modules/lodash/index.js
++++ b/node_modules/lodash/index.js
+@@ -1 +1 @@
+-module.exports = require('./lodash');
++module.exports = require('./lodash.js');
