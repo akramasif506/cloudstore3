@@ -128,6 +128,10 @@ export default async function Home({
 
   return (
     <div className="space-y-8">
+      {featuredProductInfo && featuredProductInfo.product && !hasActiveFilters && (
+        <FeaturedProductBanner product={featuredProductInfo.product} promoText={featuredProductInfo.promoText} />
+      )}
+
       {promoBanner && !hasActiveFilters && (
         <PromoBanner banner={promoBanner} />
       )}
