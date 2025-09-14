@@ -14,8 +14,8 @@ import { Button } from '@/components/ui/button';
 import { getMyOrders, getMyOrdersReturnPolicy, cancelOrder } from './actions';
 import type { ReturnPolicy } from '../dashboard/manage-returns/actions';
 import { useToast } from '@/hooks/use-toast';
-import { RequestReturnDialog } from './request-return-dialog';
-import { OrderPrintButton } from './[id]/order-print-button';
+import { RequestReturnDialog } from '@/components/my-orders/request-return-dialog';
+import { OrderPrintButton } from '@/components/my-orders/order-print-button';
 import {
   AlertDialog,
   AlertDialogAction,

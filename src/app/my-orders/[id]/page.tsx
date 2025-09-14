@@ -11,7 +11,7 @@ import { initializeAdmin } from '@/lib/firebase-admin';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { OrderPrintButton } from './order-print-button';
+import { OrderPrintButton } from '@/components/my-orders/order-print-button';
 
 
 async function getOrder(internalId: string): Promise<Order | null> {

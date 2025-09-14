@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Undo2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { requestReturn } from './actions';
+import { requestReturn } from '@/app/my-orders/actions';
 
 interface RequestReturnDialogProps {
   orderId: string;
