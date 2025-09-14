@@ -136,28 +136,30 @@ export function ProductFilters({ categories, conditions }: ProductFiltersProps) 
             </Select>
           </div>
           
-          <div className="space-y-2">
-            <Label>Condition</Label>
-            <div className="grid grid-cols-2 gap-2">
-                <Button
-                    variant={selectedCondition === 'all' ? 'default' : 'outline'}
-                    onClick={() => setSelectedCondition('all')}
-                    className="w-full col-span-2"
-                >
-                    Any Condition
-                </Button>
-                {enabledConditions.map((condition) => (
-                    <Button
-                        key={condition}
-                        variant={selectedCondition === condition ? 'default' : 'outline'}
-                        onClick={() => setSelectedCondition(condition)}
-                        className="w-full"
-                    >
-                        {condition}
-                    </Button>
-                ))}
+          {enabledConditions.length > 1 && (
+            <div className="space-y-2">
+              <Label>Condition</Label>
+              <div className="grid grid-cols-2 gap-2">
+                  <Button
+                      variant={selectedCondition === 'all' ? 'default' : 'outline'}
+                      onClick={() => setSelectedCondition('all')}
+                      className="w-full col-span-2"
+                  >
+                      Any Condition
+                  </Button>
+                  {enabledConditions.map((condition) => (
+                      <Button
+                          key={condition}
+                          variant={selectedCondition === condition ? 'default' : 'outline'}
+                          onClick={() => setSelectedCondition(condition)}
+                          className="w-full"
+                      >
+                          {condition}
+                      </Button>
+                  ))}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="space-y-2">
             <div className="flex justify-between">
