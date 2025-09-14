@@ -147,6 +147,3 @@ export async function updateProduct(
         return { success: false, message: 'Failed to update product.' };
     }
 }
-
-
-

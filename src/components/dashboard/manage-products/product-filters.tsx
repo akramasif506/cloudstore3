@@ -38,6 +38,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [selectedSubcategory, setSelectedSubcategory] = useState(searchParams.get('subcategory') || 'all');
   const [selectedStatus, setSelectedStatus] = useState(searchParams.get('status') || 'all');
+  const [selectedStock, setSelectedStock] = useState(searchParams.get('stock') || 'all');
   const [date, setDate] = useState<DateRange | undefined>({
       from: searchParams.get('from') ? new Date(searchParams.get('from')!) : undefined,
       to: searchParams.get('to') ? new Date(searchParams.get('to')!) : undefined,
@@ -48,6 +49,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
     setSelectedCategory(searchParams.get('category') || 'all');
     setSelectedSubcategory(searchParams.get('subcategory') || 'all');
     setSelectedStatus(searchParams.get('status') || 'all');
+    setSelectedStock(searchParams.get('stock') || 'all');
     setDate({
         from: searchParams.get('from') ? new Date(searchParams.get('from')!) : undefined,
         to: searchParams.get('to') ? new Date(searchParams.get('to')!) : undefined,
@@ -61,6 +63,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
     if (selectedCategory !== 'all') params.set('category', selectedCategory); else params.delete('category');
     if (selectedSubcategory !== 'all') params.set('subcategory', selectedSubcategory); else params.delete('subcategory');
     if (selectedStatus !== 'all') params.set('status', selectedStatus); else params.delete('status');
+    if (selectedStock !== 'all') params.set('stock', selectedStock); else params.delete('stock');
     if (date?.from) params.set('from', format(date.from, 'yyyy-MM-dd')); else params.delete('from');
     if (date?.to) params.set('to', format(date.to, 'yyyy-MM-dd')); else params.delete('to');
     
@@ -82,7 +85,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
   return (
     <Card className="bg-muted/50">
       <CardContent className="pt-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 items-end">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-end">
           <div className="space-y-2">
             <Label htmlFor="search">Search Name/ID</Label>
             <div className="relative">
@@ -105,6 +108,17 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
                 {statusOptions.map(status => (
                     <SelectItem key={status} value={status} className="capitalize">{status.replace('_', ' ')}</SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+          </div>
+           <div className="space-y-2">
+            <Label htmlFor="stock">Stock</Label>
+            <Select onValueChange={setSelectedStock} value={selectedStock}>
+              <SelectTrigger id="stock"><SelectValue placeholder="All" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Stock Levels</SelectItem>
+                <SelectItem value="low">Low Stock</SelectItem>
+                <SelectItem value="out">Out of Stock</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -171,9 +185,9 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
                 </PopoverContent>
             </Popover>
           </div>
-          <div className="flex gap-2 xl:col-start-5">
-              <Button onClick={handleApplyFilters} className="w-full"><Filter className="mr-2 h-4 w-4"/>Apply</Button>
-              <Button onClick={handleResetFilters} variant="ghost" className="w-full"><X className="mr-2 h-4 w-4"/>Reset</Button>
+          <div className="flex gap-2 xl:col-span-full">
+              <Button onClick={handleApplyFilters} className="w-full"><Filter className="mr-2 h-4 w-4"/>Apply Filters</Button>
+              <Button onClick={handleResetFilters} variant="ghost" className="w-full"><X className="mr-2 h-4 w-4"/>Reset All</Button>
           </div>
         </div>
       </CardContent>
