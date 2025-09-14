@@ -1,11 +1,16 @@
 
+"use client";
+
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Product } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Eye } from 'lucide-react';
+import { User, Eye, ShoppingCart } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
+import { useCart } from '@/context/cart-context';
+import { useToast } from '@/hooks/use-toast';
+import { ToastAction } from "@/components/ui/toast";
 
 interface ProductCardProps {
   product: Product;
@@ -13,10 +18,27 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, showViewButton = false }: ProductCardProps) {
+  const { addToCart } = useCart();
+  const { toast } = useToast();
+
   const imageUrl = product.imageUrl || 'https://placehold.co/400x300.png';
   const isDiscounted = product.originalPrice && product.originalPrice > product.price;
   const discountPercent = isDiscounted ? Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100) : 0;
-  const sellerName = product.seller?.name || 'CloudStore';
+  
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent link navigation
+    e.stopPropagation(); // Stop event bubbling
+    addToCart(product, 1);
+    toast({
+      title: "Added to cart!",
+      description: `${product.name} is now in your cart.`,
+      action: (
+        <ToastAction altText="View cart" asChild>
+          <Link href="/cart">View Cart</Link>
+        </ToastAction>
+      ),
+    });
+  };
 
   return (
       <Card className="overflow-hidden h-full flex flex-col group transition-all duration-300 shadow-sm hover:shadow-xl">
@@ -51,14 +73,13 @@ export function ProductCard({ product, showViewButton = false }: ProductCardProp
           </CardContent>
         </Link>
         <CardFooter className="p-4 bg-background flex justify-between items-center">
-             <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground truncate">{sellerName}</span>
-            </div>
+            <Button variant="outline" size="sm" onClick={handleAddToCart} className="w-full">
+              <ShoppingCart className="mr-2 h-4 w-4" /> Add to Cart
+            </Button>
             {showViewButton && (
-              <Button asChild variant="outline" size="sm">
+              <Button asChild variant="outline" size="sm" className="ml-2">
                 <Link href={`/listings/${product.id}`}>
-                  <Eye className="mr-2 h-4 w-4" /> View
+                  <Eye className="h-4 w-4" />
                 </Link>
               </Button>
             )}
