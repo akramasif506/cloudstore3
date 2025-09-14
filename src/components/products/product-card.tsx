@@ -56,11 +56,11 @@ export function ProductCard({ product, showViewButton = false }: ProductCardProp
                 className="object-cover transition-transform duration-500 group-hover:scale-110"
                 data-ai-hint="product image"
               />
-               <div className="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded-sm">
+               <div className="absolute bottom-1 left-1 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded-sm">
                 {product.displayId}
               </div>
               
-              <div className="absolute top-2 left-2 flex flex-col gap-1">
+              <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
                  {product.specialNote && (
                   <Badge variant="default" className="text-primary-foreground animate-pulse-badge">
                       {product.specialNote}

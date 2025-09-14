@@ -13,7 +13,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 17%;
 
-    --primary: 349 55% 83%; /* #ECA6B2 */
+    --primary: 340 82% 52%; /* Hot Pink */
     --primary-foreground: 0 0% 100%; /* White text */
 
     --secondary: 45 87% 90%; /* Lighter gold for secondary elements */
@@ -30,7 +30,7 @@
 
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
-    --ring: 349 55% 83%;
+    --ring: 340 82% 52%;
     
     --radius: 1.5rem; /* Larger radius for a softer look */
   }
@@ -45,7 +45,7 @@
     --popover: 0 0% 17%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 349 55% 83%; /* #ECA6B2 */
+    --primary: 340 82% 52%; /* Hot Pink */
     --primary-foreground: 0 0% 100%; /* White text */
 
     --secondary: 45 74% 30%;
@@ -62,7 +62,7 @@
 
     --border: 0 0% 27%;
     --input: 0 0% 27%;
-    --ring: 349 55% 83%;
+    --ring: 340 82% 52%;
   }
 }
 
