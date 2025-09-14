@@ -28,10 +28,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
-import { generateSellerOrderPdfs } from "@/lib/pdf-generator";
 import { Checkbox } from '@/components/ui/checkbox';
-import { DownloadReportButton } from './download-report-button';
-import { DownloadFulfillmentButton } from './download-fulfillment-button';
+
 
 interface OrderRowProps {
     order: Order;
@@ -80,26 +78,12 @@ function OrderRow({ order, isSelected, onSelectionChange }: OrderRowProps) {
     };
     
     const handleDownloadSlips = async () => {
-        setIsDownloading(true);
-        try {
-            const fullOrderDetails = await getOrderWithSellerDetails(currentOrder);
-            await generateSellerOrderPdfs([fullOrderDetails]);
-            
-            toast({
-                title: "Seller Slips Generated",
-                description: "PDF fulfillment slips are being downloaded.",
-            });
-        } catch (error) {
-            console.error("Failed to generate seller slips:", error);
-            const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-            toast({
-                variant: "destructive",
-                title: "Generation Failed",
-                description: `Could not generate seller slips. ${errorMessage}`,
-            });
-        } finally {
-            setIsDownloading(false);
-        }
+        // This function is now empty as per the new implementation.
+        // We can re-implement it later if needed.
+        toast({
+            title: "Feature Temporarily Disabled",
+            description: "Seller fulfillment slips will be re-enabled soon.",
+        });
     }
 
     return (
@@ -152,12 +136,8 @@ function OrderRow({ order, isSelected, onSelectionChange }: OrderRowProps) {
                                         View Details
                                     </Link>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={handleDownloadSlips} disabled={isDownloading}>
-                                    {isDownloading ? (
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    ) : (
-                                        <Download className="mr-2 h-4 w-4" />
-                                    )}
+                                <DropdownMenuItem onClick={handleDownloadSlips} disabled={true}>
+                                    <Download className="mr-2 h-4 w-4" />
                                     Download Fulfillment Slip
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
@@ -303,8 +283,6 @@ export function ManageOrderList({ initialOrders }: { initialOrders: Order[] }) {
                 <Printer className="mr-2 h-4 w-4" />
                 Print Invoices
             </Button>
-            <DownloadFulfillmentButton selectedOrders={selectedOrdersData} />
-            <DownloadReportButton selectedOrders={selectedOrdersData} />
           </div>
       </div>
       <div className="border rounded-lg overflow-hidden">
@@ -314,7 +292,7 @@ export function ManageOrderList({ initialOrders }: { initialOrders: Order[] }) {
               <TableHead className="w-12">
                   <Checkbox
                       checked={isAllSelected || isIndeterminate}
-                      onCheckedChange={handleSelectAll}
+                      onCheckedChange={(checked) => handleSelectAll(checked)}
                       aria-label="Select all orders"
                   />
               </TableHead>
