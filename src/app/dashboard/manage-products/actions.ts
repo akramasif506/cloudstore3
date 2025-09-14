@@ -22,7 +22,7 @@ interface ProductFilters {
 async function getLowStockThreshold(): Promise<number> {
     try {
         const { db } = initializeAdmin();
-        const configRef = db.ref('site_config/fees/stockThreshold');
+        const configRef = db.ref('site_config/stockThreshold');
         const snapshot = await configRef.once('value');
         return snapshot.exists() ? snapshot.val() : 5; // Default to 5
     } catch {
@@ -147,3 +147,4 @@ export async function updateProduct(
         return { success: false, message: 'Failed to update product.' };
     }
 }
+
