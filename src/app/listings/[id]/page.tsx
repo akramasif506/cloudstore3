@@ -41,157 +41,167 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
 
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-      <div className="lg:col-span-2">
-        <Card className="overflow-hidden">
-            <div className="relative w-full aspect-[4/3]">
-                <Image
-                src={product.imageUrl || 'https://placehold.co/800x600.png'}
-                alt={product.name}
-                fill
-                className="object-cover"
-                data-ai-hint="product photo"
-                />
-            </div>
-        </Card>
-        <div className="mt-8">
-            <h1 className="text-4xl font-bold font-headline mb-2">{product.name}</h1>
-            <p className="text-sm text-muted-foreground">Product ID: {product.displayId}</p>
-
-            <div className="flex items-baseline gap-2 mt-4">
-              <p className="text-3xl font-bold text-destructive">Rs {product.price.toFixed(2)}</p>
-              {product.originalPrice && product.originalPrice > product.price && (
-                <p className="text-lg text-muted-foreground line-through">Rs {product.originalPrice.toFixed(2)}</p>
-              )}
-            </div>
-
-            {reviews.length > 0 && (
-                <div className="flex items-center gap-1 mt-2">
-                    <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
-                    <span className="font-semibold">{averageRating.toFixed(1)}</span>
-                    <span className="text-muted-foreground">({reviews.length} reviews)</span>
+    <div>
+        <div className="mb-6">
+            <Button asChild variant="outline">
+                <Link href="/">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Explore More Items
+                </Link>
+            </Button>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div className="lg:col-span-2">
+            <Card className="overflow-hidden">
+                <div className="relative w-full aspect-[4/3]">
+                    <Image
+                    src={product.imageUrl || 'https://placehold.co/800x600.png'}
+                    alt={product.name}
+                    fill
+                    className="object-cover"
+                    data-ai-hint="product photo"
+                    />
                 </div>
-            )}
-            
-            <Separator className="my-6" />
-
-            <div className="prose dark:prose-invert max-w-none">
-              <p className="text-lg leading-relaxed">{product.description}</p>
-            </div>
-            
-            <Card className="mt-6 bg-muted/50">
-              <CardHeader>
-                <CardTitle className="text-lg">Product Details</CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                 <div className="flex items-center gap-2">
-                    <Tag className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Category:</span>
-                    <span className="font-semibold">{product.category} &gt; {product.subcategory}</span>
-                </div>
-                {product.condition && (
-                     <div className="flex items-center gap-2">
-                        <ShieldCheck className="w-4 h-4 text-muted-foreground" />
-                         <span className="text-muted-foreground">Condition:</span>
-                        <span className="font-semibold">{product.condition}</span>
-                    </div>
-                )}
-                {product.stock !== undefined && (
-                     <div className="flex items-center gap-2">
-                        <Package className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">Stock:</span>
-                        <span className="font-semibold">{product.stock > 0 ? `${product.stock} available` : 'Out of Stock'}</span>
-                    </div>
-                )}
-              </CardContent>
             </Card>
-        </div>
+            <div className="mt-8">
+                <h1 className="text-4xl font-bold font-headline mb-2">{product.name}</h1>
+                <p className="text-sm text-muted-foreground">Product ID: {product.displayId}</p>
 
-        {/* This block is moved up for mobile layout, but hidden on desktop */}
-        <div className="lg:hidden mt-8 space-y-6">
-            {product.status === 'active' && (
-                <>
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Purchase</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <AddToCartButtons product={product} />
-                        </CardContent>
-                    </Card>
-                    {returnPolicy?.isEnabled && (
-                    <Card>
-                        <CardContent className="pt-6">
-                        <div className="flex items-center gap-4">
-                            <Undo2 className="h-8 w-8 text-primary" />
-                            <div>
-                            <h3 className="font-semibold">{returnPolicy.returnWindowDays > 0 ? `${returnPolicy.returnWindowDays}-Day Returns` : 'Returns Accepted'}</h3>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                <Button size="sm">View Policy</Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-80">
-                                <div className="prose prose-sm dark:prose-invert">
-                                    <h4>Return Policy</h4>
-                                    <p>{returnPolicy.policyText}</p>
-                                </div>
-                                </PopoverContent>
-                            </Popover>
-                            </div>
-                        </div>
-                        </CardContent>
-                    </Card>
-                    )}
-                    <ShareButtons productName={product.name} productUrl={productUrl} />
-                </>
-            )}
-        </div>
+                <div className="flex items-baseline gap-2 mt-4">
+                <p className="text-3xl font-bold text-destructive">Rs {product.price.toFixed(2)}</p>
+                {product.originalPrice && product.originalPrice > product.price && (
+                    <p className="text-lg text-muted-foreground line-through">Rs {product.originalPrice.toFixed(2)}</p>
+                )}
+                </div>
 
-        <Separator className="my-8" />
-        <div>
-            <CustomerFeedback reviews={reviews} />
-        </div>
-      </div>
-      <div className="hidden lg:block lg:col-span-1">
-        <div className="sticky top-24 space-y-6">
-            {product.status === 'active' && (
-                <>
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Purchase</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <AddToCartButtons product={product} />
-                        </CardContent>
-                    </Card>
-                    {returnPolicy?.isEnabled && (
-                    <Card>
-                        <CardContent className="pt-6">
-                        <div className="flex items-center gap-4">
-                            <Undo2 className="h-8 w-8 text-primary" />
-                            <div>
-                            <h3 className="font-semibold">{returnPolicy.returnWindowDays > 0 ? `${returnPolicy.returnWindowDays}-Day Returns` : 'Returns Accepted'}</h3>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                <Button size="sm">View Policy</Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-80">
-                                <div className="prose prose-sm dark:prose-invert">
-                                    <h4>Return Policy</h4>
-                                    <p>{returnPolicy.policyText}</p>
-                                </div>
-                                </PopoverContent>
-                            </Popover>
-                            </div>
+                {reviews.length > 0 && (
+                    <div className="flex items-center gap-1 mt-2">
+                        <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
+                        <span className="font-semibold">{averageRating.toFixed(1)}</span>
+                        <span className="text-muted-foreground">({reviews.length} reviews)</span>
+                    </div>
+                )}
+                
+                <Separator className="my-6" />
+
+                <div className="prose dark:prose-invert max-w-none">
+                <p className="text-lg leading-relaxed">{product.description}</p>
+                </div>
+                
+                <Card className="mt-6 bg-muted/50">
+                <CardHeader>
+                    <CardTitle className="text-lg">Product Details</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-center gap-2">
+                        <Tag className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">Category:</span>
+                        <span className="font-semibold">{product.category} &gt; {product.subcategory}</span>
+                    </div>
+                    {product.condition && (
+                        <div className="flex items-center gap-2">
+                            <ShieldCheck className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-muted-foreground">Condition:</span>
+                            <span className="font-semibold">{product.condition}</span>
                         </div>
-                        </CardContent>
-                    </Card>
                     )}
-                    <ShareButtons productName={product.name} productUrl={productUrl} />
-                </>
-            )}
+                    {product.stock !== undefined && (
+                        <div className="flex items-center gap-2">
+                            <Package className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-muted-foreground">Stock:</span>
+                            <span className="font-semibold">{product.stock > 0 ? `${product.stock} available` : 'Out of Stock'}</span>
+                        </div>
+                    )}
+                </CardContent>
+                </Card>
+            </div>
+
+            {/* This block is moved up for mobile layout, but hidden on desktop */}
+            <div className="lg:hidden mt-8 space-y-6">
+                {product.status === 'active' && (
+                    <>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Purchase</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <AddToCartButtons product={product} />
+                            </CardContent>
+                        </Card>
+                        {returnPolicy?.isEnabled && (
+                        <Card>
+                            <CardContent className="pt-6">
+                            <div className="flex items-center gap-4">
+                                <Undo2 className="h-8 w-8 text-primary" />
+                                <div>
+                                <h3 className="font-semibold">{returnPolicy.returnWindowDays > 0 ? `${returnPolicy.returnWindowDays}-Day Returns` : 'Returns Accepted'}</h3>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                    <Button size="sm">View Policy</Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-80">
+                                    <div className="prose prose-sm dark:prose-invert">
+                                        <h4>Return Policy</h4>
+                                        <p>{returnPolicy.policyText}</p>
+                                    </div>
+                                    </PopoverContent>
+                                </Popover>
+                                </div>
+                            </div>
+                            </CardContent>
+                        </Card>
+                        )}
+                        <ShareButtons productName={product.name} productUrl={productUrl} />
+                    </>
+                )}
+            </div>
+
+            <Separator className="my-8" />
+            <div>
+                <CustomerFeedback reviews={reviews} />
+            </div>
         </div>
-      </div>
+        <div className="hidden lg:block lg:col-span-1">
+            <div className="sticky top-24 space-y-6">
+                {product.status === 'active' && (
+                    <>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Purchase</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <AddToCartButtons product={product} />
+                            </CardContent>
+                        </Card>
+                        {returnPolicy?.isEnabled && (
+                        <Card>
+                            <CardContent className="pt-6">
+                            <div className="flex items-center gap-4">
+                                <Undo2 className="h-8 w-8 text-primary" />
+                                <div>
+                                <h3 className="font-semibold">{returnPolicy.returnWindowDays > 0 ? `${returnPolicy.returnWindowDays}-Day Returns` : 'Returns Accepted'}</h3>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                    <Button size="sm">View Policy</Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-80">
+                                    <div className="prose prose-sm dark:prose-invert">
+                                        <h4>Return Policy</h4>
+                                        <p>{returnPolicy.policyText}</p>
+                                    </div>
+                                    </PopoverContent>
+                                </Popover>
+                                </div>
+                            </div>
+                            </CardContent>
+                        </Card>
+                        )}
+                        <ShareButtons productName={product.name} productUrl={productUrl} />
+                    </>
+                )}
+            </div>
+        </div>
+        </div>
     </div>
   );
 }
