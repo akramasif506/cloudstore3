@@ -107,8 +107,16 @@ export default async function Home({
     return searchMatch && categoryMatch && subcategoryMatch && conditionMatch && priceMatch && ratingMatch;
   });
 
+  const featuredProducts = productsToShow.filter(p => p.isFeatured);
+  const regularProducts = productsToShow.filter(p => !p.isFeatured);
+
   // Now, combine all products and sort them together.
   productsToShow.sort((a, b) => {
+    // Keep featured products at the top UNLESS a sort order is applied
+    if (sortBy === 'newest' && !hasActiveFilters) {
+      if (a.isFeatured && !b.isFeatured) return -1;
+      if (!a.isFeatured && b.isFeatured) return 1;
+    }
     switch (sortBy) {
       case 'price-asc':
         return a.price - b.price;
@@ -124,13 +132,6 @@ export default async function Home({
     <div className="space-y-8">
       {promoBanner && !hasActiveFilters && (
         <PromoBanner banner={promoBanner} />
-      )}
-
-      {featuredProductInfo?.product && !hasActiveFilters && (
-        <FeaturedProductBanner 
-            product={featuredProductInfo.product} 
-            promoText={featuredProductInfo.promoText}
-        />
       )}
       
       {!hasActiveFilters && <CategoryBrowser categories={categories} />}
@@ -163,8 +164,8 @@ export default async function Home({
                                 <div className="p-6 flex-1 overflow-y-auto">
                                     <ProductFilters categories={categoryMap} conditions={conditions} />
                                 </div>
-                                <SheetFooter className="p-6 bg-muted/50">
-                                    {/* The FilterActions component is now inside ProductFilters and handles its own logic */}
+                                <SheetFooter className="p-6 bg-muted/50 lg:hidden">
+                                     <FilterActions />
                                 </SheetFooter>
                             </SheetContent>
                         </Sheet>
@@ -177,7 +178,7 @@ export default async function Home({
           {hasActiveFilters ? (
              <ProductGrid 
                 products={productsToShow} 
-                adProducts={allProducts.filter(p => p.id !== featuredProductInfo?.productId).slice(0, 3)} 
+                adProducts={allProducts.filter(p => !productsToShow.some(p2 => p2.id === p.id)).slice(0, 5)} 
               />
           ) : (
             <ProductShowcase 
