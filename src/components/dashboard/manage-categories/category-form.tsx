@@ -18,10 +18,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, PlusCircle, Trash2, Save, Tags, GripVertical, Percent } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { CategoryMap, Category, Subcategory, VariantAttribute } from '@/app/dashboard/manage-categories/actions';
-import { saveCategories } from '@/app/dashboard/manage-categories/actions';
+import { saveCategories, saveSingleCategory } from '@/app/dashboard/manage-categories/actions';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
@@ -70,7 +70,7 @@ interface CategoryFormProps {
 }
 
 export function CategoryForm({ initialCategories, variantSets }: CategoryFormProps) {
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSaving, setIsSaving] = useState<Record<string, boolean>>({});
   const [newSubcategoryValues, setNewSubcategoryValues] = useState<Record<number, string>>({});
   const [newAttributeValues, setNewAttributeValues] = useState<Record<number, string>>({});
   const { toast } = useToast();
@@ -78,7 +78,6 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      // Convert the CategoryMap object to an array for useFieldArray
       categories: Object.values(initialCategories),
       newCategoryName: '',
     },
@@ -143,17 +142,16 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
     update(categoryIndex, { ...categoryField, variantAttributes: updatedAttributes });
   }
 
-  const onSubmit = async (data: FormValues) => {
-    setIsSaving(true);
-    // Convert the array back into the ID-keyed map for saving
-    const categoryMap: CategoryMap = data.categories.reduce((acc, category) => {
-      acc[category.id] = category;
-      return acc;
-    }, {} as CategoryMap);
+  const handleSaveCategory = async (index: number) => {
+    const categoryData = form.getValues(`categories.${index}`);
+    const categoryId = categoryData.id;
     
-    const result = await saveCategories(categoryMap);
+    setIsSaving(prev => ({ ...prev, [categoryId]: true }));
     
-    setIsSaving(false);
+    const result = await saveSingleCategory(categoryData);
+    
+    setIsSaving(prev => ({ ...prev, [categoryId]: false }));
+
     if (result.success) {
       toast({ title: 'Success!', description: result.message });
     } else {
@@ -165,7 +163,7 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
         <div className="space-y-6">
             {fields.map((field, index) => (
                 <Card key={field.id} className={cn(!field.enabled && 'bg-muted/50 border-dashed')}>
@@ -213,8 +211,7 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
                                 )}
                             />
                            <Button type="button" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => remove(index)}>
-                               <Trash2 className="h-5 w-5 mr-2" />
-                               Remove
+                               <Trash2 className="h-5 w-5" />
                            </Button>
                            </div>
                         </CardTitle>
@@ -338,6 +335,12 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
                         </div>
 
                     </CardContent>
+                     <CardFooter className="flex justify-end bg-muted/50 p-4">
+                        <Button type="button" onClick={() => handleSaveCategory(index)} disabled={isSaving[field.id]}>
+                            {isSaving[field.id] ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                            Save Changes
+                        </Button>
+                    </CardFooter>
                 </Card>
             ))}
         </div>
@@ -363,13 +366,6 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
                 </div>
             </CardContent>
         </Card>
-
-        <div className="mt-8 flex justify-end">
-          <Button type="submit" size="lg" disabled={isSaving}>
-            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-            Save All Changes
-          </Button>
-        </div>
       </form>
     </Form>
   );

@@ -166,6 +166,31 @@ export async function saveCategories(
   }
 }
 
+export async function saveSingleCategory(
+  category: Category
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const { db } = initializeAdmin();
+    // Use .update() to modify only the specific category by its ID (key)
+    const updates: { [key: string]: Category } = {};
+    updates[`${CATEGORIES_PATH}/${category.id}`] = category;
+
+    await db.ref().update(updates);
+
+    // Revalidate paths that use categories
+    revalidatePath('/listings/new');
+    revalidatePath('/');
+    revalidatePath('/dashboard/manage-categories');
+    revalidatePath('/cart');
+
+    return { success: true, message: `Category '${category.name}' saved successfully!` };
+  } catch (error) {
+    console.error("Error saving single category to Firebase:", error);
+    return { success: false, message: 'Failed to save category.' };
+  }
+}
+
+
 // Fetch variant sets for use in the category form
 export async function getVariantSetsForCategories(): Promise<VariantSetMap> {
   try {
