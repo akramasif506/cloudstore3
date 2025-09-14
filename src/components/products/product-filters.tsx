@@ -202,7 +202,7 @@ export function ProductFilters({ categories, conditions }: ProductFiltersProps) 
             </div>
           </div>
       </CardContent>
-       <CardFooter className="lg:block hidden p-0 pt-6">
+       <CardFooter className="lg:block p-0 pt-6">
             <FilterActions 
                 onApply={handleApplyFilters}
                 onReset={handleResetFilters}
