@@ -141,8 +141,19 @@ async function addImageToPdf(doc: jsPDF, imageUrl: string, x: number, y: number,
         return new Promise((resolve, reject) => {
             reader.onloadend = () => {
                 const base64data = reader.result as string;
-                doc.addImage(base64data, 'PNG', x, y, width, height);
-                resolve();
+                try {
+                    const img = new Image();
+                    img.src = base64data;
+                    img.onload = () => {
+                        const mimeType = base64data.substring(base64data.indexOf(":") + 1, base64data.indexOf(";"));
+                        const imageFormat = mimeType.split('/')[1].toUpperCase();
+                        doc.addImage(base64data, imageFormat, x, y, width, height);
+                        resolve();
+                    }
+                    img.onerror = reject;
+                } catch(e) {
+                     reject(e);
+                }
             };
             reader.onerror = reject;
             reader.readAsDataURL(blob);
