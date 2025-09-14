@@ -62,6 +62,7 @@ export function EditProductDialog({ product, categories, onSuccess, onError }: E
             subcategory: product.subcategory,
             condition: product.condition || 'Used',
             stock: product.stock ?? 1,
+            specialNote: product.specialNote || '',
         },
     });
 
@@ -236,23 +237,39 @@ export function EditProductDialog({ product, categories, onSuccess, onError }: E
                             />
                         </div>
 
-                         <FormField
-                            control={form.control}
-                            name="stock"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Stock Quantity</FormLabel>
-                                <FormControl>
-                                    <Input 
-                                    type="number" 
-                                    {...field}
-                                    onChange={e => field.onChange(parseInt(e.target.value, 10))}
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                                control={form.control}
+                                name="stock"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Stock Quantity</FormLabel>
+                                    <FormControl>
+                                        <Input 
+                                        type="number" 
+                                        {...field}
+                                        onChange={e => field.onChange(parseInt(e.target.value, 10))}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                             <FormField
+                                control={form.control}
+                                name="specialNote"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Special Note</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="e.g. New Arrival" {...field} />
+                                    </FormControl>
+                                    <FormDescription>A short badge displayed on the card.</FormDescription>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
 
 
                         <DialogFooter>

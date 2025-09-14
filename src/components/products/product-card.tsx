@@ -59,11 +59,19 @@ export function ProductCard({ product, showViewButton = false }: ProductCardProp
                <div className="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded-sm">
                 {product.displayId}
               </div>
-              {isDiscounted && (
-                 <Badge variant="destructive" className="absolute top-2 left-2">
-                    {discountPercent}% OFF
-                </Badge>
-              )}
+              
+              <div className="absolute top-2 left-2 flex flex-col gap-1">
+                 {product.specialNote && (
+                  <Badge variant="default" className="bg-accent text-accent-foreground">
+                      {product.specialNote}
+                  </Badge>
+                )}
+                {isDiscounted && (
+                   <Badge variant="destructive">
+                      {discountPercent}% OFF
+                  </Badge>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent className="p-4 flex-grow flex flex-col">

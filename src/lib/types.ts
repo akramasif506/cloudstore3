@@ -59,6 +59,7 @@ export interface Product {
   seller: ProductSeller;
   variants?: ProductVariant[];
   stock?: number;
+  specialNote?: string;
 }
 
 export interface OrderItem {

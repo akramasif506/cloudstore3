@@ -10,4 +10,5 @@ export const updateProductSchema = z.object({
   subcategory: z.string().nonempty('Please select a subcategory.'),
   condition: z.enum(['New', 'Like New', 'Used']),
   stock: z.coerce.number().int().min(0, 'Stock cannot be negative.'),
+  specialNote: z.string().optional(),
 });
