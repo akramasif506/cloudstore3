@@ -33,7 +33,7 @@ export function ProductCard({ product, showViewButton = false }: ProductCardProp
                 {product.displayId}
               </div>
               {isDiscounted && (
-                 <Badge variant="destructive" className="absolute top-2 left-2 bg-accent text-accent-foreground">
+                 <Badge variant="destructive" className="absolute top-2 left-2">
                     {discountPercent}% OFF
                 </Badge>
               )}
@@ -42,7 +42,7 @@ export function ProductCard({ product, showViewButton = false }: ProductCardProp
           <CardContent className="p-4 flex-grow">
             <CardTitle className="text-lg font-headline mb-1 truncate leading-tight">{product.name}</CardTitle>
             <div className="flex items-baseline gap-2">
-                <p className="text-xl font-bold text-primary">Rs {product.price.toFixed(2)}</p>
+                <p className="text-xl font-bold text-destructive">Rs {product.price.toFixed(2)}</p>
                 {isDiscounted && (
                     <p className="text-sm text-muted-foreground line-through">Rs {product.originalPrice!.toFixed(2)}</p>
                 )}
