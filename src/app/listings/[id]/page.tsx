@@ -105,14 +105,54 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
                 )}
               </CardContent>
             </Card>
-
         </div>
+
+        {/* This block is moved up for mobile layout, but hidden on desktop */}
+        <div className="lg:hidden mt-8 space-y-6">
+            {product.status === 'active' && (
+                <>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Purchase</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <AddToCartButtons product={product} />
+                        </CardContent>
+                    </Card>
+                    {returnPolicy?.isEnabled && (
+                    <Card>
+                        <CardContent className="pt-6">
+                        <div className="flex items-center gap-4">
+                            <Undo2 className="h-8 w-8 text-primary" />
+                            <div>
+                            <h3 className="font-semibold">{returnPolicy.returnWindowDays > 0 ? `${returnPolicy.returnWindowDays}-Day Returns` : 'Returns Accepted'}</h3>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                <Button size="sm">View Policy</Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-80">
+                                <div className="prose prose-sm dark:prose-invert">
+                                    <h4>Return Policy</h4>
+                                    <p>{returnPolicy.policyText}</p>
+                                </div>
+                                </PopoverContent>
+                            </Popover>
+                            </div>
+                        </div>
+                        </CardContent>
+                    </Card>
+                    )}
+                    <ShareButtons productName={product.name} productUrl={productUrl} />
+                </>
+            )}
+        </div>
+
         <Separator className="my-8" />
         <div>
             <CustomerFeedback reviews={reviews} />
         </div>
       </div>
-      <div className="lg:col-span-1">
+      <div className="hidden lg:block lg:col-span-1">
         <div className="sticky top-24 space-y-6">
             {product.status === 'active' && (
                 <>
