@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles, Star } from "lucide-react";
 
 interface FeaturedProductBannerProps {
     product: Product;
@@ -13,6 +13,10 @@ interface FeaturedProductBannerProps {
 }
 
 export function FeaturedProductBanner({ product, promoText }: FeaturedProductBannerProps) {
+    const reviews = Array.isArray(product.reviews) ? product.reviews : [];
+    const totalRating = reviews.reduce((acc, review) => acc + review.rating, 0);
+    const averageRating = reviews.length > 0 ? (totalRating / reviews.length) : 0;
+    
     return (
         <Card className="overflow-hidden bg-gradient-to-r from-primary/10 to-accent/10 border-2 border-primary">
             <div className="grid md:grid-cols-2">
@@ -22,9 +26,25 @@ export function FeaturedProductBanner({ product, promoText }: FeaturedProductBan
                         <h2 className="text-xl font-bold font-headline text-primary">{promoText}</h2>
                     </div>
                     <h3 className="text-3xl lg:text-4xl font-bold font-headline">{product.name}</h3>
-                    <p className="mt-2 text-muted-foreground line-clamp-3">{product.description}</p>
-                    <p className="text-3xl font-bold text-primary my-4">Rs {product.price.toFixed(2)}</p>
-                    <div className="mt-2">
+                    
+                    {reviews.length > 0 && (
+                        <div className="flex items-center gap-1 mt-2">
+                            <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
+                            <span className="font-semibold">{averageRating.toFixed(1)}</span>
+                            <span className="text-muted-foreground">({reviews.length} reviews)</span>
+                        </div>
+                    )}
+                    
+                    <p className="mt-4 text-muted-foreground line-clamp-3">{product.description}</p>
+                    
+                    <div className="flex items-baseline gap-2 mt-4">
+                      <p className="text-3xl font-bold text-primary">Rs {product.price.toFixed(2)}</p>
+                      {product.originalPrice && product.originalPrice > product.price && (
+                        <p className="text-lg text-muted-foreground line-through">Rs {product.originalPrice.toFixed(2)}</p>
+                      )}
+                    </div>
+                    
+                    <div className="mt-6">
                         <Button asChild size="lg">
                             <Link href={`/listings/${product.id}`}>
                                 View Deal <ArrowRight className="ml-2"/>
