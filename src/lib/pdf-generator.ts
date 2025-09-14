@@ -211,7 +211,7 @@ export async function generateOrderSummaryPdf(orders: Order[], dateRange: { from
     const finalY = (doc as any).lastAutoTable.finalY || 100;
     
     // Totals Section
-    const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+    const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
     doc.setFontSize(12);
     doc.text("Summary Totals", 14, finalY + 15);
     doc.setFontSize(10);

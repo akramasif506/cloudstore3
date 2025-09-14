@@ -2,7 +2,7 @@
 import { notFound } from 'next/navigation';
 import type { Order } from '@/lib/types';
 import { initializeAdmin } from '@/lib/firebase-admin';
-import { InvoicePage } from './invoice-page';
+import { InvoicePage } from '@/app/(print)/invoice-page';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle } from 'lucide-react';
 
@@ -54,7 +54,7 @@ export default async function PrintOrdersPage({
 
     if (!orderIds || orderIds.length === 0) {
         return (
-            <div className="flex items-center justify-center h-screen bg-muted">
+            <div className="flex items-center justify-center h-screen bg-muted no-print">
                 <Card className="w-full max-w-md">
                     <CardHeader className="text-center">
                         <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-destructive/10 mb-4">
@@ -76,4 +76,3 @@ export default async function PrintOrdersPage({
     
     return <InvoicePage orders={orders} />;
 }
-
