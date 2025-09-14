@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from 'react';
@@ -60,6 +61,7 @@ export function EditProductDialog({ product, categories, onSuccess, onError }: E
             category: product.category,
             subcategory: product.subcategory,
             condition: product.condition || 'Used',
+            stock: product.stock ?? 1,
         },
     });
 
@@ -233,6 +235,24 @@ export function EditProductDialog({ product, categories, onSuccess, onError }: E
                                 )}
                             />
                         </div>
+
+                         <FormField
+                            control={form.control}
+                            name="stock"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Stock Quantity</FormLabel>
+                                <FormControl>
+                                    <Input 
+                                    type="number" 
+                                    {...field}
+                                    onChange={e => field.onChange(parseInt(e.target.value, 10))}
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
 
 
                         <DialogFooter>

@@ -22,6 +22,7 @@ export const listingSchema = z.object({
   condition: z.enum(['New', 'Like New', 'Used'], {
     required_error: 'Please select the item condition.',
   }),
+  stock: z.coerce.number().int().min(1, 'Stock must be at least 1.').default(1),
   variants: z.array(variantSchema).optional(),
   seller: sellerSchema, // Add seller to the schema
 });

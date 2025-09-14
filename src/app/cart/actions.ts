@@ -92,22 +92,28 @@ export async function placeOrder(values: {
 
   const { userId, customerName, items, shippingAddress, contactNumber, pinCode } = validatedFields.data;
 
-  // --- Server-side validation for item availability ---
+  // --- Server-side validation for item availability and stock ---
   try {
     const itemIds = items.map(item => item.id);
     const productRefs = itemIds.map(id => db.ref(`products/${id}`));
     const productSnapshots = await Promise.all(productRefs.map(ref => ref.once('value')));
     
     const unavailableItems: string[] = [];
-    productSnapshots.forEach((snapshot, index) => {
-      const product = snapshot.val() as Product;
-      if (!product || product.status !== 'active') {
-        unavailableItems.push(items[index].name);
-      }
-    });
+    for (let i = 0; i < productSnapshots.length; i++) {
+        const snapshot = productSnapshots[i];
+        const product = snapshot.val() as Product;
+        const cartItem = items[i];
+
+        if (!product || product.status !== 'active') {
+            unavailableItems.push(`${cartItem.name} (no longer available)`);
+        } else if (product.stock !== undefined && product.stock < cartItem.quantity) {
+            unavailableItems.push(`${cartItem.name} (only ${product.stock} in stock)`);
+        }
+    }
+
 
     if (unavailableItems.length > 0) {
-      const message = `Some items are no longer available: ${unavailableItems.join(', ')}. Please remove them from your cart.`;
+      const message = `Some items are no longer available or have insufficient stock: ${unavailableItems.join(', ')}. Please adjust your cart.`;
       return { success: false, message: message };
     }
   } catch (error) {
@@ -205,15 +211,35 @@ export async function placeOrder(values: {
       createdAt: new Date().toISOString(),
     };
 
-    // Store the order under the user's ID for efficient retrieval
-    const userOrderRef = db.ref(`orders/${userId}/${internalId}`);
-    await userOrderRef.set(orderData);
+    // --- Create updates for multiple paths ---
+    const updates: { [key: string]: any } = {};
+
+    // 1. Store the order under the user's ID
+    updates[`orders/${userId}/${internalId}`] = orderData;
+    // 2. Store a copy for direct lookup by admins
+    updates[`all_orders/${internalId}`] = orderData;
+
+    // 3. Decrement stock for each product
+    for (const item of items) {
+        const productRef = db.ref(`products/${item.id}`);
+        const snapshot = await productRef.once('value');
+        const product = snapshot.val() as Product;
+
+        if (product && product.stock !== undefined) {
+            const newStock = product.stock - item.quantity;
+            updates[`products/${item.id}/stock`] = newStock;
+            // If stock is 0, also update status to 'sold'
+            if (newStock <= 0) {
+                updates[`products/${item.id}/status`] = 'sold';
+            }
+        }
+    }
     
-    // Also store a copy for direct lookup by admins or for the order detail page
-    const globalOrderRef = db.ref(`all_orders/${internalId}`);
-    await globalOrderRef.set(orderData);
+    // --- Atomically write all updates ---
+    await db.ref().update(updates);
 
     return { success: true, orderId: internalId };
+
   } catch (error) {
     console.error('Error saving order to Firebase:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to place order.';

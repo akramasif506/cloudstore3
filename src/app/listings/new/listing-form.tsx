@@ -82,6 +82,7 @@ export function ListingForm({ categories, variantSets, conditions }: ListingForm
       category: '',
       subcategory: '',
       condition: enabledConditions.includes('Used') ? 'Used' : 'New',
+      stock: 1,
       variants: [],
       seller: { id: '', name: '', contactNumber: '' }, // Initial empty seller
     },
@@ -516,26 +517,48 @@ export function ListingForm({ categories, variantSets, conditions }: ListingForm
           />
         </div>
 
-         <FormField
-            control={form.control}
-            name="condition"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Condition</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <FormField
+              control={form.control}
+              name="condition"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Condition</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
+                    <FormControl>
+                      <SelectTrigger><SelectValue placeholder="Select a condition" /></SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {enabledConditions.map(con => (
+                        <SelectItem key={con} value={con}>{con}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="stock"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Stock Quantity</FormLabel>
                   <FormControl>
-                    <SelectTrigger><SelectValue placeholder="Select a condition" /></SelectTrigger>
+                    <Input 
+                      type="number" 
+                      placeholder="e.g. 1" 
+                      {...field} 
+                      disabled={isSubmitting}
+                      onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
+                    />
                   </FormControl>
-                  <SelectContent>
-                    {enabledConditions.map(con => (
-                      <SelectItem key={con} value={con}>{con}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <FormDescription>Number of items available for sale.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+        </div>
         
         <Button type="submit" disabled={isSubmitting || !compressedImageFile} size="lg">
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

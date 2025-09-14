@@ -19,7 +19,7 @@ export interface User {
 export interface Review {
   id: string;
   user: {
-    id: string;
+    id:string;
     name: string;
     avatarUrl: string;
   };
@@ -58,6 +58,7 @@ export interface Product {
   createdAt: string;
   seller: ProductSeller;
   variants?: ProductVariant[];
+  stock?: number;
 }
 
 export interface OrderItem {

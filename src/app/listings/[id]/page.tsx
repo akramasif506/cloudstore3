@@ -6,7 +6,7 @@ import { notFound } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Star, Tag, User, Building, ShieldCheck, Phone, Undo2, ArrowLeft, FilePlus2 } from 'lucide-react';
+import { Star, Tag, User, Building, ShieldCheck, Phone, Undo2, ArrowLeft, FilePlus2, Package } from 'lucide-react';
 import { CustomerFeedback } from '@/components/products/customer-feedback';
 import type { Product } from '@/lib/types';
 import { AddToCartButtons } from './add-to-cart-buttons';
@@ -78,6 +78,15 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
                         </div>
                     </>
                  )}
+                  {product.stock !== undefined && (
+                    <>
+                        <Separator orientation="vertical" className="h-4" />
+                        <div className="flex items-center gap-1">
+                            <Package className="w-4 h-4" />
+                            <span>{product.stock > 0 ? `${product.stock} in stock` : 'Out of Stock'}</span>
+                        </div>
+                    </>
+                )}
             </div>
             <p className="text-lg leading-relaxed">{product.description}</p>
         </div>
