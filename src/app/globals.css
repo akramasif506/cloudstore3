@@ -13,7 +13,7 @@
     --popover: 39 100% 97%;
     --popover-foreground: 0 0% 13%;
 
-    --primary: 36 100% 58%; /* Firebase Orange: #FFA726 */
+    --primary: 30 100% 48%; /* Darker Firebase Orange: #F57C00 */
     --primary-foreground: 0 0% 13%;
 
     --secondary: 43 100% 90%;
@@ -22,7 +22,7 @@
     --muted: 39 20% 90%;
     --muted-foreground: 0 0% 40%;
 
-    --accent: 45 100% 65%; /* Firebase Yellow: #FFD54F */
+    --accent: 36 100% 58%; /* Original Firebase Orange as Accent */
     --accent-foreground: 0 0% 13%;
 
     --destructive: 0 84.2% 60.2%;
@@ -30,7 +30,7 @@
 
     --border: 39 20% 85%;
     --input: 39 20% 90%;
-    --ring: 36 100% 58%;
+    --ring: 30 100% 48%;
     
     --radius: 0.5rem;
   }
@@ -45,7 +45,7 @@
     --popover: 0 0% 13%;
     --popover-foreground: 39 100% 97%;
 
-    --primary: 36 100% 58%; /* Firebase Orange: #FFA726 */
+    --primary: 30 100% 48%; /* Darker Firebase Orange: #F57C00 */
     --primary-foreground: 0 0% 13%;
 
     --secondary: 43 100% 20%;
@@ -54,7 +54,7 @@
     --muted: 0 0% 20%;
     --muted-foreground: 39 20% 60%;
 
-    --accent: 45 100% 65%; /* Firebase Yellow */
+    --accent: 36 100% 58%; /* Original Firebase Orange as Accent */
     --accent-foreground: 0 0% 13%;
 
     --destructive: 0 62.8% 30.6%;
@@ -62,7 +62,7 @@
 
     --border: 0 0% 22%;
     --input: 0 0% 22%;
-    --ring: 36 100% 58%;
+    --ring: 30 100% 48%;
   }
 }
 
