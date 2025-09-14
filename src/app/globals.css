@@ -14,7 +14,7 @@
     --popover-foreground: 0 0% 13%;
 
     --primary: 30 100% 48%; /* Darker Firebase Orange: #F57C00 */
-    --primary-foreground: 0 0% 13%;
+    --primary-foreground: 0 0% 98%;
 
     --secondary: 43 100% 90%;
     --secondary-foreground: 0 0% 13%;
@@ -46,7 +46,7 @@
     --popover-foreground: 39 100% 97%;
 
     --primary: 30 100% 48%; /* Darker Firebase Orange: #F57C00 */
-    --primary-foreground: 0 0% 13%;
+    --primary-foreground: 0 0% 98%;
 
     --secondary: 43 100% 20%;
     --secondary-foreground: 39 100% 97%;
