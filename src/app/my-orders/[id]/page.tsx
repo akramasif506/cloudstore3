@@ -6,7 +6,7 @@ import type { Order } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import Image from 'next/image';
-import { Package, Truck, CheckCircle, Frown, PackageOpen, Home, Phone, User as UserIcon, Calendar, ShoppingCart, Percent, Download, Tag, FileText } from 'lucide-react';
+import { Package, Truck, CheckCircle, Frown, PackageOpen, Home, Phone, User as UserIcon, Calendar, ShoppingCart, Percent, Download, Tag, FileText, MessageSquare } from 'lucide-react';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -95,6 +95,15 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                     </div>
                 </CardHeader>
                 <CardContent className="p-6">
+                    {order.comments && (
+                        <>
+                        <div className="mb-6">
+                             <h3 className="font-semibold text-lg mb-2 flex items-center gap-2"><MessageSquare className="h-5 w-5" />Order Comments</h3>
+                             <p className="text-muted-foreground bg-muted/50 p-3 rounded-md border text-sm">{order.comments}</p>
+                        </div>
+                         <Separator className="my-8" />
+                        </>
+                    )}
                     <div className="grid md:grid-cols-2 gap-8">
                         <div>
                             <h3 className="font-semibold text-lg mb-4 flex items-center gap-2"><Home className="h-5 w-5" />Shipping Details</h3>

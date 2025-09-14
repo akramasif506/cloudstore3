@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import Image from 'next/image';
@@ -9,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Trash2, Frown, Home, Phone, Loader2, LogIn, Percent, Package, Tag, Plus, Minus, FileText } from 'lucide-react';
+import { Trash2, Frown, Home, Phone, Loader2, LogIn, Percent, Package, Tag, Plus, Minus, FileText, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
@@ -47,6 +46,7 @@ export function CartContents() {
   const [shippingAddress, setShippingAddress] = useState('');
   const [contactNumber, setContactNumber] = useState('');
   const [pinCodeValue, setPinCodeValue] = useState('');
+  const [orderComments, setOrderComments] = useState('');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   
   const itemsToOrder = items.filter(item => selectedItems.has(item.id));
@@ -89,6 +89,7 @@ export function CartContents() {
         shippingAddress: shippingAddress,
         contactNumber,
         pinCode: pinCodeValue,
+        comments: orderComments,
     });
     setIsPlacingOrder(false);
 
@@ -239,6 +240,16 @@ export function CartContents() {
                 onChange={(e) => setContactNumber(e.target.value)}
               />
             </div>
+             <div className="space-y-2">
+                <Label htmlFor="order-comments">Order Comments (Optional)</Label>
+                <Textarea
+                    id="order-comments"
+                    placeholder="e.g. It's a birthday gift!"
+                    rows={2}
+                    value={orderComments}
+                    onChange={(e) => setOrderComments(e.target.value)}
+                />
+            </div>
           </CardContent>
         </Card>
         
@@ -290,7 +301,3 @@ export function CartContents() {
     </div>
   );
 }
-
-    
-
-    

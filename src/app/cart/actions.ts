@@ -18,6 +18,7 @@ const placeOrderSchema = z.object({
   shippingAddress: z.string().min(10, 'Shipping address is required.'),
   contactNumber: z.string().min(10, 'A valid contact number is required.'),
   pinCode: z.string().optional(),
+  comments: z.string().optional(),
 });
 
 async function getFeeConfigServer(): Promise<FeeConfig> {
@@ -74,6 +75,7 @@ export async function placeOrder(values: {
     shippingAddress: string;
     contactNumber: string;
     pinCode?: string;
+    comments?: string;
 }): Promise<{ success: boolean; orderId?: string; message?: string }> {
   
   let db;
@@ -90,7 +92,7 @@ export async function placeOrder(values: {
       return { success: false, message: 'Invalid order data.' };
   }
 
-  const { userId, customerName, items, shippingAddress, contactNumber, pinCode } = validatedFields.data;
+  const { userId, customerName, items, shippingAddress, contactNumber, pinCode, comments } = validatedFields.data;
 
   // --- Server-side validation for item availability and stock ---
   try {
@@ -207,6 +209,7 @@ export async function placeOrder(values: {
       shippingAddress,
       pinCode,
       contactNumber,
+      comments,
       status: 'Pending' as const,
       createdAt: new Date().toISOString(),
     };

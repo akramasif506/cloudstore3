@@ -93,6 +93,7 @@ export interface Order {
     createdAt: string;
     returnStatus?: ReturnStatus;
     returnRequestId?: string;
+    comments?: string;
 }
 
 export interface ReturnRequest {
