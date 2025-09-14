@@ -148,11 +148,11 @@ export default async function Home({
            <ProductFilters categories={categoryMap} conditions={conditions} />
         </div>
         <div className="lg:col-span-3">
-            <div className="flex flex-col sm:flex-row gap-4 items-center mb-8">
-                <div className="w-full sm:flex-grow">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-center mb-8">
+                <div className="flex-grow w-full md:w-auto">
                     <ProductSearch />
                 </div>
-                 <div className="flex gap-4 w-full sm:w-auto">
+                 <div className="flex gap-4 w-full sm:w-auto ml-auto">
                     <div className="lg:hidden w-1/2 sm:w-auto">
                         <Sheet>
                             <SheetTrigger asChild>
