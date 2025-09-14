@@ -15,6 +15,15 @@ const registerSchema = z.object({
   address: z.string().optional(),
 });
 
+function getInitials(name: string): string {
+    const parts = name.split(' ').filter(Boolean);
+    if (parts.length === 1) {
+        return parts[0].substring(0, 2).toUpperCase();
+    }
+    return (parts[0][0] + (parts[parts.length - 1][0] || '')).toUpperCase();
+}
+
+
 export async function registerUser(values: z.infer<typeof registerSchema>) {
   try {
     // Ensure admin SDK is initialized for this action
@@ -25,11 +34,14 @@ export async function registerUser(values: z.infer<typeof registerSchema>) {
     const snapshot = await usersRef.limitToFirst(1).once('value');
     const isFirstUser = !snapshot.exists();
     
+    const initials = getInitials(values.name);
+    const photoURL = `https://placehold.co/100x100/FFD1E3/333333?text=${initials}`;
+
     const userRecord = await adminAuth.createUser({
         email: values.email,
         password: values.password,
         displayName: values.name,
-        photoURL: `https://placehold.co/100x100.png`
+        photoURL: photoURL
     });
     
     const userRef = db.ref(`users/${userRecord.uid}`);
@@ -43,7 +55,7 @@ export async function registerUser(values: z.infer<typeof registerSchema>) {
       createdAt: new Date().toISOString(),
       // Assign 'admin' role if it's the first user, otherwise 'user'
       role: isFirstUser ? 'admin' : 'user',
-      profileImageUrl: userRecord.photoURL || `https://placehold.co/100x100.png`,
+      profileImageUrl: userRecord.photoURL || photoURL,
     });
 
     return { success: true, userId: userRecord.uid };
