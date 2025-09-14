@@ -62,7 +62,7 @@ export function ProductCard({ product, showViewButton = false }: ProductCardProp
               
               <div className="absolute top-2 left-2 flex flex-col gap-1">
                  {product.specialNote && (
-                  <Badge variant="default" className="bg-accent text-accent-foreground">
+                  <Badge variant="default" className="bg-accent text-accent-foreground animate-pulse-badge">
                       {product.specialNote}
                   </Badge>
                 )}
@@ -75,7 +75,9 @@ export function ProductCard({ product, showViewButton = false }: ProductCardProp
             </div>
           </CardHeader>
           <CardContent className="p-4 flex-grow flex flex-col">
-            <CardTitle className="text-lg font-headline mb-2 leading-tight flex-grow">{product.name}</CardTitle>
+            <div className="flex-grow">
+              <CardTitle className="text-lg font-headline mb-2 leading-tight">{product.name}</CardTitle>
+            </div>
             
             {reviews.length > 0 && (
                 <div className="flex items-center gap-1 mt-2">

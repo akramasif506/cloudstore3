@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -87,10 +88,15 @@ export default {
             height: '0',
           },
         },
+        'pulse-badge': {
+          '0%, 100%': { transform: 'scale(1)', opacity: '1' },
+          '50%': { transform: 'scale(1.05)', opacity: '.95' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'pulse-badge': 'pulse-badge 2s infinite ease-in-out',
       },
       typography: ({ theme }: { theme: (path: string) => string }) => ({
         DEFAULT: {
