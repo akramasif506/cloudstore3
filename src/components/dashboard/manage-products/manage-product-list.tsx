@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -13,17 +14,41 @@ import {
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, CheckCircle, PackageCheck, PackageX, Edit, User, Eye, Phone } from 'lucide-react';
+import { Loader2, CheckCircle, PackageCheck, PackageX, Edit, User, Eye, Phone, AlertCircle, Image as ImageIcon } from 'lucide-react';
 import Link from 'next/link';
 import { EditProductDialog } from './edit-product-dialog';
 import { updateProductStatus } from '@/app/dashboard/manage-products/actions';
 import { Badge } from '@/components/ui/badge';
 import type { CategoryMap } from '@/app/dashboard/manage-categories/actions';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal } from 'lucide-react';
 
 interface ManageProductListProps {
   products: Product[];
   categories: CategoryMap;
 }
+
+const statusStyles: Record<Product['status'], string> = {
+    active: 'bg-green-100 text-green-800',
+    sold: 'bg-red-100 text-red-800',
+    pending_review: 'bg-amber-100 text-amber-800',
+    rejected: 'bg-destructive/20 text-destructive',
+    pending_image: 'bg-gray-100 text-gray-800'
+};
+
+const statusIcons: Record<Product['status'], React.ReactNode> = {
+    active: <CheckCircle className="h-4 w-4" />,
+    sold: <PackageX className="h-4 w-4" />,
+    pending_review: <AlertCircle className="h-4 w-4" />,
+    rejected: <AlertCircle className="h-4 w-4" />,
+    pending_image: <ImageIcon className="h-4 w-4" />,
+};
 
 export function ManageProductList({ products, categories }: ManageProductListProps) {
   const [productList, setProductList] = useState(products);
@@ -47,9 +72,8 @@ export function ManageProductList({ products, categories }: ManageProductListPro
       });
   }
 
-  const handleToggleStatus = async (product: Product) => {
+  const handleStatusChange = async (product: Product, newStatus: Product['status']) => {
     setUpdatingStatusId(product.id);
-    const newStatus = product.status === 'active' ? 'sold' : 'active';
     const result = await updateProductStatus(product.id, newStatus);
     setUpdatingStatusId(null);
 
@@ -59,7 +83,7 @@ export function ManageProductList({ products, categories }: ManageProductListPro
         ));
         toast({
             title: "Status Updated",
-            description: `Product has been marked as ${newStatus}.`
+            description: `Product has been marked as ${newStatus.replace('_', ' ')}.`
         });
     } else {
         toast({
@@ -129,36 +153,51 @@ export function ManageProductList({ products, categories }: ManageProductListPro
                 </TableCell>
                 <TableCell>Rs {product.price.toFixed(2)}</TableCell>
                 <TableCell>
-                    <Badge variant={product.status === 'active' ? 'secondary' : 'default'} className={product.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                        {product.status === 'active' ? 'Active' : 'Sold'}
+                    <Badge variant={'secondary'} className={statusStyles[product.status]}>
+                        <div className="flex items-center gap-2 capitalize">
+                           {statusIcons[product.status]}
+                           {product.status.replace('_', ' ')}
+                        </div>
                     </Badge>
                 </TableCell>
                 <TableCell className="text-right space-x-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={updatingStatusId === product.id}
-                    onClick={() => handleToggleStatus(product)}
-                  >
-                    {updatingStatusId === product.id 
-                        ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        : product.status === 'active' 
-                            ? <PackageX className="mr-2 h-4 w-4" /> 
-                            : <PackageCheck className="mr-2 h-4 w-4" />
-                    }
-                    {product.status === 'active' ? 'Mark Sold' : 'Mark Active'}
-                  </Button>
-                  <EditProductDialog
-                    product={product}
-                    categories={categories}
-                    onSuccess={handleProductUpdate}
-                    onError={handleUpdateError}
-                  />
-                  <Button asChild size="sm" variant="ghost">
-                    <Link href={`/listings/${product.id}`} target="_blank" rel="noopener noreferrer">
-                      <Eye className="h-4 w-4" />
-                    </Link>
-                  </Button>
+                 {updatingStatusId === product.id ? (
+                    <Loader2 className="h-5 w-5 animate-spin ml-auto" />
+                  ) : (
+                    <div className="flex items-center justify-end gap-1">
+                      <EditProductDialog
+                        product={product}
+                        categories={categories}
+                        onSuccess={handleProductUpdate}
+                        onError={handleUpdateError}
+                      />
+                      <Button asChild size="sm" variant="ghost">
+                        <Link href={`/listings/${product.id}`} target="_blank" rel="noopener noreferrer">
+                          <Eye className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Status Actions</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                           {Object.keys(statusStyles).map(status => (
+                                <DropdownMenuItem
+                                    key={status}
+                                    disabled={product.status === status}
+                                    onClick={() => handleStatusChange(product, status as Product['status'])}
+                                    className="capitalize"
+                                >
+                                    Mark as {status.replace('_', ' ')}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  )}
                 </TableCell>
             </TableRow>
             ))}

@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from 'react';
@@ -20,11 +21,14 @@ import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { DateRange } from 'react-day-picker';
+import type { Product } from '@/lib/types';
 
 
 interface ProductFiltersProps {
   categories: CategoryMap;
 }
+
+const statusOptions: Product['status'][] = ['active', 'sold', 'pending_review', 'rejected', 'pending_image'];
 
 export function ProductFilters({ categories }: ProductFiltersProps) {
   const router = useRouter();
@@ -33,6 +37,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [selectedSubcategory, setSelectedSubcategory] = useState(searchParams.get('subcategory') || 'all');
+  const [selectedStatus, setSelectedStatus] = useState(searchParams.get('status') || 'all');
   const [date, setDate] = useState<DateRange | undefined>({
       from: searchParams.get('from') ? new Date(searchParams.get('from')!) : undefined,
       to: searchParams.get('to') ? new Date(searchParams.get('to')!) : undefined,
@@ -42,6 +47,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
     setSearchQuery(searchParams.get('q') || '');
     setSelectedCategory(searchParams.get('category') || 'all');
     setSelectedSubcategory(searchParams.get('subcategory') || 'all');
+    setSelectedStatus(searchParams.get('status') || 'all');
     setDate({
         from: searchParams.get('from') ? new Date(searchParams.get('from')!) : undefined,
         to: searchParams.get('to') ? new Date(searchParams.get('to')!) : undefined,
@@ -54,9 +60,11 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
     if (searchQuery) params.set('q', searchQuery); else params.delete('q');
     if (selectedCategory !== 'all') params.set('category', selectedCategory); else params.delete('category');
     if (selectedSubcategory !== 'all') params.set('subcategory', selectedSubcategory); else params.delete('subcategory');
+    if (selectedStatus !== 'all') params.set('status', selectedStatus); else params.delete('status');
     if (date?.from) params.set('from', format(date.from, 'yyyy-MM-dd')); else params.delete('from');
     if (date?.to) params.set('to', format(date.to, 'yyyy-MM-dd')); else params.delete('to');
     
+    params.set('page', '1'); // Reset to first page on new filter
     router.push(`/dashboard/manage-products?${params.toString()}`);
   };
   
@@ -74,7 +82,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
   return (
     <Card className="bg-muted/50">
       <CardContent className="pt-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 items-end">
           <div className="space-y-2">
             <Label htmlFor="search">Search Name/ID</Label>
             <div className="relative">
@@ -87,6 +95,18 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="status">Status</Label>
+            <Select onValueChange={setSelectedStatus} value={selectedStatus}>
+              <SelectTrigger id="status"><SelectValue placeholder="All" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                {statusOptions.map(status => (
+                    <SelectItem key={status} value={status} className="capitalize">{status.replace('_', ' ')}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
@@ -151,7 +171,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
                 </PopoverContent>
             </Popover>
           </div>
-          <div className="flex gap-2 lg:col-start-4">
+          <div className="flex gap-2 xl:col-start-5">
               <Button onClick={handleApplyFilters} className="w-full"><Filter className="mr-2 h-4 w-4"/>Apply</Button>
               <Button onClick={handleResetFilters} variant="ghost" className="w-full"><X className="mr-2 h-4 w-4"/>Reset</Button>
           </div>

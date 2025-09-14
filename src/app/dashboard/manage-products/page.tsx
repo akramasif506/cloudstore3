@@ -9,6 +9,7 @@ import { getCategories } from '../manage-categories/actions';
 import { ProductFilters } from '@/components/dashboard/manage-products/product-filters';
 import { Suspense } from 'react';
 import { PaginationControls } from '@/components/dashboard/pagination-controls';
+import type { Product } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +20,7 @@ export default async function ManageProductsPage({
     q?: string;
     category?: string;
     subcategory?: string;
+    status?: Product['status'];
     from?: string;
     to?: string;
     stock?: 'low' | 'out';

@@ -15,6 +15,7 @@ interface ProductFilters {
     from?: string;
     to?: string;
     stock?: 'low' | 'out';
+    status?: Product['status'];
 }
 
 // Function to get the low stock threshold from DB
@@ -49,22 +50,24 @@ export async function getManageableProducts(
       }));
     }
     
-    let filteredProducts = allProducts.filter(p => p.status === 'active' || p.status === 'sold');
+    let filteredProducts = allProducts;
     const lowStockThreshold = await getLowStockThreshold();
 
 
     if (filters) {
-        const { q, category, subcategory, from, to, stock } = filters;
+        const { q, category, subcategory, from, to, stock, status } = filters;
         const searchQuery = q?.toLowerCase();
         
         filteredProducts = filteredProducts.filter(product => {
             const searchMatch = searchQuery
                 ? product.name.toLowerCase().includes(searchQuery) || 
+                  (product.description && product.description.toLowerCase().includes(searchQuery)) ||
                   (product.displayId && product.displayId.toLowerCase().includes(searchQuery))
                 : true;
             
             const categoryMatch = category ? product.category === category : true;
             const subcategoryMatch = subcategory ? product.subcategory === subcategory : true;
+            const statusMatch = status ? product.status === status : true;
             
             const createdAt = new Date(product.createdAt);
             const fromDate = from ? new Date(from) : null;
@@ -77,7 +80,7 @@ export async function getManageableProducts(
 
             const stockMatch = !stock || (stock === 'low' && product.stock && product.stock <= lowStockThreshold && product.stock > 0) || (stock === 'out' && product.stock === 0);
 
-            return searchMatch && categoryMatch && subcategoryMatch && dateMatch && stockMatch;
+            return searchMatch && categoryMatch && subcategoryMatch && dateMatch && stockMatch && statusMatch;
         });
     }
 
@@ -96,7 +99,7 @@ export async function getManageableProducts(
 
 export async function updateProductStatus(
     productId: string, 
-    status: 'active' | 'sold'
+    status: Product['status']
 ): Promise<{ success: boolean; message?: string }> {
     try {
         const { db } = initializeAdmin();
