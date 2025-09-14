@@ -203,7 +203,7 @@ export function MyOrdersClient() {
                                 <div className="flex justify-between items-start flex-wrap gap-2">
                                     <Link href={`/my-orders/${order.internalId}`} className="block">
                                         <CardTitle className="text-lg">Order #{order.id}</CardTitle>
-                                        <CardDescription>Placed on {new Date(order.createdAt).toLocaleDateString()}</CardDescription>
+                                        <CardDescription>Placed on {new Date(order.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</CardDescription>
                                     </Link>
                                     <div className="flex items-center gap-2">
                                         {order.returnStatus && <ReturnStatusBadge status={order.returnStatus} />}

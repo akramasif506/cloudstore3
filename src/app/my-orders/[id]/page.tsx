@@ -102,7 +102,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                                 <p className="flex items-start gap-3"><UserIcon className="h-4 w-4 mt-1 flex-shrink-0" /><span className="font-semibold text-foreground">{order.customerName}</span></p>
                                 <p className="flex items-start gap-3"><Home className="h-4 w-4 mt-1 flex-shrink-0" /><span>{order.shippingAddress}</span></p>
                                 <p className="flex items-start gap-3"><Phone className="h-4 w-4 mt-1 flex-shrink-0" /><span>{order.contactNumber}</span></p>
-                                <p className="flex items-start gap-3"><Calendar className="h-4 w-4 mt-1 flex-shrink-0" /><span>Placed on {new Date(order.createdAt).toLocaleString()}</span></p>
+                                <p className="flex items-start gap-3"><Calendar className="h-4 w-4 mt-1 flex-shrink-0" /><span>Placed on {new Date(order.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</span></p>
                             </div>
                         </div>
 
