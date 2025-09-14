@@ -14,9 +14,10 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, Star } from "lucide-react";
 import type { CategoryMap } from '@/app/dashboard/manage-categories/actions';
 import type { ProductConditionMap } from '@/app/dashboard/manage-product-conditions/actions';
+import { cn } from '@/lib/utils';
 
 const MAX_PRICE = 50000;
 
@@ -40,6 +41,7 @@ export function ProductFilters({ categories, conditions }: ProductFiltersProps) 
     Number(searchParams.get('minPrice')) || 0,
     Number(searchParams.get('maxPrice')) || MAX_PRICE
   ]);
+  const [selectedRating, setSelectedRating] = useState(Number(searchParams.get('rating')) || 0);
 
   useEffect(() => {
     setSelectedCategory(searchParams.get('category') || 'all');
@@ -49,6 +51,7 @@ export function ProductFilters({ categories, conditions }: ProductFiltersProps) 
         Number(searchParams.get('minPrice')) || 0,
         Number(searchParams.get('maxPrice')) || MAX_PRICE
     ]);
+    setSelectedRating(Number(searchParams.get('rating')) || 0);
   }, [searchParams]);
 
   const handleApplyFilters = () => {
@@ -69,6 +72,9 @@ export function ProductFilters({ categories, conditions }: ProductFiltersProps) 
     if (priceRange[1] < MAX_PRICE) params.set('maxPrice', priceRange[1].toString());
     else params.delete('maxPrice');
     
+    if (selectedRating > 0) params.set('rating', selectedRating.toString());
+    else params.delete('rating');
+    
     router.push(`/?${params.toString()}`);
   };
   
@@ -77,6 +83,7 @@ export function ProductFilters({ categories, conditions }: ProductFiltersProps) 
     setSelectedSubcategory('all');
     setSelectedCondition('all');
     setPriceRange([0, MAX_PRICE]);
+    setSelectedRating(0);
     router.push('/');
   }
 
@@ -174,6 +181,24 @@ export function ProductFilters({ categories, conditions }: ProductFiltersProps) 
               onValueChange={setPriceRange}
               className="[&>span:first-child]:h-2 [&>span>span]:h-5 [&>span>span]:w-5 [&>span>span]:border-2"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Rating</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {[4, 3, 2, 1].map((rating) => (
+                <Button
+                  key={rating}
+                  variant={selectedRating === rating ? 'default' : 'outline'}
+                  onClick={() => setSelectedRating(prev => prev === rating ? 0 : rating)}
+                  className="w-full"
+                >
+                  <div className="flex items-center gap-1">
+                    {rating} <Star className="w-4 h-4 text-amber-400 fill-amber-400" /> & up
+                  </div>
+                </Button>
+              ))}
+            </div>
           </div>
       </CardContent>
        <CardFooter className="lg:block hidden p-0 pt-6">

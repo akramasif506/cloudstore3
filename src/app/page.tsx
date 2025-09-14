@@ -51,6 +51,7 @@ export default async function Home({
     minPrice?: string;
     maxPrice?: string;
     sortBy?: string;
+    rating?: string;
   };
 }) {
   const allProducts = await getProducts();
@@ -73,8 +74,9 @@ export default async function Home({
   const minPrice = Number(searchParams?.minPrice) || 0;
   const maxPrice = Number(searchParams?.maxPrice);
   const sortBy = searchParams?.sortBy || 'newest';
+  const minRating = Number(searchParams?.rating) || 0;
 
-  const hasActiveFilters = !!(searchQuery || selectedCategory || selectedSubcategory || selectedCondition || minPrice > 0 || maxPrice);
+  const hasActiveFilters = !!(searchQuery || selectedCategory || selectedSubcategory || selectedCondition || minPrice > 0 || maxPrice || minRating > 0);
 
   let productsToShow = allProducts.filter(product => {
     if (featuredProductInfo?.productId === product.id) {
@@ -91,7 +93,11 @@ export default async function Home({
     const conditionMatch = selectedCondition ? product.condition === selectedCondition : true;
     const priceMatch = product.price >= minPrice && (maxPrice ? product.price <= maxPrice : true);
 
-    return searchMatch && categoryMatch && subcategoryMatch && conditionMatch && priceMatch;
+    const totalRating = product.reviews?.reduce((acc, review) => acc + review.rating, 0) || 0;
+    const averageRating = product.reviews?.length > 0 ? (totalRating / product.reviews.length) : 0;
+    const ratingMatch = minRating > 0 ? averageRating >= minRating : true;
+
+    return searchMatch && categoryMatch && subcategoryMatch && conditionMatch && priceMatch && ratingMatch;
   });
 
   productsToShow.sort((a, b) => {
