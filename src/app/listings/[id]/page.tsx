@@ -114,7 +114,7 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
       </div>
       <div className="lg:col-span-1">
         <div className="sticky top-24 space-y-6">
-            {product.status === 'active' && product.stock !== undefined && product.stock > 0 && (
+            {product.status === 'active' && (
                 <>
                     <Card>
                         <CardHeader>
