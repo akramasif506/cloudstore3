@@ -35,7 +35,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
   const searchParams = useSearchParams();
   
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
+  const [selectedCategoryId, setSelectedCategoryId] = useState(searchParams.get('category') || 'all');
   const [selectedSubcategory, setSelectedSubcategory] = useState(searchParams.get('subcategory') || 'all');
   const [selectedStatus, setSelectedStatus] = useState(searchParams.get('status') || 'all');
   const [selectedStock, setSelectedStock] = useState(searchParams.get('stock') || 'all');
@@ -46,7 +46,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
 
   useEffect(() => {
     setSearchQuery(searchParams.get('q') || '');
-    setSelectedCategory(searchParams.get('category') || 'all');
+    setSelectedCategoryId(searchParams.get('category') || 'all');
     setSelectedSubcategory(searchParams.get('subcategory') || 'all');
     setSelectedStatus(searchParams.get('status') || 'all');
     setSelectedStock(searchParams.get('stock') || 'all');
@@ -60,7 +60,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
     const params = new URLSearchParams(searchParams.toString());
     
     if (searchQuery) params.set('q', searchQuery); else params.delete('q');
-    if (selectedCategory !== 'all') params.set('category', selectedCategory); else params.delete('category');
+    if (selectedCategoryId !== 'all') params.set('category', selectedCategoryId); else params.delete('category');
     if (selectedSubcategory !== 'all') params.set('subcategory', selectedSubcategory); else params.delete('subcategory');
     if (selectedStatus !== 'all') params.set('status', selectedStatus); else params.delete('status');
     if (selectedStock !== 'all') params.set('stock', selectedStock); else params.delete('stock');
@@ -76,11 +76,11 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
   }
 
   const handleCategoryChange = (value: string) => {
-    setSelectedCategory(value);
+    setSelectedCategoryId(value);
     setSelectedSubcategory('all');
   };
 
-  const enabledCategories = Object.entries(categories).filter(([_, catData]) => catData.enabled);
+  const enabledCategories = Object.values(categories).filter(cat => cat.enabled);
 
   return (
     <Card className="bg-muted/50">
@@ -124,12 +124,12 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
-            <Select onValueChange={handleCategoryChange} value={selectedCategory}>
+            <Select onValueChange={handleCategoryChange} value={selectedCategoryId}>
               <SelectTrigger id="category"><SelectValue placeholder="All" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                {enabledCategories.map(([catName]) => (
-                  <SelectItem key={catName} value={catName}>{catName}</SelectItem>
+                {enabledCategories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -139,12 +139,12 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
             <Select 
               onValueChange={setSelectedSubcategory} 
               value={selectedSubcategory}
-              disabled={selectedCategory === 'all'}
+              disabled={selectedCategoryId === 'all'}
             >
               <SelectTrigger id="subcategory"><SelectValue placeholder="All" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Subcategories</SelectItem>
-                {selectedCategory !== 'all' && categories[selectedCategory as keyof typeof categories]?.subcategories
+                {selectedCategoryId !== 'all' && categories[selectedCategoryId]?.subcategories
                   .filter(sub => sub.enabled)
                   .map(subcat => (
                     <SelectItem key={subcat.name} value={subcat.name}>{subcat.name}</SelectItem>

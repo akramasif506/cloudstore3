@@ -218,6 +218,7 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
                            </Button>
                            </div>
                         </CardTitle>
+                        <CardDescription>ID: {field.id}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         {/* SUBCATEGORIES SECTION */}

@@ -93,7 +93,7 @@ export function ListingForm({ categories, variantSets, conditions }: ListingForm
     name: "variants",
   });
 
-  const selectedCategory = form.watch('category');
+  const selectedCategoryId = form.watch('category');
   
   useEffect(() => {
     if (user) {
@@ -106,13 +106,13 @@ export function ListingForm({ categories, variantSets, conditions }: ListingForm
   }, [user, form]);
   
   useEffect(() => {
-    const categoryData = categories[selectedCategory as keyof typeof categories];
+    const categoryData = categories[selectedCategoryId];
     const newVariantFields = categoryData?.variantAttributes?.map(attr => ({
       name: attr.name,
       value: '', // Default to empty
     })) || [];
     replace(newVariantFields);
-  }, [selectedCategory, categories, replace]);
+  }, [selectedCategoryId, categories, replace]);
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -203,8 +203,10 @@ export function ListingForm({ categories, variantSets, conditions }: ListingForm
   };
 
   const handleGenerateDescription = async () => {
-    const { productName, category, subcategory } = form.getValues();
-    const basePayload = { productName, category, subcategory };
+    const { productName, category: categoryId, subcategory } = form.getValues();
+    const categoryName = categoryId ? categories[categoryId]?.name : undefined;
+
+    const basePayload = { productName, category: categoryName, subcategory };
 
     if (!productName) {
         toast({
@@ -273,7 +275,7 @@ export function ListingForm({ categories, variantSets, conditions }: ListingForm
   if (submissionStep === 'uploading_image') buttonText = 'Uploading image...';
   if (submissionStep === 'finalizing') buttonText = 'Finalizing...';
 
-  const enabledCategories = Object.entries(categories).filter(([_, catData]) => catData.enabled);
+  const enabledCategories = Object.values(categories).filter(cat => cat.enabled);
 
   return (
     <Form {...form}>
@@ -377,8 +379,8 @@ export function ListingForm({ categories, variantSets, conditions }: ListingForm
                     <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {enabledCategories.map(([catName]) => (
-                      <SelectItem key={catName} value={catName}>{catName}</SelectItem>
+                    {enabledCategories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -392,12 +394,12 @@ export function ListingForm({ categories, variantSets, conditions }: ListingForm
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Subcategory</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory || isSubmitting}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategoryId || isSubmitting}>
                   <FormControl>
                     <SelectTrigger><SelectValue placeholder="Select a subcategory" /></SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {selectedCategory && categories[selectedCategory as keyof typeof categories]?.subcategories
+                    {selectedCategoryId && categories[selectedCategoryId]?.subcategories
                         .filter(sub => sub.enabled)
                         .map(subcat => (
                            <SelectItem key={subcat.name} value={subcat.name}>{subcat.name}</SelectItem>
@@ -415,7 +417,7 @@ export function ListingForm({ categories, variantSets, conditions }: ListingForm
             <CardHeader><CardTitle>Product Options</CardTitle></CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {fields.map((field, index) => {
-                const attribute = categories[selectedCategory as keyof typeof categories]?.variantAttributes?.[index];
+                const attribute = categories[selectedCategoryId]?.variantAttributes?.[index];
                 const variantSetId = attribute?.variantSetId;
                 const options = variantSetId ? variantSets[variantSetId]?.options : [];
                 return (
