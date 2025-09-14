@@ -52,7 +52,7 @@ export function BroadcastBanner() {
   }
 
   const BannerContent = (
-    <Alert className="relative rounded-none border-x-0 border-t-0 bg-pink-800 text-white pr-10">
+    <Alert className="relative rounded-none border-x-0 border-t-0 bg-rose-600 text-white pr-10">
       <Megaphone className="h-4 w-4 text-white" />
       <AlertDescription className="font-semibold text-white">
         {broadcast.message}
