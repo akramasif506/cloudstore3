@@ -4,8 +4,8 @@
 
 @layer base {
   :root {
-    --background: 39 100% 97%; /* Ivory */
-    --foreground: 0 0% 13%; /* Charcoal */
+    --background: 39 100% 97%; /* Ivory: #FFF8EE */
+    --foreground: 0 0% 13%; /* Charcoal: #212121 */
 
     --card: 39 100% 97%;
     --card-foreground: 0 0% 13%;
@@ -13,16 +13,16 @@
     --popover: 39 100% 97%;
     --popover-foreground: 0 0% 13%;
 
-    --primary: 338 82% 51%; /* Pink */
-    --primary-foreground: 338 82% 98%;
+    --primary: 338 82% 51%; /* Pink: #E91E63 */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 43 100% 90%; /* Lighter Accent */
+    --secondary: 43 100% 90%;
     --secondary-foreground: 0 0% 13%;
 
     --muted: 39 20% 90%;
     --muted-foreground: 0 0% 40%;
 
-    --accent: 43 100% 70%; /* Yellow */
+    --accent: 43 100% 70%; /* Yellow: #FFD166 */
     --accent-foreground: 0 0% 13%;
 
     --destructive: 0 84.2% 60.2%;
@@ -46,9 +46,9 @@
     --popover-foreground: 39 100% 97%;
 
     --primary: 338 82% 51%; /* Pink */
-    --primary-foreground: 338 82% 98%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 43 100% 20%; /* Darker Accent */
+    --secondary: 43 100% 20%;
     --secondary-foreground: 39 100% 97%;
 
     --muted: 0 0% 20%;
@@ -72,6 +72,18 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  }
+  h1,h2,h3,h4,h5 { 
+    font-family: 'Playfair Display', serif;
+    color: hsl(var(--foreground));
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center gap-2 text-white px-4 py-2.5 rounded-full font-semibold;
+    background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)));
   }
 }
 
