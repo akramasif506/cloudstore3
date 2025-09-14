@@ -14,10 +14,10 @@ import {
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, CheckCircle, PackageCheck, PackageX, Edit, User, Eye, Phone, AlertCircle, Image as ImageIcon } from 'lucide-react';
+import { Loader2, CheckCircle, PackageCheck, PackageX, Edit, User, Eye, Phone, AlertCircle, Image as ImageIcon, Star } from 'lucide-react';
 import Link from 'next/link';
 import { EditProductDialog } from './edit-product-dialog';
-import { updateProductStatus } from '@/app/dashboard/manage-products/actions';
+import { updateProductStatus, toggleFeaturedStatus } from '@/app/dashboard/manage-products/actions';
 import { Badge } from '@/components/ui/badge';
 import type { CategoryMap } from '@/app/dashboard/manage-categories/actions';
 import {
@@ -28,6 +28,7 @@ import {
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ManageProductListProps {
   products: Product[];
@@ -94,6 +95,29 @@ export function ManageProductList({ products, categories }: ManageProductListPro
     }
   }
 
+  const handleFeatureToggle = async (product: Product) => {
+    setUpdatingStatusId(product.id);
+    const newFeaturedState = !product.isFeatured;
+    const result = await toggleFeaturedStatus(product.id, newFeaturedState);
+    setUpdatingStatusId(null);
+
+    if (result.success) {
+        setProductList(currentProducts => currentProducts.map(p => 
+            p.id === product.id ? {...p, isFeatured: newFeaturedState} : p
+        ));
+        toast({
+            title: `Product ${newFeaturedState ? 'Featured' : 'Unfeatured'}`,
+            description: `${product.name} is now ${newFeaturedState ? 'featured' : 'no longer featured'}.`
+        });
+    } else {
+        toast({
+            variant: "destructive",
+            title: "Update Failed",
+            description: result.message
+        });
+    }
+  }
+
 
   if (products.length === 0) {
     return (
@@ -120,7 +144,7 @@ export function ManageProductList({ products, categories }: ManageProductListPro
             </TableRow>
         </TableHeader>
         <TableBody>
-            {products.map((product) => (
+            {productList.map((product) => (
             <TableRow key={product.id}>
                 <TableCell>
                   <Link href={`/listings/${product.id}`} target="_blank" rel="noopener noreferrer">
@@ -165,6 +189,14 @@ export function ManageProductList({ products, categories }: ManageProductListPro
                     <Loader2 className="h-5 w-5 animate-spin ml-auto" />
                   ) : (
                     <div className="flex items-center justify-end gap-1">
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => handleFeatureToggle(product)}
+                        aria-label="Toggle featured status"
+                      >
+                          <Star className={cn("h-4 w-4", product.isFeatured ? "text-amber-400 fill-amber-400" : "text-muted-foreground")}/>
+                      </Button>
                       <EditProductDialog
                         product={product}
                         categories={categories}

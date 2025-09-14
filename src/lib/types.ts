@@ -60,6 +60,7 @@ export interface Product {
   variants?: ProductVariant[];
   stock?: number;
   specialNote?: string;
+  isFeatured?: boolean;
 }
 
 export interface OrderItem {

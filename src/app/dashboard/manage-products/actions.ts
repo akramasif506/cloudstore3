@@ -147,3 +147,22 @@ export async function updateProduct(
         return { success: false, message: 'Failed to update product.' };
     }
 }
+
+export async function toggleFeaturedStatus(
+    productId: string, 
+    isFeatured: boolean
+): Promise<{ success: boolean; message?: string }> {
+    try {
+        const { db } = initializeAdmin();
+        const productRef = ref(db, `products/${productId}`);
+        await update(productRef, { isFeatured });
+        
+        revalidatePath('/');
+        revalidatePath('/dashboard/manage-products');
+
+        return { success: true };
+    } catch (error) {
+        console.error("Error updating featured status:", error);
+        return { success: false, message: 'Failed to update featured status.' };
+    }
+}

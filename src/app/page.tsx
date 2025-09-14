@@ -109,7 +109,11 @@ export default async function Home({
     return searchMatch && categoryMatch && subcategoryMatch && conditionMatch && priceMatch && ratingMatch;
   });
 
-  productsToShow.sort((a, b) => {
+  // Separate featured products
+  const featuredProducts = productsToShow.filter(p => p.isFeatured);
+  const regularProducts = productsToShow.filter(p => !p.isFeatured);
+
+  regularProducts.sort((a, b) => {
     switch (sortBy) {
       case 'price-asc':
         return a.price - b.price;
@@ -120,6 +124,9 @@ export default async function Home({
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     }
   });
+
+  // Prepend featured products to the list
+  productsToShow = [...featuredProducts, ...regularProducts];
 
   return (
     <div className="space-y-8">
