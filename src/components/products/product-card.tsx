@@ -62,13 +62,13 @@ export function ProductCard({ product, showViewButton = false }: ProductCardProp
               )}
             </div>
           </CardHeader>
-          <CardContent className="p-4 flex-grow">
-            <CardTitle className="text-lg font-headline mb-1 truncate leading-tight">{product.name}</CardTitle>
-            <div className="flex items-baseline gap-2">
-                <p className="text-xl font-bold text-destructive">Rs {product.price.toFixed(2)}</p>
+          <CardContent className="p-4 flex-grow flex flex-col">
+            <CardTitle className="text-lg font-headline mb-2 leading-tight flex-grow">{product.name}</CardTitle>
+            <div className="flex flex-col">
                 {isDiscounted && (
                     <p className="text-sm text-muted-foreground line-through">Rs {product.originalPrice!.toFixed(2)}</p>
                 )}
+                <p className="text-xl font-bold text-destructive">Rs {product.price.toFixed(2)}</p>
             </div>
           </CardContent>
         </Link>
