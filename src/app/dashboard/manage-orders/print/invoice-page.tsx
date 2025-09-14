@@ -159,4 +159,3 @@ export function InvoicePage({ orders }: { orders: Order[] }) {
         </html>
     );
 }
-

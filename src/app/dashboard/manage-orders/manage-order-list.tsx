@@ -28,7 +28,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
-import { generateSellerOrderPdfs, generateInvoicesPdf } from "@/lib/pdf-generator";
+import { generateSellerOrderPdfs } from "@/lib/pdf-generator";
 import { Checkbox } from '@/components/ui/checkbox';
 import { DownloadReportButton } from './download-report-button';
 import { DownloadFulfillmentButton } from './download-fulfillment-button';
