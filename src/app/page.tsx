@@ -17,7 +17,7 @@ import { PromoBanner } from '@/components/products/promo-banner';
 import { Sheet, SheetContent, SheetTrigger, SheetFooter, SheetClose, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { SlidersHorizontal } from 'lucide-react';
-import { FilterActions } from '@/components/products/filter-actions';
+
 
 async function getProducts(): Promise<Product[]> {
   try {
@@ -165,7 +165,24 @@ export default async function Home({
                                     <ProductFilters categories={categoryMap} conditions={conditions} />
                                 </div>
                                 <SheetFooter className="p-6 bg-muted/50">
-                                     <FilterActions />
+                                     <div className="flex w-full flex-col gap-2">
+                                        <SheetClose asChild>
+                                            <Button variant="default" className="w-full" onClick={() => {
+                                                // This is a bit of a hack, but we need to find the button on the page and click it.
+                                                // A better solution would involve state management (e.g. zustand, redux)
+                                                document.getElementById('apply-filters-mobile')?.click();
+                                            }}>
+                                                Apply Filters
+                                            </Button>
+                                        </SheetClose>
+                                        <SheetClose asChild>
+                                            <Button className="w-full" variant="ghost" onClick={() => {
+                                                document.getElementById('reset-filters-mobile')?.click();
+                                            }}>
+                                                Reset Filters
+                                            </Button>
+                                        </SheetClose>
+                                    </div>
                                 </SheetFooter>
                             </SheetContent>
                         </Sheet>
