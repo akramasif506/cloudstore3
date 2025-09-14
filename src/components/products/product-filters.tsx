@@ -18,6 +18,7 @@ import { SlidersHorizontal, Star } from "lucide-react";
 import type { CategoryMap } from '@/app/dashboard/manage-categories/actions';
 import type { ProductConditionMap } from '@/app/dashboard/manage-product-conditions/actions';
 import { cn } from '@/lib/utils';
+import { FilterActions } from './filter-actions';
 
 const MAX_PRICE = 50000;
 
@@ -202,14 +203,10 @@ export function ProductFilters({ categories, conditions }: ProductFiltersProps) 
           </div>
       </CardContent>
        <CardFooter className="lg:block hidden p-0 pt-6">
-            <div className="flex flex-col gap-2">
-            <Button variant="default" className="w-full" onClick={handleApplyFilters}>
-                Apply Filters
-            </Button>
-            <Button className="w-full" variant="ghost" onClick={handleResetFilters}>
-                Reset Filters
-            </Button>
-            </div>
+            <FilterActions 
+                onApply={handleApplyFilters}
+                onReset={handleResetFilters}
+            />
       </CardFooter>
     </Card>
   );

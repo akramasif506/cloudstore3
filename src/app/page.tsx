@@ -17,6 +17,7 @@ import { PromoBanner } from '@/components/products/promo-banner';
 import { Sheet, SheetContent, SheetTrigger, SheetFooter, SheetClose, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { SlidersHorizontal } from 'lucide-react';
+import { FilterActions } from '@/components/products/filter-actions';
 
 async function getProducts(): Promise<Product[]> {
   try {
@@ -109,11 +110,19 @@ export default async function Home({
     return searchMatch && categoryMatch && subcategoryMatch && conditionMatch && priceMatch && ratingMatch;
   });
 
-  // Separate featured products
-  const featuredProducts = productsToShow.filter(p => p.isFeatured);
-  const regularProducts = productsToShow.filter(p => !p.isFeatured);
+  // Combine featured products with regular products for consistent sorting
+  const featuredProducts = allProducts.filter(p => p.isFeatured && p.id !== featuredProductInfo?.productId);
+  let regularProducts = productsToShow.filter(p => !p.isFeatured);
 
-  regularProducts.sort((a, b) => {
+  // When sorting is active, combine all products and sort them together.
+  // Otherwise, keep featured products at the top.
+  if (sortBy !== 'newest' || hasActiveFilters) {
+      productsToShow = [...featuredProducts, ...regularProducts];
+  } else {
+      productsToShow = [...featuredProducts, ...regularProducts];
+  }
+
+  productsToShow.sort((a, b) => {
     switch (sortBy) {
       case 'price-asc':
         return a.price - b.price;
@@ -121,12 +130,12 @@ export default async function Home({
         return b.price - a.price;
       case 'newest':
       default:
+        // Give featured items a boost to appear first if no other sort is active
+        if (!hasActiveFilters && a.isFeatured && !b.isFeatured) return -1;
+        if (!hasActiveFilters && !a.isFeatured && b.isFeatured) return 1;
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     }
   });
-
-  // Prepend featured products to the list
-  productsToShow = [...featuredProducts, ...regularProducts];
 
   return (
     <div className="space-y-8">
@@ -161,8 +170,8 @@ export default async function Home({
                                     Filters
                                 </Button>
                             </SheetTrigger>
-                            <SheetContent className="flex flex-col">
-                                <SheetHeader className="p-6">
+                            <SheetContent className="flex flex-col p-0">
+                                <SheetHeader className="p-6 pb-0">
                                   <SheetTitle>Filter Products</SheetTitle>
                                   <SheetDescription>
                                     Refine your search using the options below.
@@ -172,12 +181,7 @@ export default async function Home({
                                     <ProductFilters categories={categoryMap} conditions={conditions} />
                                 </div>
                                 <SheetFooter className="p-4 border-t">
-                                    <SheetClose asChild>
-                                        <Button className="w-full" variant="ghost">Reset</Button>
-                                    </SheetClose>
-                                    <SheetClose asChild>
-                                        <Button variant="default" className="w-full">Apply</Button>
-                                    </SheetClose>
+                                  <FilterActions />
                                 </SheetFooter>
                             </SheetContent>
                         </Sheet>
