@@ -17,18 +17,18 @@ import { Button } from "@/components/ui/button";
 import { SlidersHorizontal, Star } from "lucide-react";
 import type { CategoryMap } from '@/app/dashboard/manage-categories/actions';
 import type { ProductConditionMap } from '@/app/dashboard/manage-product-conditions/actions';
-import { cn } from '@/lib/utils';
 import { SheetClose } from '../ui/sheet';
-
 
 const MAX_PRICE = 50000;
 
 interface ProductFiltersProps {
   categories: CategoryMap;
   conditions: ProductConditionMap;
+  onApply?: () => void;
+  onReset?: () => void;
 }
 
-export function ProductFilters({ categories, conditions }: ProductFiltersProps) {
+export function ProductFilters({ categories, conditions, onApply, onReset }: ProductFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -78,15 +78,12 @@ export function ProductFilters({ categories, conditions }: ProductFiltersProps) 
     else params.delete('rating');
     
     router.push(`/?${params.toString()}`);
+    if (onApply) onApply();
   };
   
   const handleResetFilters = () => {
-    setSelectedCategory('all');
-    setSelectedSubcategory('all');
-    setSelectedCondition('all');
-    setPriceRange([0, MAX_PRICE]);
-    setSelectedRating(0);
     router.push('/');
+    if (onReset) onReset();
   }
 
   const handleCategoryChange = (value: string) => {
@@ -204,14 +201,18 @@ export function ProductFilters({ categories, conditions }: ProductFiltersProps) 
           </div>
       </CardContent>
        <CardFooter className="p-0 pt-6 lg:p-6 lg:pt-0">
-            {/* Desktop-only buttons */}
-            <div className="w-full flex-col gap-2 hidden lg:flex">
-                <Button variant="default" className="w-full" onClick={handleApplyFilters}>
-                    Apply Filters
-                </Button>
-                <Button className="w-full" variant="ghost" onClick={handleResetFilters}>
-                    Reset Filters
-                </Button>
+            {/* Action buttons */}
+            <div className="flex w-full flex-col gap-2">
+                <SheetClose asChild>
+                    <Button variant="default" className="w-full" onClick={handleApplyFilters}>
+                        Apply Filters
+                    </Button>
+                </SheetClose>
+                <SheetClose asChild>
+                    <Button className="w-full" variant="ghost" onClick={handleResetFilters}>
+                        Reset Filters
+                    </Button>
+                </SheetClose>
             </div>
       </CardFooter>
     </Card>

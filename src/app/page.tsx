@@ -14,9 +14,7 @@ import { ProductGrid } from '@/components/products/product-grid';
 import { getPromoBanner } from './dashboard/manage-promo-banner/actions';
 import { getProductConditions } from './dashboard/manage-product-conditions/actions';
 import { PromoBanner } from '@/components/products/promo-banner';
-import { Sheet, SheetContent, SheetTrigger, SheetFooter, SheetClose, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { SlidersHorizontal } from 'lucide-react';
+import { MobileFilterSheet } from '@/components/products/mobile-filter-sheet';
 
 
 async function getProducts(): Promise<Product[]> {
@@ -147,45 +145,7 @@ export default async function Home({
                 </div>
                  <div className="flex gap-4 w-full sm:w-auto ml-auto">
                     <div className="lg:hidden w-1/2 sm:w-auto">
-                        <Sheet>
-                            <SheetTrigger asChild>
-                                <Button variant="outline" className="w-full">
-                                    <SlidersHorizontal className="mr-2 h-4 w-4" />
-                                    Filters
-                                </Button>
-                            </SheetTrigger>
-                            <SheetContent className="flex flex-col p-0">
-                                <SheetHeader className="p-6 pb-0">
-                                  <SheetTitle>Filter Products</SheetTitle>
-                                  <SheetDescription>
-                                    Refine your search using the options below.
-                                  </SheetDescription>
-                                </SheetHeader>
-                                <div className="p-6 flex-1 overflow-y-auto">
-                                    <ProductFilters categories={categoryMap} conditions={conditions} />
-                                </div>
-                                <SheetFooter className="p-6 bg-muted/50">
-                                     <div className="flex w-full flex-col gap-2">
-                                        <SheetClose asChild>
-                                            <Button variant="default" className="w-full" onClick={() => {
-                                                // This is a bit of a hack, but we need to find the button on the page and click it.
-                                                // A better solution would involve state management (e.g. zustand, redux)
-                                                document.getElementById('apply-filters-mobile')?.click();
-                                            }}>
-                                                Apply Filters
-                                            </Button>
-                                        </SheetClose>
-                                        <SheetClose asChild>
-                                            <Button className="w-full" variant="ghost" onClick={() => {
-                                                document.getElementById('reset-filters-mobile')?.click();
-                                            }}>
-                                                Reset Filters
-                                            </Button>
-                                        </SheetClose>
-                                    </div>
-                                </SheetFooter>
-                            </SheetContent>
-                        </Sheet>
+                        <MobileFilterSheet categories={categoryMap} conditions={conditions} />
                     </div>
                     <div className="w-1/2 sm:w-auto">
                         <ProductSort />
