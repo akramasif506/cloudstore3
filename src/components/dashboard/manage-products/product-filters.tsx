@@ -57,15 +57,15 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
   }, [searchParams]);
 
   const handleApplyFilters = () => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams();
     
-    if (searchQuery) params.set('q', searchQuery); else params.delete('q');
-    if (selectedCategoryId !== 'all') params.set('category', selectedCategoryId); else params.delete('category');
-    if (selectedSubcategory !== 'all') params.set('subcategory', selectedSubcategory); else params.delete('subcategory');
-    if (selectedStatus !== 'all') params.set('status', selectedStatus); else params.delete('status');
-    if (selectedStock !== 'all') params.set('stock', selectedStock); else params.delete('stock');
-    if (date?.from) params.set('from', format(date.from, 'yyyy-MM-dd')); else params.delete('from');
-    if (date?.to) params.set('to', format(date.to, 'yyyy-MM-dd')); else params.delete('to');
+    if (searchQuery) params.set('q', searchQuery);
+    if (selectedCategoryId !== 'all') params.set('category', selectedCategoryId);
+    if (selectedSubcategory !== 'all') params.set('subcategory', selectedSubcategory);
+    if (selectedStatus !== 'all') params.set('status', selectedStatus);
+    if (selectedStock !== 'all') params.set('stock', selectedStock);
+    if (date?.from) params.set('from', format(date.from, 'yyyy-MM-dd'));
+    if (date?.to) params.set('to', format(date.to, 'yyyy-MM-dd'));
     
     params.set('page', '1'); // Reset to first page on new filter
     router.push(`/dashboard/manage-products?${params.toString()}`);
