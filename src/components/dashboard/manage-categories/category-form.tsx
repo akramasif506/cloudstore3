@@ -87,6 +87,8 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
     control: form.control,
     name: 'categories',
   });
+  
+  const { formState: { dirtyFields, isSubmitting } } = form;
 
   const handleAddCategory = () => {
     const newCategoryName = form.getValues('newCategoryName');
@@ -146,6 +148,17 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
     const categoryData = form.getValues(`categories.${index}`);
     const categoryId = categoryData.id;
     
+    // Trigger validation for only the specific category being saved
+    const isValid = await form.trigger(`categories.${index}`);
+    if (!isValid) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "Please check the fields for errors before saving.",
+      });
+      return;
+    }
+
     setIsSaving(prev => ({ ...prev, [categoryId]: true }));
     
     const result = await saveSingleCategory(categoryData);
@@ -153,6 +166,9 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
     setIsSaving(prev => ({ ...prev, [categoryId]: false }));
 
     if (result.success) {
+      // Reset the dirty state for this specific field after successful save
+      const newCategories = [...form.getValues('categories')];
+      form.reset({ categories: newCategories, newCategoryName: '' });
       toast({ title: 'Success!', description: result.message });
     } else {
       toast({ variant: 'destructive', title: 'Error', description: result.message });
@@ -165,7 +181,9 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
     <Form {...form}>
       <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
         <div className="space-y-6">
-            {fields.map((field, index) => (
+            {fields.map((field, index) => {
+                const isCategoryDirty = !!dirtyFields.categories?.[index];
+                return (
                 <Card key={field.id} className={cn(!field.enabled && 'bg-muted/50 border-dashed')}>
                     <CardHeader>
                         <CardTitle className="flex justify-between items-center flex-wrap gap-4">
@@ -204,6 +222,8 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
                                       type="number"
                                       className="w-24"
                                       {...taxField}
+                                      value={taxField.value || ''}
+                                      onChange={(e) => taxField.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
                                     />
                                      <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                   </div>
@@ -251,6 +271,8 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
                                               className="w-20 h-8"
                                               placeholder="Default"
                                               {...taxField}
+                                              value={taxField.value || ''}
+                                              onChange={(e) => taxField.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
                                             />
                                             <Percent className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
                                           </div>
@@ -336,13 +358,13 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
 
                     </CardContent>
                      <CardFooter className="flex justify-end bg-muted/50 p-4">
-                        <Button type="button" onClick={() => handleSaveCategory(index)} disabled={isSaving[field.id]}>
+                        <Button type="button" onClick={() => handleSaveCategory(index)} disabled={isSaving[field.id] || !isCategoryDirty}>
                             {isSaving[field.id] ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                             Save Changes
                         </Button>
                     </CardFooter>
                 </Card>
-            ))}
+            )})}
         </div>
         
         <Card>
