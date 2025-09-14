@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState } from 'react';
@@ -62,6 +61,15 @@ const formSchema = z.object({
 });
 
 type FormValues = z.infer<typeof formSchema>;
+
+// Helper to convert a string to kebab-case
+const toKebabCase = (str: string) =>
+  str
+    .replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2')
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, '')
+    .replace(/--+/g, '-');
+
 
 interface CategoryFormProps {
     initialCategories: CategoryMap;
@@ -150,7 +158,8 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
   const onSubmit = async (data: FormValues) => {
     setIsSaving(true);
     const categoryMap: CategoryMap = data.categories.reduce((acc, category) => {
-      acc[category.name] = {
+      const categoryId = toKebabCase(category.name);
+      acc[categoryId] = {
         enabled: category.enabled,
         subcategories: category.subcategories,
         variantAttributes: category.variantAttributes,

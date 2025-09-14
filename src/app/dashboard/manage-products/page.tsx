@@ -8,6 +8,9 @@ import Link from 'next/link';
 import { getCategories } from '../manage-categories/actions';
 import { ProductFilters } from '@/components/dashboard/manage-products/product-filters';
 import { Suspense } from 'react';
+import { PaginationControls } from '@/components/dashboard/pagination-controls';
+
+export const dynamic = 'force-dynamic';
 
 export default async function ManageProductsPage({
   searchParams
@@ -18,9 +21,13 @@ export default async function ManageProductsPage({
     subcategory?: string;
     from?: string;
     to?: string;
+    stock?: 'low' | 'out';
+    page?: string;
   };
 }) {
-  const products = await getManageableProducts(searchParams);
+  const page = Number(searchParams?.page || '1');
+  const limit = 10;
+  const { products, total } = await getManageableProducts(page, limit, searchParams);
   const categories = await getCategories();
 
   return (
@@ -50,6 +57,13 @@ export default async function ManageProductsPage({
                 <Suspense fallback={<div>Loading products...</div>}>
                     <ManageProductList products={products} categories={categories} />
                 </Suspense>
+            </div>
+            <div className="mt-6">
+                <PaginationControls
+                    currentPage={page}
+                    totalItems={total}
+                    itemsPerPage={limit}
+                />
             </div>
         </CardContent>
     </Card>

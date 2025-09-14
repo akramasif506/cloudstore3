@@ -2,7 +2,7 @@
 'use server';
 
 import type { Product } from '@/lib/types';
-import { get, ref, update } from 'firebase/database';
+import { get, ref, update, query, orderByChild, startAt, endAt, limitToFirst, limitToLast } from 'firebase/database';
 import { initializeAdmin } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
@@ -14,9 +14,27 @@ interface ProductFilters {
     subcategory?: string;
     from?: string;
     to?: string;
+    stock?: 'low' | 'out';
 }
 
-export async function getManageableProducts(filters?: ProductFilters): Promise<Product[]> {
+// Function to get the low stock threshold from DB
+async function getLowStockThreshold(): Promise<number> {
+    try {
+        const { db } = initializeAdmin();
+        const configRef = db.ref('site_config/fees/stockThreshold');
+        const snapshot = await configRef.once('value');
+        return snapshot.exists() ? snapshot.val() : 5; // Default to 5
+    } catch {
+        return 5; // Default on error
+    }
+}
+
+
+export async function getManageableProducts(
+    page: number = 1, 
+    limit: number = 10,
+    filters?: ProductFilters
+): Promise<{ products: Product[], total: number }> {
   try {
     const { db } = initializeAdmin();
     const productsRef = ref(db, 'products');
@@ -32,9 +50,11 @@ export async function getManageableProducts(filters?: ProductFilters): Promise<P
     }
     
     let filteredProducts = allProducts.filter(p => p.status === 'active' || p.status === 'sold');
+    const lowStockThreshold = await getLowStockThreshold();
+
 
     if (filters) {
-        const { q, category, subcategory, from, to } = filters;
+        const { q, category, subcategory, from, to, stock } = filters;
         const searchQuery = q?.toLowerCase();
         
         filteredProducts = filteredProducts.filter(product => {
@@ -55,15 +75,22 @@ export async function getManageableProducts(filters?: ProductFilters): Promise<P
 
             const dateMatch = (!fromDate || createdAt >= fromDate) && (!toDate || createdAt <= toDate);
 
-            return searchMatch && categoryMatch && subcategoryMatch && dateMatch;
+            const stockMatch = !stock || (stock === 'low' && product.stock && product.stock <= lowStockThreshold && product.stock > 0) || (stock === 'out' && product.stock === 0);
+
+            return searchMatch && categoryMatch && subcategoryMatch && dateMatch && stockMatch;
         });
     }
 
-    return filteredProducts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const sortedProducts = filteredProducts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    
+    const total = sortedProducts.length;
+    const paginatedProducts = sortedProducts.slice((page - 1) * limit, page * limit);
+
+    return { products: paginatedProducts, total };
 
   } catch (error) {
     console.error("Error fetching manageable products from Firebase:", error);
-    return [];
+    return { products: [], total: 0 };
   }
 }
 

@@ -12,7 +12,11 @@ interface OrderFilters {
     to?: string;
 }
 
-export async function getAllOrders(filters?: OrderFilters): Promise<Order[]> {
+export async function getAllOrders(
+    page: number = 1,
+    limit: number = 10,
+    filters?: OrderFilters
+): Promise<{ orders: Order[], total: number }> {
   try {
     const { db } = initializeAdmin();
     // Fetch from the denormalized 'all_orders' path for a complete list
@@ -25,11 +29,13 @@ export async function getAllOrders(filters?: OrderFilters): Promise<Order[]> {
       allOrders = Object.keys(ordersData).map(key => ({ ...ordersData[key], internalId: key }));
     }
 
+    let filteredOrders = allOrders;
+
     if (filters) {
         const { q, status, from, to } = filters;
         const searchQuery = q?.toLowerCase();
 
-        allOrders = allOrders.filter(order => {
+        filteredOrders = filteredOrders.filter(order => {
             const searchMatch = searchQuery ? order.id.toLowerCase().includes(searchQuery) : true;
             const statusMatch = status ? order.status === status : true;
             
@@ -47,11 +53,16 @@ export async function getAllOrders(filters?: OrderFilters): Promise<Order[]> {
     }
     
     // Sort all orders by creation date, newest first
-    return allOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const sortedOrders = filteredOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    
+    const total = sortedOrders.length;
+    const paginatedOrders = sortedOrders.slice((page - 1) * limit, page * limit);
+
+    return { orders: paginatedOrders, total };
 
   } catch (error) {
     console.error("Error fetching all orders:", error);
-    return [];
+    return { orders: [], total: 0 };
   }
 }
 

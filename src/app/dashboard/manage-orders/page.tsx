@@ -8,6 +8,9 @@ import Link from 'next/link';
 import { OrderFilters } from '@/components/dashboard/manage-orders/order-filters';
 import type { Order } from '@/lib/types';
 import { Suspense } from 'react';
+import { PaginationControls } from '@/components/dashboard/pagination-controls';
+
+export const dynamic = 'force-dynamic';
 
 export default async function ManageOrdersPage({
   searchParams
@@ -17,9 +20,12 @@ export default async function ManageOrdersPage({
     status?: Order['status'];
     from?: string;
     to?: string;
+    page?: string;
   };
 }) {
-  const orders = await getAllOrders(searchParams);
+  const page = Number(searchParams?.page || '1');
+  const limit = 10;
+  const { orders, total } = await getAllOrders(page, limit, searchParams);
 
   return (
     <Card>
@@ -50,6 +56,13 @@ export default async function ManageOrdersPage({
         </Suspense>
         <div className="mt-8">
             <ManageOrderList initialOrders={orders} />
+        </div>
+        <div className="mt-6">
+            <PaginationControls
+                currentPage={page}
+                totalItems={total}
+                itemsPerPage={limit}
+            />
         </div>
       </CardContent>
     </Card>
