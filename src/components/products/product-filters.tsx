@@ -100,14 +100,14 @@ export function ProductFilters({ categories, conditions }: ProductFiltersProps) 
   const enabledCategories = Object.entries(categories).filter(([_, catData]) => catData.enabled);
 
   return (
-    <Card className="border-0 shadow-none bg-transparent">
-      <CardHeader className="p-0 mb-4 hidden lg:block">
-        <CardTitle className="flex items-center gap-2 text-base">
+    <Card className="border-0 shadow-none bg-transparent lg:border lg:shadow-sm lg:bg-card">
+      <CardHeader className="p-0 mb-4 lg:p-6 lg:mb-0">
+        <CardTitle className="flex items-center gap-2 text-base lg:text-2xl">
           <SlidersHorizontal className="h-5 w-5" />
           <span>Filters</span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6 p-0">
+      <CardContent className="space-y-6 p-0 lg:p-6">
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
             <Select onValueChange={handleCategoryChange} value={selectedCategory}>
@@ -202,7 +202,7 @@ export function ProductFilters({ categories, conditions }: ProductFiltersProps) 
             </div>
           </div>
       </CardContent>
-       <CardFooter className="hidden lg:block p-0 pt-6">
+       <CardFooter className="p-0 pt-6 lg:p-6 lg:pt-0">
             <FilterActions 
                 onApply={handleApplyFilters}
                 onReset={handleResetFilters}

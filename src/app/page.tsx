@@ -89,9 +89,6 @@ export default async function Home({
   const hasActiveFilters = !!(searchQuery || selectedCategory || selectedSubcategory || selectedCondition || minPrice > 0 || maxPrice || minRating > 0);
 
   let productsToShow = allProducts.filter(product => {
-    if (featuredProductInfo?.productId === product.id) {
-        return false;
-    }
     const searchMatch = searchQuery
       ? product.name.toLowerCase().includes(searchQuery) || 
         product.description.toLowerCase().includes(searchQuery) ||
@@ -112,12 +109,6 @@ export default async function Home({
 
   // Now, combine all products and sort them together.
   productsToShow.sort((a, b) => {
-    // Featured products get a boost only when no other sort is active
-    if (sortBy === 'newest' && !hasActiveFilters) {
-      if (a.isFeatured && !b.isFeatured) return -1;
-      if (!a.isFeatured && b.isFeatured) return 1;
-    }
-
     switch (sortBy) {
       case 'price-asc':
         return a.price - b.price;
@@ -172,6 +163,9 @@ export default async function Home({
                                 <div className="p-6 flex-1 overflow-y-auto">
                                     <ProductFilters categories={categoryMap} conditions={conditions} />
                                 </div>
+                                <SheetFooter className="p-6 bg-muted/50">
+                                    {/* The FilterActions component is now inside ProductFilters and handles its own logic */}
+                                </SheetFooter>
                             </SheetContent>
                         </Sheet>
                     </div>
