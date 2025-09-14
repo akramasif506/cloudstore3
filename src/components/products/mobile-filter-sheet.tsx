@@ -36,8 +36,7 @@ export function MobileFilterSheet({ categories, conditions }: MobileFilterSheetP
                     <ProductFilters 
                         categories={categories} 
                         conditions={conditions} 
-                        onApply={() => setIsOpen(false)}
-                        onReset={() => setIsOpen(false)}
+                        onAction={() => setIsOpen(false)}
                     />
                 </div>
             </SheetContent>

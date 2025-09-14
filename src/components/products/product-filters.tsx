@@ -17,18 +17,16 @@ import { Button } from "@/components/ui/button";
 import { SlidersHorizontal, Star } from "lucide-react";
 import type { CategoryMap } from '@/app/dashboard/manage-categories/actions';
 import type { ProductConditionMap } from '@/app/dashboard/manage-product-conditions/actions';
-import { SheetClose } from '../ui/sheet';
 
 const MAX_PRICE = 50000;
 
 interface ProductFiltersProps {
   categories: CategoryMap;
   conditions: ProductConditionMap;
-  onApply?: () => void;
-  onReset?: () => void;
+  onAction?: () => void;
 }
 
-export function ProductFilters({ categories, conditions, onApply, onReset }: ProductFiltersProps) {
+export function ProductFilters({ categories, conditions, onAction }: ProductFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -78,12 +76,12 @@ export function ProductFilters({ categories, conditions, onApply, onReset }: Pro
     else params.delete('rating');
     
     router.push(`/?${params.toString()}`);
-    if (onApply) onApply();
+    if (onAction) onAction();
   };
   
   const handleResetFilters = () => {
     router.push('/');
-    if (onReset) onReset();
+    if (onAction) onAction();
   }
 
   const handleCategoryChange = (value: string) => {
@@ -203,16 +201,12 @@ export function ProductFilters({ categories, conditions, onApply, onReset }: Pro
        <CardFooter className="p-0 pt-6 lg:p-6 lg:pt-0">
             {/* Action buttons */}
             <div className="flex w-full flex-col gap-2">
-                <SheetClose asChild>
-                    <Button variant="default" className="w-full" onClick={handleApplyFilters}>
-                        Apply Filters
-                    </Button>
-                </SheetClose>
-                <SheetClose asChild>
-                    <Button className="w-full" variant="ghost" onClick={handleResetFilters}>
-                        Reset Filters
-                    </Button>
-                </SheetClose>
+                <Button variant="default" className="w-full" onClick={handleApplyFilters}>
+                    Apply Filters
+                </Button>
+                <Button className="w-full" variant="ghost" onClick={handleResetFilters}>
+                    Reset Filters
+                </Button>
             </div>
       </CardFooter>
     </Card>
