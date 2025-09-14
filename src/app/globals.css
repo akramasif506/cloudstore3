@@ -89,25 +89,3 @@
         transform: scale(1.05);
     }
 }
-
-@media print {
-  body {
-    background: white !important;
-  }
-  header, footer, .no-print {
-    display: none !important;
-  }
-  main {
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-  .max-w-4xl {
-    max-width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-  .card {
-    box-shadow: none !important;
-    border: none !important;
-  }
-}

@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
 import React, { useTransition } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { generateInvoicesPdf } from "@/lib/pdf-generator";
 import type { Order } from "@/lib/types";
+import { useRouter } from "next/navigation";
 
 interface DownloadInvoicesButtonProps {
     selectedOrders: Order[];
@@ -15,6 +15,7 @@ interface DownloadInvoicesButtonProps {
 export function DownloadInvoicesButton({ selectedOrders }: DownloadInvoicesButtonProps) {
     const [isPending, startTransition] = useTransition();
     const { toast } = useToast();
+    const router = useRouter();
 
     const handleDownload = () => {
         if (selectedOrders.length === 0) {
@@ -26,24 +27,11 @@ export function DownloadInvoicesButton({ selectedOrders }: DownloadInvoicesButto
             return;
         }
 
-        startTransition(async () => {
-            try {
-                await generateInvoicesPdf(selectedOrders);
-                
-                toast({
-                    title: "Invoices Generated",
-                    description: `Your PDF with ${selectedOrders.length} invoice(s) is being downloaded.`
-                });
-
-            } catch (error) {
-                console.error("Failed to generate invoices:", error);
-                const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-                 toast({
-                    variant: "destructive",
-                    title: "Generation Failed",
-                    description: `Could not generate the PDF. ${errorMessage}`
-                });
-            }
+        startTransition(() => {
+            const orderIds = selectedOrders.map(o => o.internalId);
+            const url = `/dashboard/manage-orders/print?orders=${orderIds.join(',')}`;
+            // Open the printable page in a new tab
+            window.open(url, '_blank');
         });
     };
 
