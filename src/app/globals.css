@@ -4,65 +4,65 @@
 
 @layer base {
   :root {
-    --background: 39 100% 97%; /* Ivory: #FFF8EE */
-    --foreground: 0 0% 13%; /* Charcoal: #212121 */
+    --background: 0 0% 98%; /* #FAFAFA */
+    --foreground: 0 0% 17%; /* #2B2B2B */
 
-    --card: 39 100% 97%;
-    --card-foreground: 0 0% 13%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 17%;
 
-    --popover: 39 100% 97%;
-    --popover-foreground: 0 0% 13%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 17%;
 
-    --primary: 30 100% 48%; /* Darker Firebase Orange: #F57C00 */
-    --primary-foreground: 0 0% 98%;
+    --primary: 349 55% 83%; /* #ECA6B2 */
+    --primary-foreground: 0 0% 17%;
 
-    --secondary: 43 100% 90%;
-    --secondary-foreground: 0 0% 13%;
+    --secondary: 45 87% 90%; /* Lighter gold for secondary elements */
+    --secondary-foreground: 0 0% 17%;
 
-    --muted: 39 20% 90%;
-    --muted-foreground: 0 0% 40%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
 
-    --accent: 36 100% 58%; /* Original Firebase Orange as Accent */
-    --accent-foreground: 0 0% 13%;
+    --accent: 45 74% 52%; /* #D4AF37 */
+    --accent-foreground: 0 0% 17%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 39 20% 85%;
-    --input: 39 20% 90%;
-    --ring: 30 100% 48%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 349 55% 83%;
     
-    --radius: 0.5rem;
+    --radius: 1.5rem; /* Larger radius for a softer look */
   }
 
   .dark {
-    --background: 0 0% 13%; /* Charcoal */
-    --foreground: 39 100% 97%; /* Ivory */
+    --background: 0 0% 17%; /* #2B2B2B */
+    --foreground: 0 0% 98%; /* #FAFAFA */
 
-    --card: 0 0% 15%;
-    --card-foreground: 39 100% 97%;
+    --card: 0 0% 19%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 13%;
-    --popover-foreground: 39 100% 97%;
+    --popover: 0 0% 17%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 30 100% 48%; /* Darker Firebase Orange: #F57C00 */
-    --primary-foreground: 0 0% 98%;
+    --primary: 349 55% 83%; /* #ECA6B2 */
+    --primary-foreground: 0 0% 17%;
 
-    --secondary: 43 100% 20%;
-    --secondary-foreground: 39 100% 97%;
+    --secondary: 45 74% 30%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 0 0% 20%;
-    --muted-foreground: 39 20% 60%;
+    --muted: 0 0% 25%;
+    --muted-foreground: 0 0% 65%;
 
-    --accent: 36 100% 58%; /* Original Firebase Orange as Accent */
-    --accent-foreground: 0 0% 13%;
+    --accent: 45 74% 52%; /* #D4AF37 */
+    --accent-foreground: 0 0% 17%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 22%;
-    --input: 0 0% 22%;
-    --ring: 30 100% 48%;
+    --border: 0 0% 27%;
+    --input: 0 0% 27%;
+    --ring: 349 55% 83%;
   }
 }
 
@@ -72,19 +72,29 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    font-family: var(--font-body), 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
   }
   h1,h2,h3,h4,h5 { 
-    font-family: 'Playfair Display', serif;
+    font-family: var(--font-headline), 'Playfair Display', serif;
     color: hsl(var(--foreground));
   }
 }
 
 @layer components {
-  .btn-primary {
-    @apply inline-flex items-center gap-2 text-white px-4 py-2.5 rounded-full font-semibold;
-    background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)));
-  }
+    .btn-gradient {
+        @apply relative inline-flex items-center justify-center overflow-hidden;
+    }
+    .btn-gradient:before {
+        content: '';
+        @apply absolute -top-1/2 -left-1/2 w-full h-full;
+        background: linear-gradient(115deg, transparent 20%, hsl(var(--primary)), hsl(var(--accent)), transparent 80%);
+        background-size: 200% 200%;
+        transition: all 0.5s ease-in-out;
+        transform: translate(-100%, -100%) rotate(30deg);
+    }
+    .btn-gradient:hover:before {
+        transform: translate(0, 0) rotate(30deg);
+    }
 }
 
 @media print {

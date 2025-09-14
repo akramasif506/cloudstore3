@@ -13,6 +13,8 @@ import React from 'react';
 import { CartProvider } from '@/context/cart-context';
 import { BroadcastBanner } from '@/components/layout/broadcast-banner';
 import { Playfair_Display, Poppins } from 'next/font/google';
+import { motion, AnimatePresence } from 'framer-motion';
+import { usePathname } from 'next/navigation';
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -28,6 +30,7 @@ const poppins = Poppins({
 
 function AppContent({ children }: { children: React.ReactNode }) {
   const { loading } = useAuth();
+  const pathname = usePathname();
 
   if (loading) {
     return (
@@ -41,9 +44,18 @@ function AppContent({ children }: { children: React.ReactNode }) {
     <>
       <Header />
       <BroadcastBanner />
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {children}
-      </main>
+      <AnimatePresence mode="wait">
+        <motion.main
+          key={pathname}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
+          className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8"
+        >
+          {children}
+        </motion.main>
+      </AnimatePresence>
       <Footer />
     </>
   );

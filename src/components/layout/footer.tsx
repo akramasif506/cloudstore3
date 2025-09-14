@@ -18,7 +18,7 @@ export function Footer() {
             <Link href="/privacy" className="hover:text-foreground">Privacy Policy</Link>
           </nav>
         </div>
-        <div className="mt-8 text-center text-sm text-muted-foreground">
+        <div className="mt-8 text-center text-sm text-muted-foreground border-t border-accent/20 pt-6">
           <p>&copy; {new Date().getFullYear()} CloudStore. All rights reserved.</p>
         </div>
       </div>
