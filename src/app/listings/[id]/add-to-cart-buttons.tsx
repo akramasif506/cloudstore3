@@ -41,23 +41,23 @@ export function AddToCartButtons({ product }: AddToCartButtonsProps) {
   };
 
   return (
-    <div className="space-y-4">
-        <div className="flex items-center gap-1">
-            <Button variant="outline" size="icon" className="h-12 w-12" onClick={() => setQuantity(q => Math.max(1, q - 1))}>
-                <Minus className="h-5 w-5" />
-            </Button>
-            <Input 
-                type="number"
-                className="w-16 h-12 text-center text-lg font-bold"
-                value={quantity}
-                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                min="1"
-            />
-            <Button variant="outline" size="icon" className="h-12 w-12" onClick={() => setQuantity(q => q + 1)}>
-                <Plus className="h-5 w-5" />
-            </Button>
-        </div>
-      <div className="flex flex-col sm:flex-row gap-4">
+    <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex items-center gap-1">
+          <Button variant="outline" size="icon" className="h-12 w-12" onClick={() => setQuantity(q => Math.max(1, q - 1))}>
+              <Minus className="h-5 w-5" />
+          </Button>
+          <Input 
+              type="number"
+              className="w-16 h-12 text-center text-lg font-bold"
+              value={quantity}
+              onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))}
+              min="1"
+          />
+          <Button variant="outline" size="icon" className="h-12 w-12" onClick={() => setQuantity(q => q + 1)}>
+              <Plus className="h-5 w-5" />
+          </Button>
+      </div>
+      <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-4">
          <Button size="lg" variant="secondary" className="w-full text-lg h-12" onClick={handleAddToCart}>
             <ShoppingCart className="mr-2" /> Add to Cart
         </Button>
