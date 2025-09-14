@@ -3,7 +3,7 @@ import { FeaturedProductBanner } from '@/components/products/featured-product-ba
 import { ProductSearch } from '@/components/products/product-search';
 import { ProductSort } from '@/components/products/product-sort';
 import { initializeAdmin } from '@/lib/firebase-admin';
-import type { Product } from '@/lib/types';
+import type { Product, Review } from '@/lib/types';
 import { getFeaturedProduct } from './dashboard/manage-featured-product/actions';
 import { getCategories } from './dashboard/manage-categories/actions';
 import type { CategoryMap, Category as CategoryType } from './dashboard/manage-categories/actions';
@@ -25,12 +25,21 @@ async function getProducts(): Promise<Product[]> {
     const snapshot = await productsRef.once('value');
     if (snapshot.exists()) {
       const productsData = snapshot.val();
-      const allProducts: Product[] = Object.keys(productsData).map(key => ({
-        ...productsData[key],
-        id: key,
-        price: Number(productsData[key].price) || 0,
-        imageUrl: productsData[key].imageUrl || 'https://placehold.co/400x300.png',
-      }));
+      const allProducts: Product[] = Object.keys(productsData).map(key => {
+        const product = {
+            ...productsData[key],
+            id: key,
+            price: Number(productsData[key].price) || 0,
+            imageUrl: productsData[key].imageUrl || 'https://placehold.co/400x300.png',
+        };
+        // Convert reviews from object to array
+        if (product.reviews && typeof product.reviews === 'object') {
+            product.reviews = Object.values(product.reviews) as Review[];
+        } else {
+            product.reviews = [];
+        }
+        return product;
+      });
       return allProducts.filter(product => product.status === 'active');
     }
     return [];

@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Separator } from '@/components/ui/separator';
 import { Star, Tag, User, Building, ShieldCheck, Phone, Undo2, ArrowLeft, FilePlus2, Package } from 'lucide-react';
 import { CustomerFeedback } from '@/components/products/customer-feedback';
-import type { Product } from '@/lib/types';
+import type { Product, Review } from '@/lib/types';
 import { AddToCartButtons } from './add-to-cart-buttons';
 import { ShareButtons } from './share-buttons';
 import { headers } from 'next/headers';
@@ -28,8 +28,10 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
     notFound();
   }
   
-  const totalRating = product.reviews?.reduce((acc, review) => acc + review.rating, 0) || 0;
-  const averageRating = product.reviews?.length > 0 ? (totalRating / product.reviews.length) : 0;
+  // Ensure reviews is an array before using array methods
+  const reviews = Array.isArray(product.reviews) ? product.reviews : [];
+  const totalRating = reviews.reduce((acc, review) => acc + review.rating, 0);
+  const averageRating = reviews.length > 0 ? (totalRating / reviews.length) : 0;
   
   const heads = headers();
   const host = heads.get('host');
@@ -69,12 +71,12 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
                         </div>
                     </>
                 )}
-                 {product.reviews?.length > 0 && (
+                 {reviews.length > 0 && (
                     <>
                         <Separator orientation="vertical" className="h-4" />
                         <div className="flex items-center gap-1">
                             <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                            <span>{averageRating.toFixed(1)} ({product.reviews.length} reviews)</span>
+                            <span>{averageRating.toFixed(1)} ({reviews.length} reviews)</span>
                         </div>
                     </>
                  )}
@@ -92,7 +94,7 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
         </div>
         <Separator className="my-8" />
         <div>
-            <CustomerFeedback reviews={product.reviews || []} />
+            <CustomerFeedback reviews={reviews} />
         </div>
       </div>
       <div className="lg:col-span-1">
