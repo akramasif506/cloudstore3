@@ -76,4 +76,3 @@ export default async function PrintOrdersPage({
     
     return <InvoicePage orders={orders} />;
 }
-

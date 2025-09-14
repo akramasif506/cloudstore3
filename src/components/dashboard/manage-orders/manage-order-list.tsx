@@ -23,7 +23,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { updateOrderStatus, getOrderWithSellerDetails } from '@/app/dashboard/manage-orders/actions';
-import { CheckCircle, MoreHorizontal, Loader2, PackageOpen, Truck, Frown, Eye, ChevronDown, ChevronRight, User, Phone, Undo2, Ban, Download } from 'lucide-react';
+import { CheckCircle, MoreHorizontal, Loader2, PackageOpen, Truck, Frown, Eye, ChevronDown, ChevronRight, User, Phone, Undo2, Ban, Download, Printer } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -32,7 +32,6 @@ import { generateSellerOrderPdfs } from "@/lib/pdf-generator";
 import { Checkbox } from '@/components/ui/checkbox';
 import { DownloadReportButton } from './download-report-button';
 import { DownloadFulfillmentButton } from './download-fulfillment-button';
-import { DownloadInvoicesButton } from './download-invoices-button';
 
 interface OrderRowProps {
     order: Order;
@@ -274,6 +273,21 @@ export function ManageOrderList({ initialOrders }: { initialOrders: Order[] }) {
       }
   }
 
+  const handlePrintInvoices = () => {
+    if (selectedOrders.size === 0) {
+      toast({
+        variant: "destructive",
+        title: "No Orders Selected",
+        description: "Please select one or more orders to print.",
+      });
+      return;
+    }
+    const orderIds = Array.from(selectedOrders).join(',');
+    const printUrl = `/dashboard/manage-orders/print?orders=${orderIds}`;
+    window.open(printUrl, '_blank');
+  };
+
+  const { toast } = useToast();
   const isAllSelected = selectedOrders.size > 0 && selectedOrders.size === initialOrders.length;
   const isIndeterminate = selectedOrders.size > 0 && !isAllSelected;
   const selectedOrdersData = initialOrders.filter(o => selectedOrders.has(o.internalId!));
@@ -285,7 +299,10 @@ export function ManageOrderList({ initialOrders }: { initialOrders: Order[] }) {
               {selectedOrders.size} of {initialOrders.length} order(s) selected.
           </p>
           <div className="flex items-center gap-2">
-            <DownloadInvoicesButton selectedOrders={selectedOrdersData} />
+             <Button onClick={handlePrintInvoices} disabled={selectedOrders.size === 0}>
+                <Printer className="mr-2 h-4 w-4" />
+                Print Invoices
+            </Button>
             <DownloadFulfillmentButton selectedOrders={selectedOrdersData} />
             <DownloadReportButton selectedOrders={selectedOrdersData} />
           </div>
