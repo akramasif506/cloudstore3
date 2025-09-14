@@ -133,7 +133,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                                 )}
                                 <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Shipping</span>
-                                    <span className="font-medium text-primary">Free</span>
+                                    <span className="font-medium text-destructive">Free</span>
                                 </div>
                                 <Separator className="my-2" />
                                 <div className="flex justify-between font-bold text-lg text-foreground">
