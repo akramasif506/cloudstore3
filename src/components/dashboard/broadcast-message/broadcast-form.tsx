@@ -1,3 +1,4 @@
+
 // src/components/dashboard/broadcast-message/broadcast-form.tsx
 "use client";
 
@@ -60,9 +61,31 @@ export function BroadcastForm({ currentMessage: initialMessage, categories }: Br
     },
   });
 
+  // Effect to parse the link and set dropdowns on initial load
+  useEffect(() => {
+    if (initialMessage?.link) {
+      try {
+        const url = new URL(initialMessage.link);
+        const category = url.searchParams.get('category');
+        const subcategory = url.searchParams.get('subcategory');
+        if (category) {
+          setSelectedCategory(category);
+        }
+        if (subcategory) {
+          setSelectedSubcategory(subcategory);
+        }
+      } catch (error) {
+        console.warn('Could not parse category from existing link:', error);
+      }
+    }
+  }, [initialMessage]);
+
   useEffect(() => {
     if (selectedCategory === NONE_VALUE) {
-      form.setValue('link', '');
+      // Don't clear the link if it wasn't a category link to begin with
+      if (form.getValues('link').includes('?category=')) {
+        form.setValue('link', '');
+      }
       return;
     }
     
@@ -197,7 +220,7 @@ export function BroadcastForm({ currentMessage: initialMessage, categories }: Br
           name="link"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Generated Link</FormLabel>
+              <FormLabel>Generated or Manual Link</FormLabel>
               <FormControl>
                 <Input placeholder="https://yourapp.com/electronics" {...field} disabled={isSubmitting} />
               </FormControl>
