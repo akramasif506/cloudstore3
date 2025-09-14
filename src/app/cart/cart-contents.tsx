@@ -244,7 +244,7 @@ export function CartContents() {
         
         <Card>
           <CardHeader>
-            <CardTitle>Order Summary ({itemsToOrder.length} item{itemsToOrder.length !== 1 ? 's' : ''})</CardTitle>
+            <CardTitle className="text-xl">Order Summary ({itemsToOrder.length} item{itemsToOrder.length !== 1 ? 's' : ''})</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="flex justify-between text-sm">
@@ -290,5 +290,7 @@ export function CartContents() {
     </div>
   );
 }
+
+    
 
     
