@@ -27,7 +27,7 @@ export function ProductSearch() {
         // This is key: if the search query is empty, remove the 'q' param from the URL
         params.delete('q');
       }
-      // Pushing the new URL will trigger the useEffect hook and re-sync state
+      // Pushing the new URL will trigger a re-render and the useEffect hook will re-sync state
       router.push(`/?${params.toString()}`);
     }
   };
