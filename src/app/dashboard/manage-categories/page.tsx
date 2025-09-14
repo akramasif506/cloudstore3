@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { getCategories, getVariantSetsForCategories } from './actions';
-import { CategoryForm } from './category-form';
+import { CategoryForm } from '@/components/dashboard/manage-categories/category-form';
 
 export default async function ManageCategoriesPage() {
   const [categories, variantSets] = await Promise.all([

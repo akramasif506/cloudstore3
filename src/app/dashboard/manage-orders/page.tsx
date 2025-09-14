@@ -3,10 +3,10 @@
 import { ShieldAlert, ShoppingBag, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getAllOrders } from './actions';
-import { ManageOrderList } from './manage-order-list';
+import { ManageOrderList } from '@/components/dashboard/manage-orders/manage-order-list';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { OrderFilters } from './order-filters';
+import { OrderFilters } from '@/components/dashboard/manage-orders/order-filters';
 import type { Order } from '@/lib/types';
 import { Suspense } from 'react';
 

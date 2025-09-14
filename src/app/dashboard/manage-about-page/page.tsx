@@ -3,7 +3,7 @@
 import { ShieldAlert, BookUser, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getAboutPageContent, type AboutPageContent } from './actions';
-import { AboutPageForm } from './about-page-form';
+import { AboutPageForm } from '@/components/dashboard/manage-about-page/about-page-form';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 

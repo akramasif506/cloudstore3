@@ -5,9 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { getReturnPolicy } from './actions';
-import { ReturnPolicyForm } from './return-policy-form';
+import { ReturnPolicyForm } from '@/components/dashboard/manage-returns/return-policy-form';
 import { Separator } from '@/components/ui/separator';
-import { ReturnRequestsList } from './return-requests-list';
+import { ReturnRequestsList } from '@/components/dashboard/manage-returns/return-requests-list';
 import { getAllReturnRequests } from './actions';
 
 export default async function ManageReturnPolicyPage() {

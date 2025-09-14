@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { getDiscounts } from './actions';
-import { DiscountForm } from './discount-form';
+import { DiscountForm } from '@/components/dashboard/manage-discounts/discount-form';
 
 export default async function ManageDiscountsPage() {
   const discounts = await getDiscounts();
@@ -38,5 +38,3 @@ export default async function ManageDiscountsPage() {
     </Card>
   );
 }
-
-    

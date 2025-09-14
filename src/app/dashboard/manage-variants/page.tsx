@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { getVariantSets } from './actions';
-import { VariantForm } from './variant-form';
+import { VariantForm } from '@/components/dashboard/manage-variants/variant-form';
 
 export default async function ManageVariantsPage() {
   const variantSets = await getVariantSets();

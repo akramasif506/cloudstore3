@@ -2,7 +2,7 @@
 import { Image as ImageIcon, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getPromoBanner } from './actions';
-import { PromoBannerForm } from './promo-banner-form';
+import { PromoBannerForm } from '@/components/dashboard/manage-promo-banner/promo-banner-form';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 

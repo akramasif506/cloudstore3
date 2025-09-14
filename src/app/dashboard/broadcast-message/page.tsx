@@ -1,8 +1,7 @@
-
 // src/app/dashboard/broadcast-message/page.tsx
 import { ShieldAlert, Announce, Megaphone, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BroadcastForm } from './broadcast-form';
+import { BroadcastForm } from '@/components/dashboard/broadcast-message/broadcast-form';
 import { getBroadcastMessage, getCategoriesForBroadcast } from './actions';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';

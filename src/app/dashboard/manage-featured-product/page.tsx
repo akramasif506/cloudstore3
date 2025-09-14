@@ -5,7 +5,7 @@ import { ShieldAlert, Star, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getManageableProducts } from '../manage-products/actions';
 import { getFeaturedProduct } from './actions';
-import { FeaturedProductForm } from './featured-product-form';
+import { FeaturedProductForm } from '@/components/dashboard/manage-featured-product/featured-product-form';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 

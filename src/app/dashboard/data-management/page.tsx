@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ClearDataButton } from './clear-data-button';
+import { ClearDataButton } from '@/components/dashboard/data-management/clear-data-button';
 import { deleteAllProducts, deleteAllOrders, deleteAllMessages, deleteAllReturnRequests } from './actions';
 
 export default async function DataManagementPage() {

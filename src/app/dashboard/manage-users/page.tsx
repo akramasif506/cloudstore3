@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { getAllUsers } from './actions';
-import { UserList } from './user-list';
+import { UserList } from '@/components/dashboard/manage-users/user-list';
 import { Suspense } from 'react';
 
 // Let's keep this dynamic to ensure fresh data on first load.

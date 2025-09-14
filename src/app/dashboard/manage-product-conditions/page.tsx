@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { getProductConditions } from './actions';
-import { ConditionForm } from './condition-form';
+import { ConditionForm } from '@/components/dashboard/manage-product-conditions/condition-form';
 
 export default async function ManageProductConditionsPage() {
   const conditions = await getProductConditions();

@@ -2,13 +2,13 @@
 // src/app/dashboard/pending-products/page.tsx
 import { ShieldAlert, CheckCircle, ArrowLeft } from 'lucide-react';
 import { getPendingProducts } from './actions';
-import { PendingProductList } from './pending-product-list';
+import { PendingProductList } from '@/components/dashboard/pending-products/pending-product-list';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { getCategories } from '../manage-categories/actions';
 import { getProductConditions } from '../manage-product-conditions/actions';
-import { PendingProductFilters } from './pending-product-filters';
+import { PendingProductFilters } from '@/components/dashboard/pending-products/pending-product-filters';
 import { Suspense } from 'react';
 
 export default async function PendingProductsPage({

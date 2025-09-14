@@ -2,7 +2,7 @@
 import { Percent, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getFeeConfig } from './actions';
-import { FeeForm } from './fee-form';
+import { FeeForm } from '@/components/dashboard/manage-fees/fee-form';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 

@@ -2,11 +2,11 @@
 import { ShieldAlert, List, ArrowLeft, Filter } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getManageableProducts } from './actions';
-import { ManageProductList } from './manage-product-list';
+import { ManageProductList } from '@/components/dashboard/manage-products/manage-product-list';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { getCategories } from '../manage-categories/actions';
-import { ProductFilters } from './product-filters';
+import { ProductFilters } from '@/components/dashboard/manage-products/product-filters';
 import { Suspense } from 'react';
 
 export default async function ManageProductsPage({
