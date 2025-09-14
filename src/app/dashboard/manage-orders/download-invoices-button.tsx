@@ -29,6 +29,7 @@ export function DownloadInvoicesButton({ selectedOrders }: DownloadInvoicesButto
 
         startTransition(() => {
             const orderIds = selectedOrders.map(o => o.internalId);
+            // The route now points to the page inside the (print) route group
             const url = `/dashboard/manage-orders/print?orders=${orderIds.join(',')}`;
             // Open the printable page in a new tab
             window.open(url, '_blank');

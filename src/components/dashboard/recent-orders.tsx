@@ -29,7 +29,7 @@ async function getRecentOrders(): Promise<Order[]> {
             const ordersData = snapshot.val();
             const ordersList = Object.keys(ordersData).map(key => ({
                 ...ordersData[key],
-                id: key,
+                internalId: key, // Use internalId for links, keep `id` for display
             }));
             // Sort all orders by date and take the most recent 5
             return ordersList
@@ -63,8 +63,8 @@ export async function RecentOrders() {
             </TableHeader>
             <TableBody>
                 {orders.map((order) => (
-                    <TableRow key={order.id}>
-                        <TableCell className="font-medium">#{order.id.substring(0, 8)}</TableCell>
+                    <TableRow key={order.internalId}>
+                        <TableCell className="font-medium">#{order.id}</TableCell>
                         <TableCell><Badge variant={order.status === 'Pending' ? 'secondary' : 'default'}>{order.status}</Badge></TableCell>
                         <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
                         <TableCell className="text-right">Rs {typeof order.total === 'number' ? order.total.toFixed(2) : '0.00'}</TableCell>
