@@ -18,8 +18,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        body: ['var(--font-body)', 'sans-serif'],
-        headline: ['var(--font-body)', 'sans-serif'],
+        body: ['var(--font-body)', 'ui-sans-serif', 'system-ui'],
+        headline: ['var(--font-headline)', 'serif'],
         code: ['monospace'],
       },
       colors: {

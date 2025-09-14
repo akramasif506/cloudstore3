@@ -12,11 +12,17 @@ import { Loader2 } from 'lucide-react';
 import React from 'react';
 import { CartProvider } from '@/context/cart-context';
 import { BroadcastBanner } from '@/components/layout/broadcast-banner';
-import { PT_Sans } from 'next/font/google'
+import { Playfair_Display, Poppins } from 'next/font/google';
 
-const ptSans = PT_Sans({
+const playfair = Playfair_Display({
   subsets: ['latin'],
-  weight: ['400', '700'],
+  weight: ['400', '600', '700'],
+  variable: '--font-headline',
+})
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['300', '400', '600', '700'],
   variable: '--font-body',
 })
 
@@ -54,7 +60,7 @@ export default function RootLayout({
       <head>
         <title>CloudStore - A Secondhand Marketplace</title>
       </head>
-      <body className={cn('font-body antialiased min-h-screen flex flex-col', ptSans.variable)}>
+      <body className={cn('antialiased min-h-screen flex flex-col', playfair.variable, poppins.variable)}>
         <AuthProvider>
             <CartProvider>
               <AppContent>
