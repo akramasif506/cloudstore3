@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useTransition } from 'react';
+import { useTransition, useState, useEffect } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -29,40 +29,32 @@ export function OrderFilters() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+  const [selectedStatus, setSelectedStatus] = useState(searchParams.get('status') || 'all');
+  const [date, setDate] = useState<DateRange | undefined>({
+      from: searchParams.get('from') ? new Date(searchParams.get('from')!) : undefined,
+      to: searchParams.get('to') ? new Date(searchParams.get('to')!) : undefined,
+  });
+
+  useEffect(() => {
+    setSearchQuery(searchParams.get('q') || '');
+    setSelectedStatus(searchParams.get('status') || 'all');
+    setDate({
+        from: searchParams.get('from') ? new Date(searchParams.get('from')!) : undefined,
+        to: searchParams.get('to') ? new Date(searchParams.get('to')!) : undefined,
+    });
+  }, [searchParams]);
   
-  const searchQuery = searchParams.get('q') || '';
-  const selectedStatus = searchParams.get('status') || 'all';
-  const fromDate = searchParams.get('from');
-  const toDate = searchParams.get('to');
-  
-  const date: DateRange | undefined = {
-    from: fromDate ? new Date(fromDate) : undefined,
-    to: toDate ? new Date(toDate) : undefined,
-  };
-  
-  const createQueryString = (params: Record<string, string | number | undefined | null>) => {
-    const newParams = new URLSearchParams(searchParams.toString());
-    for (const [key, value] of Object.entries(params)) {
-      if (value === null || value === undefined || String(value).length === 0) {
-        newParams.delete(key);
-      } else {
-        newParams.set(key, String(value));
-      }
-    }
-    return newParams.toString();
-  };
-  
-  const handleFilterChange = (key: string, value: string | DateRange | undefined | null) => {
+  const handleApplyFilters = () => {
     startTransition(() => {
-        if (key === 'date') {
-            const dateRange = value as DateRange | undefined;
-            router.push(pathname + '?' + createQueryString({ 
-                from: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : null,
-                to: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : null
-            }));
-        } else {
-            router.push(pathname + '?' + createQueryString({ [key]: value === 'all' ? null : value }));
-        }
+      const params = new URLSearchParams(searchParams.toString());
+      if (searchQuery) params.set('q', searchQuery); else params.delete('q');
+      if (selectedStatus !== 'all') params.set('status', selectedStatus); else params.delete('status');
+      if (date?.from) params.set('from', format(date.from, 'yyyy-MM-dd')); else params.delete('from');
+      if (date?.to) params.set('to', format(date.to, 'yyyy-MM-dd')); else params.delete('to');
+      params.set('page', '1');
+      router.push(pathname + '?' + params.toString());
     });
   };
 
@@ -84,19 +76,15 @@ export function OrderFilters() {
                     id="search"
                     placeholder="Search by ID..."
                     className="pl-9"
-                    defaultValue={searchQuery}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                            handleFilterChange('q', e.currentTarget.value)
-                        }
-                    }}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     disabled={isPending}
                 />
             </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="status">Status</Label>
-            <Select onValueChange={(value) => handleFilterChange('status', value)} value={selectedStatus} disabled={isPending}>
+            <Select onValueChange={setSelectedStatus} value={selectedStatus} disabled={isPending}>
               <SelectTrigger id="status"><SelectValue placeholder="All" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
@@ -134,14 +122,15 @@ export function OrderFilters() {
                         mode="range"
                         defaultMonth={date?.from}
                         selected={date}
-                        onSelect={(newDate) => handleFilterChange('date', newDate)}
+                        onSelect={setDate}
                         numberOfMonths={2}
                     />
                 </PopoverContent>
             </Popover>
           </div>
-          <div className="flex gap-2 lg:col-start-4">
-              <Button onClick={handleResetFilters} variant="ghost" className="w-full" disabled={isPending}><X className="mr-2 h-4 w-4"/>Reset All Filters</Button>
+          <div className="flex gap-2">
+              <Button onClick={handleApplyFilters} className="w-full" disabled={isPending}><Filter className="mr-2 h-4 w-4"/>Apply</Button>
+              <Button onClick={handleResetFilters} variant="ghost" className="w-full" disabled={isPending}><X className="mr-2 h-4 w-4"/>Reset</Button>
           </div>
         </div>
       </CardContent>
