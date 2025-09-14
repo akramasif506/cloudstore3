@@ -197,10 +197,8 @@ export function ProductFilters({ categories, conditions, onAction }: ProductFilt
               ))}
             </div>
           </div>
-      </CardContent>
-       <CardFooter className="p-0 pt-6 lg:p-6 lg:pt-0">
             {/* Action buttons */}
-            <div className="flex w-full flex-col gap-2">
+            <div className="flex w-full flex-col gap-2 pt-4">
                 <Button variant="default" className="w-full" onClick={handleApplyFilters}>
                     Apply Filters
                 </Button>
@@ -208,7 +206,7 @@ export function ProductFilters({ categories, conditions, onAction }: ProductFilt
                     Reset Filters
                 </Button>
             </div>
-      </CardFooter>
+      </CardContent>
     </Card>
   );
 }
