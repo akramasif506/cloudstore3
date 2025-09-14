@@ -14,7 +14,7 @@
     --popover-foreground: 0 0% 17%;
 
     --primary: 349 55% 83%; /* #ECA6B2 */
-    --primary-foreground: 0 0% 17%;
+    --primary-foreground: 0 0% 100%; /* White text */
 
     --secondary: 45 87% 90%; /* Lighter gold for secondary elements */
     --secondary-foreground: 0 0% 17%;
@@ -46,7 +46,7 @@
     --popover-foreground: 0 0% 98%;
 
     --primary: 349 55% 83%; /* #ECA6B2 */
-    --primary-foreground: 0 0% 17%;
+    --primary-foreground: 0 0% 100%; /* White text */
 
     --secondary: 45 74% 30%;
     --secondary-foreground: 0 0% 98%;
@@ -82,18 +82,11 @@
 
 @layer components {
     .btn-gradient {
-        @apply relative inline-flex items-center justify-center overflow-hidden;
+        @apply bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] shadow-md hover:shadow-lg transition-all duration-300;
     }
-    .btn-gradient:before {
-        content: '';
-        @apply absolute -top-1/2 -left-1/2 w-full h-full;
-        background: linear-gradient(115deg, transparent 20%, hsl(var(--primary)), hsl(var(--accent)), transparent 80%);
-        background-size: 200% 200%;
-        transition: all 0.5s ease-in-out;
-        transform: translate(-100%, -100%) rotate(30deg);
-    }
-    .btn-gradient:hover:before {
-        transform: translate(0, 0) rotate(30deg);
+    .btn-gradient:hover {
+        --tw-gradient-stops: hsl(var(--primary) / 0.9), hsl(var(--accent) / 0.9);
+        transform: scale(1.05);
     }
 }
 
