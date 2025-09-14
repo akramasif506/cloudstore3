@@ -34,6 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { v4 as uuidv4 } from 'uuid';
 
 
 const variantAttributeSchema = z.object({
@@ -48,6 +49,7 @@ const subcategorySchema = z.object({
 });
 
 const categorySchema = z.object({
+  id: z.string().min(1),
   name: z.string().min(1, 'Category name cannot be empty.'),
   enabled: z.boolean(),
   subcategories: z.array(subcategorySchema),
@@ -61,15 +63,6 @@ const formSchema = z.object({
 });
 
 type FormValues = z.infer<typeof formSchema>;
-
-// Helper to convert a string to kebab-case
-const toKebabCase = (str: string) =>
-  str
-    .replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2')
-    .toLowerCase()
-    .replace(/[^a-z0-9-]+/g, '')
-    .replace(/--+/g, '-');
-
 
 interface CategoryFormProps {
     initialCategories: CategoryMap;
@@ -85,13 +78,8 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      categories: Object.entries(initialCategories).map(([name, categoryData]) => ({
-        name,
-        enabled: categoryData.enabled,
-        subcategories: categoryData.subcategories,
-        variantAttributes: categoryData.variantAttributes || [],
-        taxPercent: categoryData.taxPercent || 0,
-      })),
+      // Convert the CategoryMap object to an array for useFieldArray
+      categories: Object.values(initialCategories),
       newCategoryName: '',
     },
   });
@@ -108,7 +96,7 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
         toast({ variant: 'destructive', title: 'Category already exists.' });
         return;
       }
-      append({ name: newCategoryName, subcategories: [], enabled: true, variantAttributes: [], taxPercent: 0 });
+      append({ id: uuidv4(), name: newCategoryName, subcategories: [], enabled: true, variantAttributes: [], taxPercent: 0 });
       form.setValue('newCategoryName', '');
     }
   };
@@ -157,14 +145,9 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
 
   const onSubmit = async (data: FormValues) => {
     setIsSaving(true);
+    // Convert the array back into the ID-keyed map for saving
     const categoryMap: CategoryMap = data.categories.reduce((acc, category) => {
-      const categoryId = toKebabCase(category.name);
-      acc[categoryId] = {
-        enabled: category.enabled,
-        subcategories: category.subcategories,
-        variantAttributes: category.variantAttributes,
-        taxPercent: category.taxPercent,
-      };
+      acc[category.id] = category;
       return acc;
     }, {} as CategoryMap);
     
@@ -200,7 +183,16 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
                                     />
                                 )}
                             />
-                            <span className={cn("text-2xl font-headline", !field.enabled && 'text-muted-foreground line-through')}>{field.name}</span>
+                             <FormField
+                                control={form.control}
+                                name={`categories.${index}.name`}
+                                render={({ field: nameField }) => (
+                                  <Input
+                                    {...nameField}
+                                    className={cn("text-2xl font-headline h-auto p-0 border-none focus-visible:ring-0", !field.enabled && "text-muted-foreground line-through")}
+                                  />
+                                )}
+                              />
                            </div>
                            <div className="flex items-center gap-4">
                             <FormField
@@ -312,7 +304,7 @@ export function CategoryForm({ initialCategories, variantSets }: CategoryFormPro
                                             >
                                               <SelectTrigger><SelectValue placeholder="Link a variant set..." /></SelectTrigger>
                                               <SelectContent>
-                                                <SelectItem value={NONE_VALUE}>None</SelectItem>
+                                                <SelectItem value={NONE_VALUE}>None (Free Text)</SelectItem>
                                                 {Object.entries(variantSets).map(([setId, set]) => (
                                                   <SelectItem key={setId} value={setId}>{set.name}</SelectItem>
                                                 ))}

@@ -94,7 +94,7 @@ export function ProductFilters({ categories, conditions, onAction }: ProductFilt
     setSelectedSubcategory(value);
   }
 
-  const enabledCategories = Object.entries(categories).filter(([_, catData]) => catData.enabled);
+  const enabledCategories = Object.values(categories).filter(cat => cat.enabled);
 
   return (
     <Card className="border-0 shadow-none bg-transparent lg:border lg:shadow-sm lg:bg-card flex flex-col lg:max-h-[calc(100vh-8rem)]">
@@ -115,8 +115,8 @@ export function ProductFilters({ categories, conditions, onAction }: ProductFilt
                     </SelectTrigger>
                     <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
-                    {enabledCategories.map(([catName]) => (
-                        <SelectItem key={catName} value={catName}>{catName}</SelectItem>
+                    {enabledCategories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                     ))}
                     </SelectContent>
                 </Select>

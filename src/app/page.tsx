@@ -68,15 +68,16 @@ export default async function Home({
   const promoBanner = await getPromoBanner();
   const conditions = await getProductConditions();
   
-  const categories = Object.entries(categoryMap)
-    .filter(([_, catData]) => catData.enabled) // Filter for enabled categories
-    .map(([name, catData]) => ({
-      name,
-      productCount: allProducts.filter(p => p.category === name).length,
+  const categories = Object.values(categoryMap)
+    .filter(cat => cat.enabled) // Filter for enabled categories
+    .map(cat => ({
+      id: cat.id,
+      name: cat.name,
+      productCount: allProducts.filter(p => p.category === cat.id).length,
   }));
 
   const searchQuery = searchParams?.q?.toLowerCase() || '';
-  const selectedCategory = searchParams?.category;
+  const selectedCategoryId = searchParams?.category;
   const selectedSubcategory = searchParams?.subcategory;
   const selectedCondition = searchParams?.condition;
   const minPrice = Number(searchParams?.minPrice) || 0;
@@ -84,7 +85,7 @@ export default async function Home({
   const sortBy = searchParams?.sortBy || 'newest';
   const minRating = Number(searchParams?.rating) || 0;
 
-  const hasActiveFilters = !!(searchQuery || selectedCategory || selectedSubcategory || selectedCondition || minPrice > 0 || maxPrice || minRating > 0);
+  const hasActiveFilters = !!(searchQuery || selectedCategoryId || selectedSubcategory || selectedCondition || minPrice > 0 || maxPrice || minRating > 0);
 
   let productsToShow = allProducts.filter(product => {
     const searchMatch = searchQuery
@@ -93,7 +94,7 @@ export default async function Home({
         (product.displayId && product.displayId.toLowerCase().includes(searchQuery))
       : true;
     
-    const categoryMatch = selectedCategory ? product.category === selectedCategory : true;
+    const categoryMatch = selectedCategoryId ? product.category === selectedCategoryId : true;
     const subcategoryMatch = selectedSubcategory ? product.subcategory === selectedSubcategory : true;
     const conditionMatch = selectedCondition ? product.condition === selectedCondition : true;
     const priceMatch = product.price >= minPrice && (maxPrice ? product.price <= maxPrice : true);
@@ -165,6 +166,7 @@ export default async function Home({
             <ProductShowcase 
               products={productsToShow} 
               categories={categories}
+              categoryMap={categoryMap}
             />
           )}
         </div>

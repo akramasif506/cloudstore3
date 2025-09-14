@@ -16,12 +16,12 @@ interface CategoryBrowserProps {
 export function CategoryBrowser({ categories }: CategoryBrowserProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const selectedCategory = searchParams.get('category');
+  const selectedCategoryId = searchParams.get('category');
 
-  const handleCategorySelect = (categoryName: string | null) => {
+  const handleCategorySelect = (categoryId: string | null) => {
     const params = new URLSearchParams(searchParams);
-    if (categoryName) {
-      params.set('category', categoryName);
+    if (categoryId) {
+      params.set('category', categoryId);
     } else {
       params.delete('category');
     }
@@ -41,7 +41,7 @@ export function CategoryBrowser({ categories }: CategoryBrowserProps) {
       <ScrollArea className="w-full whitespace-nowrap rounded-md">
         <div className="flex gap-4 pb-4">
           <Button
-            variant={!selectedCategory ? 'default' : 'secondary'}
+            variant={!selectedCategoryId ? 'default' : 'secondary'}
             onClick={() => handleCategorySelect(null)}
             className="h-auto shrink-0"
           >
@@ -49,9 +49,9 @@ export function CategoryBrowser({ categories }: CategoryBrowserProps) {
           </Button>
           {categories.map((category) => (
             <Button
-              key={category.name}
-              variant={selectedCategory === category.name ? 'default' : 'secondary'}
-              onClick={() => handleCategorySelect(category.name)}
+              key={category.id}
+              variant={selectedCategoryId === category.id ? 'default' : 'secondary'}
+              onClick={() => handleCategorySelect(category.id)}
               className="h-auto shrink-0"
             >
               {category.name} ({category.productCount})

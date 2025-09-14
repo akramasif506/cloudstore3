@@ -48,7 +48,7 @@ export interface Product {
   description: string;
   price: number;
   originalPrice?: number;
-  category: string;
+  category: string; // This should be the category ID
   subcategory: string;
   imageUrl: string;
   condition?: Condition;
@@ -70,8 +70,8 @@ export interface OrderItem {
     quantity: number;
     imageUrl: string;
     seller?: ProductSeller;
-    category: string; // Add category to item for tax lookup
-    subcategory: string; // Add subcategory to item for tax lookup
+    category: string; // This should be the category ID
+    subcategory: string;
 }
 
 export type ReturnStatus = 'Return Requested' | 'Return Approved' | 'Return Rejected' | 'Returned' | 'Cancelled';
@@ -127,6 +127,7 @@ export type DiscountMap = { [id: string]: Omit<Discount, 'id'> };
 
 
 export interface CategoryInfo {
+  id: string;
   name: string;
   productCount: number;
 }
