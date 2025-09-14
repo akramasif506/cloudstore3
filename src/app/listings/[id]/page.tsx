@@ -56,41 +56,56 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
         </Card>
         <div className="mt-8">
             <h1 className="text-4xl font-bold font-headline mb-2">{product.name}</h1>
-            <p className="text-sm text-muted-foreground mb-4">Product ID: {product.displayId}</p>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-muted-foreground mb-4">
-                <div className="flex items-center gap-1">
-                    <Tag className="w-4 h-4" />
-                    <span>{product.category} &gt; {product.subcategory}</span>
+            <p className="text-sm text-muted-foreground">Product ID: {product.displayId}</p>
+
+            <div className="flex items-baseline gap-2 mt-4">
+              <p className="text-3xl font-bold text-destructive">Rs {product.price.toFixed(2)}</p>
+              {product.originalPrice && product.originalPrice > product.price && (
+                <p className="text-lg text-muted-foreground line-through">Rs {product.originalPrice.toFixed(2)}</p>
+              )}
+            </div>
+
+            {reviews.length > 0 && (
+                <div className="flex items-center gap-1 mt-2">
+                    <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
+                    <span className="font-semibold">{averageRating.toFixed(1)}</span>
+                    <span className="text-muted-foreground">({reviews.length} reviews)</span>
+                </div>
+            )}
+            
+            <Separator className="my-6" />
+
+            <div className="prose dark:prose-invert max-w-none">
+              <p className="text-lg leading-relaxed">{product.description}</p>
+            </div>
+            
+            <Card className="mt-6 bg-muted/50">
+              <CardHeader>
+                <CardTitle className="text-lg">Product Details</CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                 <div className="flex items-center gap-2">
+                    <Tag className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Category:</span>
+                    <span className="font-semibold">{product.category} &gt; {product.subcategory}</span>
                 </div>
                 {product.condition && (
-                    <>
-                        <Separator orientation="vertical" className="h-4" />
-                        <div className="flex items-center gap-1">
-                            <ShieldCheck className="w-4 h-4" />
-                            <span>{product.condition}</span>
-                        </div>
-                    </>
+                     <div className="flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4 text-muted-foreground" />
+                         <span className="text-muted-foreground">Condition:</span>
+                        <span className="font-semibold">{product.condition}</span>
+                    </div>
                 )}
-                 {reviews.length > 0 && (
-                    <>
-                        <Separator orientation="vertical" className="h-4" />
-                        <div className="flex items-center gap-1">
-                            <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                            <span>{averageRating.toFixed(1)} ({reviews.length} reviews)</span>
-                        </div>
-                    </>
-                 )}
-                  {product.stock !== undefined && (
-                    <>
-                        <Separator orientation="vertical" className="h-4" />
-                        <div className="flex items-center gap-1">
-                            <Package className="w-4 h-4" />
-                            <span>{product.stock > 0 ? `${product.stock} in stock` : 'Out of Stock'}</span>
-                        </div>
-                    </>
+                {product.stock !== undefined && (
+                     <div className="flex items-center gap-2">
+                        <Package className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">Stock:</span>
+                        <span className="font-semibold">{product.stock > 0 ? `${product.stock} available` : 'Out of Stock'}</span>
+                    </div>
                 )}
-            </div>
-            <p className="text-lg leading-relaxed">{product.description}</p>
+              </CardContent>
+            </Card>
+
         </div>
         <Separator className="my-8" />
         <div>
@@ -99,11 +114,11 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
       </div>
       <div className="lg:col-span-1">
         <div className="sticky top-24 space-y-6">
-            {product.status === 'active' && (
+            {product.status === 'active' && product.stock !== undefined && product.stock > 0 ? (
                 <>
                     <Card>
                         <CardHeader>
-                            <CardTitle className="text-3xl font-bold text-destructive">Rs {product.price.toFixed(2)}</CardTitle>
+                            <CardTitle>Purchase</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <AddToCartButtons product={product} />
@@ -134,16 +149,14 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
                     )}
                     <ShareButtons productName={product.name} productUrl={productUrl} />
                 </>
-            )}
-
-            {product.status !== 'active' && (
+            ) : (
                  <Card>
                     <CardHeader>
                         <CardTitle>Listing Status</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="flex items-center justify-center p-4 bg-muted rounded-md">
-                           <p className="text-lg font-semibold capitalize">{product.status.replace('_', ' ')}</p>
+                           <p className="text-lg font-semibold capitalize">{product.status === 'sold' || (product.stock !== undefined && product.stock <= 0) ? 'Sold Out' : product.status.replace('_', ' ')}</p>
                         </div>
                         {product.rejectionReason && (
                             <div className="mt-4 text-sm text-destructive border-l-4 border-destructive pl-3">
