@@ -134,7 +134,8 @@ export async function generateSellerOrderPdfs(orders: Order[]) {
 
 async function addImageToPdf(doc: jsPDF, imageUrl: string, x: number, y: number, width: number, height: number): Promise<void> {
     try {
-        const response = await fetch(imageUrl);
+        const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+        const response = await fetch(proxyUrl + imageUrl);
         const blob = await response.blob();
         const reader = new FileReader();
         return new Promise((resolve, reject) => {
