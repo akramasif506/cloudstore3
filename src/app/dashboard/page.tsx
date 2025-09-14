@@ -211,13 +211,6 @@ export default async function DashboardPage() {
                     icon={Users}
                     href="/dashboard/manage-users"
                 />
-                 <StatsCard
-                    title="Data Management"
-                    value={"Clear Data"}
-                    icon={DatabaseZap}
-                    href="/dashboard/data-management"
-                    className="border-destructive/50 text-destructive"
-                 />
             </CardContent>
         </Card>
       </div>
