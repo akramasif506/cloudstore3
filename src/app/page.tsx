@@ -40,7 +40,7 @@ async function getProducts(): Promise<Product[]> {
         }
         return product;
       });
-      return allProducts.filter(product => product.status === 'active');
+      return allProducts.filter(product => product.status === 'active' && (product.stock === undefined || product.stock > 0));
     }
     return [];
   } catch (error) {
