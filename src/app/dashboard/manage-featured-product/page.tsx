@@ -1,5 +1,4 @@
 
-
 // src/app/dashboard/manage-featured-product/page.tsx
 import { ShieldAlert, Star, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

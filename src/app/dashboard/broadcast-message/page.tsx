@@ -1,3 +1,4 @@
+
 // src/app/dashboard/broadcast-message/page.tsx
 import { ShieldAlert, Announce, Megaphone, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

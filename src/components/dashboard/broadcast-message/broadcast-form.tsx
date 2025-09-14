@@ -1,4 +1,5 @@
-// src/app/dashboard/broadcast-message/broadcast-form.tsx
+
+// src/components/dashboard/broadcast-message/broadcast-form.tsx
 "use client";
 
 import { useState, useEffect } from 'react';
