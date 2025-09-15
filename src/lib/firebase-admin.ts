@@ -9,11 +9,8 @@ export function initializeAdmin() {
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
-  // If credentials are not set, return null instead of throwing an error.
-  // This allows the app to run in a degraded mode during local development.
   if (!projectId || !clientEmail || !privateKey) {
-    console.warn('Firebase Admin SDK credentials are not defined. Server-side Firebase features will be disabled.');
-    return null;
+    throw new Error('Firebase Admin SDK credentials are not defined in environment variables.');
   }
 
   // This gets the existing app if it's initialized, or initializes a new one.

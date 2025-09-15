@@ -15,10 +15,7 @@ import { OrderPrintButton } from '@/components/my-orders/order-print-button';
 
 
 async function getOrder(internalId: string): Promise<Order | null> {
-    const admin = initializeAdmin();
-    if (!admin) return null;
-
-    const { db } = admin;
+    const { db } = initializeAdmin();
     
     try {
         // Fetch from the denormalized 'all_orders' path for direct lookup

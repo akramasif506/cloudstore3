@@ -21,15 +21,7 @@ const POLICY_PATH = 'site_config/return_policy';
  * from client components to get up-to-date policy info.
  */
 export async function getMyOrdersReturnPolicy(): Promise<ReturnPolicy> {
-    const admin = initializeAdmin();
-    if (!admin) {
-        return {
-            isEnabled: false,
-            returnWindowDays: 7,
-            policyText: 'Returns are not currently enabled.',
-        };
-    }
-    const { db } = admin;
+    const { db } = initializeAdmin();
 
     try {
         const policyRef = db.ref(POLICY_PATH);
@@ -55,10 +47,7 @@ export async function getMyOrders(): Promise<Order[]> {
     return []; // Not logged in
   }
 
-  const admin = initializeAdmin();
-  if (!admin) return [];
-
-  const { db, adminAuth } = admin;
+  const { db, adminAuth } = initializeAdmin();
   
   try {
     const decodedClaims = await adminAuth.verifySessionCookie(session, true);
@@ -100,9 +89,7 @@ export async function requestReturn(
         return { success: false, message: 'Invalid data provided.' };
     }
     
-    const admin = initializeAdmin();
-    if (!admin) return { success: false, message: 'Server is not configured.' };
-    const { db, adminAuth } = admin;
+    const { db, adminAuth } = initializeAdmin();
 
     const { orderId, reason } = validatedFields.data;
 
