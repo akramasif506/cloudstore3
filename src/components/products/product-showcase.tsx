@@ -9,6 +9,9 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { Button } from '../ui/button';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 
 interface CategoryInfo {
   id: string;
@@ -46,7 +49,14 @@ export function ProductShowcase({ products, categories, categoryMap }: ProductSh
 
         return (
           <div key={category.id}>
-            <h3 className="text-2xl font-bold font-headline mb-4">{category.name}</h3>
+            <div className="flex justify-between items-baseline mb-4">
+              <h3 className="text-2xl font-bold font-headline">{category.name}</h3>
+               <Button asChild variant="link" className="text-primary">
+                  <Link href={`/?category=${category.id}`}>
+                    View All <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+            </div>
             <Carousel
               opts={{
                 align: "start",
