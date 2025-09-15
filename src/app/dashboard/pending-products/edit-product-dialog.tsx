@@ -71,8 +71,8 @@ export function EditProductDialog({ product, categories, conditions, onSuccess, 
         },
     });
 
-    const selectedCategory = form.watch('category');
-    const enabledCategories = Object.entries(categories).filter(([_, catData]) => catData.enabled);
+    const selectedCategoryId = form.watch('category');
+    const enabledCategories = Object.values(categories).filter(cat => cat.enabled);
 
     async function onSubmit(values: z.infer<typeof updateProductSchema>) {
         setIsSubmitting(true);
@@ -146,8 +146,8 @@ export function EditProductDialog({ product, categories, conditions, onSuccess, 
                                         <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        {enabledCategories.map(([catName]) => (
-                                        <SelectItem key={catName} value={catName}>{catName}</SelectItem>
+                                        {enabledCategories.map((cat) => (
+                                        <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                                         ))}
                                     </SelectContent>
                                     </Select>
@@ -161,12 +161,12 @@ export function EditProductDialog({ product, categories, conditions, onSuccess, 
                                 render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Subcategory</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory}>
+                                    <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategoryId}>
                                     <FormControl>
                                         <SelectTrigger><SelectValue placeholder="Select a subcategory" /></SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        {selectedCategory && categories[selectedCategory as keyof typeof categories]?.subcategories
+                                        {selectedCategoryId && categories[selectedCategoryId]?.subcategories
                                             .filter(sub => sub.enabled)
                                             .map(subcat => (
                                             <SelectItem key={subcat.name} value={subcat.name}>{subcat.name}</SelectItem>

@@ -35,9 +35,9 @@ import {
 } from "@/components/ui/select";
 import { Loader2, Edit } from 'lucide-react';
 import type { Product } from '@/lib/types';
-import { updateProduct } from './actions';
+import { updateProduct } from '@/app/dashboard/manage-products/actions';
 import { updateProductSchema } from '@/lib/schemas/product';
-import type { CategoryMap } from '../manage-categories/actions';
+import type { CategoryMap } from '@/app/dashboard/manage-categories/actions';
 
 interface EditProductDialogProps {
   product: Product;
@@ -61,11 +61,13 @@ export function EditProductDialog({ product, categories, onSuccess, onError }: E
             category: product.category,
             subcategory: product.subcategory,
             condition: product.condition || 'Used',
+            stock: product.stock ?? 1,
+            specialNote: product.specialNote || '',
         },
     });
 
-    const selectedCategory = form.watch('category');
-    const enabledCategories = Object.entries(categories).filter(([_, catData]) => catData.enabled);
+    const selectedCategoryId = form.watch('category');
+    const enabledCategories = Object.values(categories).filter(cat => cat.enabled);
 
 
     async function onSubmit(values: z.infer<typeof updateProductSchema>) {
@@ -140,8 +142,8 @@ export function EditProductDialog({ product, categories, onSuccess, onError }: E
                                         <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        {enabledCategories.map(([catName]) => (
-                                        <SelectItem key={catName} value={catName}>{catName}</SelectItem>
+                                        {enabledCategories.map((cat) => (
+                                        <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                                         ))}
                                     </SelectContent>
                                     </Select>
@@ -155,12 +157,12 @@ export function EditProductDialog({ product, categories, onSuccess, onError }: E
                                 render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Subcategory</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategory}>
+                                    <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCategoryId}>
                                     <FormControl>
                                         <SelectTrigger><SelectValue placeholder="Select a subcategory" /></SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        {selectedCategory && categories[selectedCategory as keyof typeof categories]?.subcategories
+                                        {selectedCategoryId && categories[selectedCategoryId]?.subcategories
                                             .filter(sub => sub.enabled)
                                             .map(subcat => (
                                             <SelectItem key={subcat.name} value={subcat.name}>{subcat.name}</SelectItem>
@@ -229,6 +231,40 @@ export function EditProductDialog({ product, categories, onSuccess, onError }: E
                                         </FormControl>
                                     </div>
                                      <FormDescription>Leave blank if not on sale.</FormDescription>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                                control={form.control}
+                                name="stock"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Stock Quantity</FormLabel>
+                                    <FormControl>
+                                        <Input 
+                                        type="number" 
+                                        {...field}
+                                        onChange={e => field.onChange(parseInt(e.target.value, 10))}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                             <FormField
+                                control={form.control}
+                                name="specialNote"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Special Note</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="e.g. New Arrival" {...field} />
+                                    </FormControl>
+                                    <FormDescription>A short badge displayed on the card.</FormDescription>
                                     <FormMessage />
                                     </FormItem>
                                 )}

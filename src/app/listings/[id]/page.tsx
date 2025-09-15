@@ -16,13 +16,15 @@ import { getReturnPolicy } from '@/app/dashboard/manage-returns/actions';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { getProductForDisplay } from './actions';
+import { getCategories } from '@/app/dashboard/manage-categories/actions';
 
 
 export default async function ListingDetailPage({ params }: { params: { id:string } }) {
   const productPromise = getProductForDisplay(params.id);
   const returnPolicyPromise = getReturnPolicy();
+  const categoriesPromise = getCategories();
 
-  const [product, returnPolicy] = await Promise.all([productPromise, returnPolicyPromise]);
+  const [product, returnPolicy, categories] = await Promise.all([productPromise, returnPolicyPromise, categoriesPromise]);
 
   if (!product) {
     notFound();
@@ -38,6 +40,8 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
   const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `${protocol}://${host}`;
   const productUrl = `${siteUrl}/listings/${product.id}`;
+
+  const categoryName = categories[product.category]?.name || product.category;
 
 
   return (
@@ -96,7 +100,7 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
                     <div className="flex items-center gap-2">
                         <Tag className="w-4 h-4 text-muted-foreground" />
                         <span className="text-muted-foreground">Category:</span>
-                        <span className="font-semibold">{product.category} &gt; {product.subcategory}</span>
+                        <span className="font-semibold">{categoryName} &gt; {product.subcategory}</span>
                     </div>
                     {product.condition && (
                         <div className="flex items-center gap-2">

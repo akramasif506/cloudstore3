@@ -15,25 +15,30 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarIcon, Filter, Search, X } from "lucide-react";
-import type { CategoryMap } from '../manage-categories/actions';
+import type { CategoryMap } from '@/app/dashboard/manage-categories/actions';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { DateRange } from 'react-day-picker';
+import type { Product } from '@/lib/types';
 
 
 interface ProductFiltersProps {
   categories: CategoryMap;
 }
 
+const statusOptions: Product['status'][] = ['active', 'sold', 'pending_review', 'rejected', 'pending_image'];
+
 export function ProductFilters({ categories }: ProductFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
+  const [selectedCategoryId, setSelectedCategoryId] = useState(searchParams.get('category') || 'all');
   const [selectedSubcategory, setSelectedSubcategory] = useState(searchParams.get('subcategory') || 'all');
+  const [selectedStatus, setSelectedStatus] = useState(searchParams.get('status') || 'all');
+  const [selectedStock, setSelectedStock] = useState(searchParams.get('stock') || 'all');
   const [date, setDate] = useState<DateRange | undefined>({
       from: searchParams.get('from') ? new Date(searchParams.get('from')!) : undefined,
       to: searchParams.get('to') ? new Date(searchParams.get('to')!) : undefined,
@@ -41,8 +46,10 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
 
   useEffect(() => {
     setSearchQuery(searchParams.get('q') || '');
-    setSelectedCategory(searchParams.get('category') || 'all');
+    setSelectedCategoryId(searchParams.get('category') || 'all');
     setSelectedSubcategory(searchParams.get('subcategory') || 'all');
+    setSelectedStatus(searchParams.get('status') || 'all');
+    setSelectedStock(searchParams.get('stock') || 'all');
     setDate({
         from: searchParams.get('from') ? new Date(searchParams.get('from')!) : undefined,
         to: searchParams.get('to') ? new Date(searchParams.get('to')!) : undefined,
@@ -53,29 +60,32 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
     const params = new URLSearchParams(searchParams.toString());
     
     if (searchQuery) params.set('q', searchQuery); else params.delete('q');
-    if (selectedCategory !== 'all') params.set('category', selectedCategory); else params.delete('category');
+    if (selectedCategoryId !== 'all') params.set('category', selectedCategoryId); else params.delete('category');
     if (selectedSubcategory !== 'all') params.set('subcategory', selectedSubcategory); else params.delete('subcategory');
+    if (selectedStatus !== 'all') params.set('status', selectedStatus); else params.delete('status');
+    if (selectedStock !== 'all') params.set('stock', selectedStock); else params.delete('stock');
     if (date?.from) params.set('from', format(date.from, 'yyyy-MM-dd')); else params.delete('from');
     if (date?.to) params.set('to', format(date.to, 'yyyy-MM-dd')); else params.delete('to');
     
-    router.push(`/dashboard/manage-products?${params.toString()}`);
+    params.set('page', '1'); // Reset to first page on new filter
+    window.location.href = `/dashboard/manage-products?${params.toString()}`;
   };
   
   const handleResetFilters = () => {
-    router.push('/dashboard/manage-products');
+    window.location.href = '/dashboard/manage-products';
   }
 
   const handleCategoryChange = (value: string) => {
-    setSelectedCategory(value);
+    setSelectedCategoryId(value);
     setSelectedSubcategory('all');
   };
 
-  const enabledCategories = Object.entries(categories).filter(([_, catData]) => catData.enabled);
+  const enabledCategories = Object.values(categories).filter(cat => cat.enabled);
 
   return (
     <Card className="bg-muted/50">
       <CardContent className="pt-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-end">
           <div className="space-y-2">
             <Label htmlFor="search">Search Name/ID</Label>
             <div className="relative">
@@ -90,13 +100,36 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
             </div>
           </div>
           <div className="space-y-2">
+            <Label htmlFor="status">Status</Label>
+            <Select onValueChange={setSelectedStatus} value={selectedStatus}>
+              <SelectTrigger id="status"><SelectValue placeholder="All" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                {statusOptions.map(status => (
+                    <SelectItem key={status} value={status} className="capitalize">{status.replace('_', ' ')}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+           <div className="space-y-2">
+            <Label htmlFor="stock">Stock</Label>
+            <Select onValueChange={setSelectedStock} value={selectedStock}>
+              <SelectTrigger id="stock"><SelectValue placeholder="All" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Stock Levels</SelectItem>
+                <SelectItem value="low">Low Stock</SelectItem>
+                <SelectItem value="out">Out of Stock</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
-            <Select onValueChange={handleCategoryChange} value={selectedCategory}>
+            <Select onValueChange={handleCategoryChange} value={selectedCategoryId}>
               <SelectTrigger id="category"><SelectValue placeholder="All" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                {enabledCategories.map(([catName]) => (
-                  <SelectItem key={catName} value={catName}>{catName}</SelectItem>
+                {enabledCategories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -106,12 +139,12 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
             <Select 
               onValueChange={setSelectedSubcategory} 
               value={selectedSubcategory}
-              disabled={selectedCategory === 'all'}
+              disabled={selectedCategoryId === 'all'}
             >
               <SelectTrigger id="subcategory"><SelectValue placeholder="All" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Subcategories</SelectItem>
-                {selectedCategory !== 'all' && categories[selectedCategory as keyof typeof categories]?.subcategories
+                {selectedCategoryId !== 'all' && categories[selectedCategoryId as keyof typeof categories]?.subcategories
                   .filter(sub => sub.enabled)
                   .map(subcat => (
                     <SelectItem key={subcat.name} value={subcat.name}>{subcat.name}</SelectItem>
@@ -152,9 +185,9 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
                 </PopoverContent>
             </Popover>
           </div>
-          <div className="flex gap-2 lg:col-start-4">
-              <Button onClick={handleApplyFilters} className="w-full"><Filter className="mr-2 h-4 w-4"/>Apply</Button>
-              <Button onClick={handleResetFilters} variant="ghost" className="w-full"><X className="mr-2 h-4 w-4"/>Reset</Button>
+          <div className="flex gap-2 xl:col-span-full">
+              <Button onClick={handleApplyFilters} className="w-full"><Filter className="mr-2 h-4 w-4"/>Apply Filters</Button>
+              <Button onClick={handleResetFilters} variant="ghost" className="w-full"><X className="mr-2 h-4 w-4"/>Reset All</Button>
           </div>
         </div>
       </CardContent>
