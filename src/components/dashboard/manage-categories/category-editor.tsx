@@ -2,7 +2,7 @@
 "use client"
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -35,7 +35,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { createNewCategory, deleteCategory } from '@/app/dashboard/manage-categories/actions';
 import { PlusCircle, Trash2, Loader2 } from 'lucide-react';
-import { CategoryForm } from './category-form';
+import { CategoryForm } from '@/components/dashboard/manage-categories/category-form';
 import type { CategoryMap, Category, VariantSetMap } from '@/app/dashboard/manage-categories/actions';
 import { cn } from '@/lib/utils';
 import cloneDeep from 'lodash/cloneDeep';
