@@ -1,11 +1,14 @@
-
 import type { Product } from '@/lib/types';
-import { ProductGrid } from './product-grid';
+import { ProductCard } from './product-card';
 import { Separator } from '../ui/separator';
 import type { CategoryMap } from '@/app/dashboard/manage-categories/actions';
-import { Button } from '../ui/button';
-import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 interface CategoryInfo {
   id: string;
@@ -36,23 +39,33 @@ export function ProductShowcase({ products, categories, categoryMap }: ProductSh
   return (
     <div className="space-y-12">
       {categoriesToShow.map((category, index) => {
-        if (!productsByCategory[category.id] || productsByCategory[category.id].length === 0) {
+        const categoryProducts = productsByCategory[category.id];
+        if (!categoryProducts || categoryProducts.length === 0) {
           return null;
         }
-        const categoryProducts = productsByCategory[category.id];
+
         return (
           <div key={category.id}>
             <h3 className="text-2xl font-bold font-headline mb-4">{category.name}</h3>
-            <ProductGrid products={categoryProducts.slice(0, 5)} />
-            {categoryProducts.length > 5 && (
-                 <div className="text-center mt-6">
-                    <Button asChild variant="outline">
-                        <Link href={`/?category=${category.id}`}>
-                            View All in {category.name} <ArrowRight className="ml-2" />
-                        </Link>
-                    </Button>
-                </div>
-            )}
+            <Carousel
+              opts={{
+                align: "start",
+                loop: categoryProducts.length > 5,
+              }}
+              className="w-full"
+            >
+              <CarouselContent>
+                {categoryProducts.map((product) => (
+                  <CarouselItem key={product.id} className="basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                    <div className="p-1 h-full">
+                      <ProductCard product={product} />
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="hidden lg:flex" />
+              <CarouselNext className="hidden lg:flex" />
+            </Carousel>
             {index < categoriesToShow.length - 1 && <Separator className="mt-8" />}
           </div>
         )
