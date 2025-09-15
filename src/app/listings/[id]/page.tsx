@@ -38,7 +38,7 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
   const heads = headers();
   const host = heads.get('host');
   const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `${protocol}://${host}`;
+  const siteUrl = `${protocol}://${host}`;
   const productUrl = `${siteUrl}/listings/${product.id}`;
 
   const categoryName = categories[product.category]?.name || product.category;
