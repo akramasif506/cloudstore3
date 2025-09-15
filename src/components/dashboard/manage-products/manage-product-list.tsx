@@ -19,7 +19,7 @@ import Link from 'next/link';
 import { EditProductDialog } from './edit-product-dialog';
 import { updateProductStatus, toggleFeaturedStatus } from '@/app/dashboard/manage-products/actions';
 import { Badge } from '@/components/ui/badge';
-import type { CategoryMap } from '@/app/dashboard/manage-categories/actions';
+import type { CategoryMap } from '../manage-categories/actions';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -140,7 +140,7 @@ export function ManageProductList({ products, categories }: ManageProductListPro
         <TableHeader>
             <TableRow>
             <TableHead className="w-[80px]">Image</TableHead>
-            <TableHead>Product Name</TableHead>
+            <TableHead>Product</TableHead>
             <TableHead>Seller</TableHead>
             <TableHead>Contact</TableHead>
             <TableHead>Price</TableHead>
@@ -165,6 +165,7 @@ export function ManageProductList({ products, categories }: ManageProductListPro
                 </TableCell>
                 <TableCell className="font-medium">
                   {product.name}
+                  <p className="text-xs text-muted-foreground">{product.displayId}</p>
                 </TableCell>
                 <TableCell>
                     <div className="flex items-center gap-2">

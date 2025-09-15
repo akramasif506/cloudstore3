@@ -43,6 +43,11 @@ export interface ProductVariant {
   value: string; // e.g., 'Red'
 }
 
+export interface ProductSpecification {
+  key: string;
+  value: string;
+}
+
 export interface Product {
   id: string;
   displayId: string;
@@ -60,6 +65,7 @@ export interface Product {
   createdAt: string;
   seller: ProductSeller;
   variants?: ProductVariant[];
+  specifications?: ProductSpecification[];
   stock?: number;
   specialNote?: string;
   isFeatured?: boolean;

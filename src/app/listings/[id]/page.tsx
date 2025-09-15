@@ -6,7 +6,7 @@ import { notFound } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Star, Tag, User, Building, ShieldCheck, Phone, Undo2, ArrowLeft, FilePlus2, Package } from 'lucide-react';
+import { Star, Tag, User, Building, ShieldCheck, Phone, Undo2, ArrowLeft, FilePlus2, Package, ListTree } from 'lucide-react';
 import { CustomerFeedback } from '@/components/products/customer-feedback';
 import type { Product, Review } from '@/lib/types';
 import { AddToCartButtons } from './add-to-cart-buttons';
@@ -118,6 +118,19 @@ export default async function ListingDetailPage({ params }: { params: { id:strin
                     )}
                 </CardContent>
                 </Card>
+
+                {product.specifications && product.specifications.length > 0 && (
+                  <div className="mt-8">
+                    <h3 className="text-2xl font-headline font-bold mb-4 flex items-center gap-2"><ListTree /> Specifications</h3>
+                    <ul className="space-y-2 list-disc pl-5 text-muted-foreground">
+                      {product.specifications.map((spec, index) => (
+                        <li key={index}>
+                          <span className="font-semibold text-foreground">{spec.key}:</span> {spec.value}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
             </div>
 
             {/* This block is moved up for mobile layout, but hidden on desktop */}

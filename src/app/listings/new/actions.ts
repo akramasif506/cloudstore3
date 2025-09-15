@@ -80,6 +80,9 @@ export async function createListingDraft(
     if (restOfData.variants && restOfData.variants.length > 0) {
         newProductData.variants = restOfData.variants;
     }
+    if (restOfData.specifications && restOfData.specifications.length > 0) {
+        newProductData.specifications = restOfData.specifications;
+    }
 
 
     const productRef = ref(db, `products/${productId}`);

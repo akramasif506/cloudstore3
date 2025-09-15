@@ -2,7 +2,7 @@
 "use client"
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -33,11 +33,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Edit } from 'lucide-react';
+import { Loader2, Edit, PlusCircle, Trash2 } from 'lucide-react';
 import type { Product } from '@/lib/types';
 import { updateProduct } from '@/app/dashboard/manage-products/actions';
 import { updateProductSchema } from '@/lib/schemas/product';
 import type { CategoryMap } from '@/app/dashboard/manage-categories/actions';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 interface EditProductDialogProps {
   product: Product;
@@ -62,8 +63,14 @@ export function EditProductDialog({ product, categories, onSuccess, onError }: E
             subcategory: product.subcategory,
             condition: product.condition || 'Used',
             stock: product.stock ?? 1,
+            specifications: product.specifications || [],
             specialNote: product.specialNote || '',
         },
+    });
+
+    const { fields: specFields, append: appendSpec, remove: removeSpec } = useFieldArray({
+        control: form.control,
+        name: "specifications",
     });
 
     const selectedCategoryId = form.watch('category');
@@ -236,6 +243,59 @@ export function EditProductDialog({ product, categories, onSuccess, onError }: E
                                 )}
                             />
                         </div>
+
+                        <Card className="bg-muted/50">
+                            <CardHeader>
+                                <CardTitle>Specifications</CardTitle>
+                                <CardDescription>Add technical details for the product.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {specFields.map((field, index) => (
+                                    <div key={field.id} className="flex items-end gap-2">
+                                        <FormField
+                                            control={form.control}
+                                            name={`specifications.${index}.key`}
+                                            render={({ field }) => (
+                                                <FormItem className="flex-grow">
+                                                    <FormLabel>Name</FormLabel>
+                                                    <FormControl>
+                                                        <Input {...field} placeholder="e.g. Weight" />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name={`specifications.${index}.value`}
+                                            render={({ field }) => (
+                                                <FormItem className="flex-grow">
+                                                    <FormLabel>Value</FormLabel>
+                                                    <FormControl>
+                                                        <Input {...field} placeholder="e.g. 2.5kg" />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <Button type="button" variant="destructive" size="icon" onClick={() => removeSpec(index)}>
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="mt-2"
+                                    onClick={() => appendSpec({ key: '', value: '' })}
+                                >
+                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                    Add Specification
+                                </Button>
+                            </CardContent>
+                        </Card>
+
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField

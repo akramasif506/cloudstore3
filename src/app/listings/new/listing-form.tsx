@@ -26,7 +26,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { Loader2, Frown, Image as ImageIcon, CheckCircle, Sparkles } from 'lucide-react';
+import { Loader2, Frown, Image as ImageIcon, CheckCircle, Sparkles, PlusCircle, Trash2, ListTree } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { createListingDraft, finalizeListing } from './actions';
@@ -84,13 +84,19 @@ export function ListingForm({ categories, variantSets, conditions }: ListingForm
       condition: enabledConditions.includes('Used') ? 'Used' : 'New',
       stock: 1,
       variants: [],
+      specifications: [],
       seller: { id: '', name: '', contactNumber: '' }, // Initial empty seller
     },
   });
   
-  const { fields, replace } = useFieldArray({
+  const { fields: variantFields, replace: replaceVariants } = useFieldArray({
     control: form.control,
     name: "variants",
+  });
+  
+  const { fields: specFields, append: appendSpec, remove: removeSpec } = useFieldArray({
+    control: form.control,
+    name: "specifications",
   });
 
   const selectedCategoryId = form.watch('category');
@@ -111,8 +117,8 @@ export function ListingForm({ categories, variantSets, conditions }: ListingForm
       name: attr.name,
       value: '', // Default to empty
     })) || [];
-    replace(newVariantFields);
-  }, [selectedCategoryId, categories, replace]);
+    replaceVariants(newVariantFields);
+  }, [selectedCategoryId, categories, replaceVariants]);
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -412,11 +418,11 @@ export function ListingForm({ categories, variantSets, conditions }: ListingForm
           />
         </div>
 
-        {fields.length > 0 && (
+        {variantFields.length > 0 && (
           <Card className="bg-muted/50">
             <CardHeader><CardTitle>Product Options</CardTitle></CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {fields.map((field, index) => {
+              {variantFields.map((field, index) => {
                 const attribute = categories[selectedCategoryId]?.variantAttributes?.[index];
                 const variantSetId = attribute?.variantSetId;
                 const options = variantSetId ? variantSets[variantSetId]?.options : [];
@@ -453,6 +459,59 @@ export function ListingForm({ categories, variantSets, conditions }: ListingForm
             </CardContent>
           </Card>
         )}
+
+        <Card className="bg-muted/50">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><ListTree className="h-5 w-5" /> Product Specifications</CardTitle>
+                <CardDescription>Add technical details or specifications for your item. (Optional)</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                {specFields.map((field, index) => (
+                    <div key={field.id} className="flex items-end gap-2">
+                        <FormField
+                            control={form.control}
+                            name={`specifications.${index}.key`}
+                            render={({ field }) => (
+                                <FormItem className="flex-grow">
+                                    <FormLabel>Name</FormLabel>
+                                    <FormControl>
+                                        <Input {...field} placeholder="e.g. Weight" disabled={isSubmitting} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name={`specifications.${index}.value`}
+                            render={({ field }) => (
+                                <FormItem className="flex-grow">
+                                    <FormLabel>Value</FormLabel>
+                                    <FormControl>
+                                        <Input {...field} placeholder="e.g. 2.5kg" disabled={isSubmitting} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <Button type="button" variant="destructive" size="icon" onClick={() => removeSpec(index)} disabled={isSubmitting}>
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </div>
+                ))}
+                 <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() => appendSpec({ key: '', value: '' })}
+                    disabled={isSubmitting}
+                >
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Specification
+                </Button>
+            </CardContent>
+        </Card>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <FormField

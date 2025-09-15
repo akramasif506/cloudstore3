@@ -6,6 +6,11 @@ const variantSchema = z.object({
   value: z.string(),
 });
 
+const specificationSchema = z.object({
+  key: z.string().min(1, 'Specification key cannot be empty.'),
+  value: z.string().min(1, 'Specification value cannot be empty.'),
+});
+
 const sellerSchema = z.object({
     id: z.string(),
     name: z.string(),
@@ -24,5 +29,6 @@ export const listingSchema = z.object({
   }),
   stock: z.coerce.number().int().min(1, 'Stock must be at least 1.').default(1),
   variants: z.array(variantSchema).optional(),
+  specifications: z.array(specificationSchema).optional(),
   seller: sellerSchema, // Add seller to the schema
 });

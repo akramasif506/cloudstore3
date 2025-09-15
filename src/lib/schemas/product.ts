@@ -1,4 +1,10 @@
+
 import { z } from 'zod';
+
+const specificationSchema = z.object({
+  key: z.string().min(1, 'Specification key cannot be empty.'),
+  value: z.string().min(1, 'Specification value cannot be empty.'),
+});
 
 export const updateProductSchema = z.object({
   id: z.string(),
@@ -10,5 +16,6 @@ export const updateProductSchema = z.object({
   subcategory: z.string().nonempty('Please select a subcategory.'),
   condition: z.enum(['New', 'Like New', 'Used']),
   stock: z.coerce.number().int().min(0, 'Stock cannot be negative.'),
+  specifications: z.array(specificationSchema).optional(),
   specialNote: z.string().optional(),
 });
