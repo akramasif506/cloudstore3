@@ -1,17 +1,12 @@
+
 import type { Product } from '@/lib/types';
 import { ProductCard } from './product-card';
 import { Separator } from '../ui/separator';
 import type { CategoryMap } from '@/app/dashboard/manage-categories/actions';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
 import { Button } from '../ui/button';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { ScrollArea, ScrollBar } from '../ui/scroll-area';
 
 interface CategoryInfo {
   id: string;
@@ -57,25 +52,16 @@ export function ProductShowcase({ products, categories, categoryMap }: ProductSh
                   </Link>
                 </Button>
             </div>
-            <Carousel
-              opts={{
-                align: "start",
-                loop: categoryProducts.length > 5,
-              }}
-              className="w-full"
-            >
-              <CarouselContent>
+            <ScrollArea>
+              <div className="flex space-x-4 pb-4">
                 {categoryProducts.map((product) => (
-                  <CarouselItem key={product.id} className="basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
-                    <div className="p-1 h-full">
-                      <ProductCard product={product} />
-                    </div>
-                  </CarouselItem>
+                  <div key={product.id} className="w-64 shrink-0">
+                    <ProductCard product={product} />
+                  </div>
                 ))}
-              </CarouselContent>
-              <CarouselPrevious className="hidden lg:flex" />
-              <CarouselNext className="hidden lg:flex" />
-            </Carousel>
+              </div>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
             {index < categoriesToShow.length - 1 && <Separator className="mt-8" />}
           </div>
         )

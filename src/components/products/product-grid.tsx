@@ -3,6 +3,7 @@ import type { Product } from '@/lib/types';
 import { ProductCard } from './product-card';
 import { Frown } from 'lucide-react';
 import { Separator } from '../ui/separator';
+import { ScrollArea, ScrollBar } from '../ui/scroll-area';
 
 interface ProductGridProps {
   products: Product[];
@@ -24,11 +25,16 @@ export function ProductGrid({ products, adProducts = [], showViewButton = false 
           <div>
             <h2 className="text-2xl font-bold font-headline mb-4">You might also like</h2>
              <Separator />
-             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 mt-6">
-                {adProducts.map((product) => (
-                    <ProductCard key={`ad-${product.id}`} product={product} />
-                ))}
-            </div>
+             <ScrollArea className="mt-6">
+                <div className="flex space-x-4 pb-4">
+                    {adProducts.map((product) => (
+                        <div key={`ad-${product.id}`} className="w-64 shrink-0">
+                            <ProductCard product={product} />
+                        </div>
+                    ))}
+                </div>
+                <ScrollBar orientation="horizontal" />
+            </ScrollArea>
           </div>
         )}
       </div>
