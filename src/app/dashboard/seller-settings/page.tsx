@@ -3,15 +3,37 @@ import { Store, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { getSellerSettings, searchUsers } from './actions';
+import { getSellerSettings } from './actions';
 import { SellerSettingsForm } from './seller-settings-form';
-import { getAllUsers } from '../manage-users/actions';
+import { initializeAdmin } from '@/lib/firebase-admin';
+import type { User } from '@/lib/types';
+
+// New function to get details for only the allowed users
+async function getAllowedUsers(allowedSellersMap: { [userId: string]: boolean }): Promise<User[]> {
+    if (!allowedSellersMap || Object.keys(allowedSellersMap).length === 0) {
+        return [];
+    }
+
+    const { db } = initializeAdmin();
+    const userIds = Object.keys(allowedSellersMap);
+
+    const userPromises = userIds.map(async (id) => {
+        const userRef = db.ref(`users/${id}`);
+        const snapshot = await userRef.once('value');
+        if (snapshot.exists()) {
+            return { id, ...snapshot.val() };
+        }
+        return null;
+    });
+
+    const users = (await Promise.all(userPromises)).filter((u): u is User => u !== null);
+    return users;
+}
+
 
 export default async function SellerSettingsPage() {
-  const [settings, allUsers] = await Promise.all([
-    getSellerSettings(),
-    getAllUsers(),
-  ]);
+  const settings = await getSellerSettings();
+  const initialAllowedUsers = await getAllowedUsers(settings.allowed_sellers);
 
   return (
     <Card>
@@ -39,7 +61,7 @@ export default async function SellerSettingsPage() {
       <CardContent>
         <SellerSettingsForm 
             initialSettings={settings}
-            allUsers={allUsers}
+            initialAllowedUsers={initialAllowedUsers}
         />
       </CardContent>
     </Card>
