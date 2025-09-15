@@ -33,6 +33,7 @@ import type { User as AppUser } from '@/lib/types';
 import { setSellerSettings, type SellerSettings, type SellerMode } from './actions';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Label } from '@/components/ui/label';
 
 const sellerSettingsSchema = z.object({
   mode: z.enum(['admins_only', 'all_users', 'specific_users']),
@@ -125,7 +126,7 @@ export function SellerSettingsForm({ initialSettings, searchUsersAction }: Selle
                 >
                   <FormItem>
                     <Label className={cn(
-                        "flex flex-col items-center justify-center rounded-md border-2 p-4 hover:bg-accent hover:text-accent-foreground",
+                        "flex flex-col items-center justify-center rounded-md border-2 p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer",
                         field.value === 'admins_only' ? 'border-primary' : 'border-muted'
                     )}>
                       <FormControl>
@@ -137,7 +138,7 @@ export function SellerSettingsForm({ initialSettings, searchUsersAction }: Selle
                   </FormItem>
                   <FormItem>
                     <Label className={cn(
-                        "flex flex-col items-center justify-center rounded-md border-2 p-4 hover:bg-accent hover:text-accent-foreground",
+                        "flex flex-col items-center justify-center rounded-md border-2 p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer",
                         field.value === 'all_users' ? 'border-primary' : 'border-muted'
                     )}>
                       <FormControl>
@@ -149,7 +150,7 @@ export function SellerSettingsForm({ initialSettings, searchUsersAction }: Selle
                   </FormItem>
                   <FormItem>
                     <Label className={cn(
-                        "flex flex-col items-center justify-center rounded-md border-2 p-4 hover:bg-accent hover:text-accent-foreground",
+                        "flex flex-col items-center justify-center rounded-md border-2 p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer",
                         field.value === 'specific_users' ? 'border-primary' : 'border-muted'
                     )}>
                       <FormControl>
