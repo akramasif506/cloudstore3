@@ -17,12 +17,12 @@ import { PromoBanner } from '@/components/products/promo-banner';
 import { MobileFilterSheet } from '@/components/products/mobile-filter-sheet';
 import Link from 'next/link';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, ServerCrash } from 'lucide-react';
 
 
-async function getProducts(): Promise<Product[]> {
-  const { db } = initializeAdmin();
+async function getProducts(): Promise<{ products: Product[], error?: string }> {
   try {
+    const { db } = initializeAdmin();
     const productsRef = db.ref('products');
     const snapshot = await productsRef.once('value');
     if (snapshot.exists()) {
@@ -42,12 +42,15 @@ async function getProducts(): Promise<Product[]> {
         }
         return product;
       });
-      return allProducts.filter(product => product.status === 'active' && (product.stock === undefined || product.stock > 0));
+      return { products: allProducts.filter(product => product.status === 'active' && (product.stock === undefined || product.stock > 0)) };
     }
-    return [];
+    return { products: [] };
   } catch (error) {
-    console.error("Error fetching products from Firebase with Admin SDK:", error);
-    return [];
+    console.error("Error fetching products from Firebase:", error);
+    if (error instanceof Error && error.message.includes('credentials')) {
+        return { products: [], error: error.message };
+    }
+    return { products: [] };
   }
 }
 
@@ -65,7 +68,7 @@ export default async function Home({
     rating?: string;
   };
 }) {
-  const allProducts = await getProducts();
+  const { products: allProducts, error: productsError } = await getProducts();
   const featuredProductInfo = await getFeaturedProduct();
   const categoryMap: CategoryMap = await getCategories();
   const promoBanner = await getPromoBanner();
@@ -129,6 +132,19 @@ export default async function Home({
       productsToShow = [...featured, ...regular];
   }
 
+  if (productsError) {
+    return (
+        <div className="container mx-auto px-4 py-8">
+            <Alert variant="destructive">
+                <ServerCrash className="h-4 w-4" />
+                <AlertTitle>Server Configuration Error</AlertTitle>
+                <AlertDescription>
+                   Could not connect to the database. Please ensure your Firebase Admin credentials are correctly set up in your <strong>.env</strong> file. You can check the status on the <Link href="/config-status" className="underline font-semibold">Configuration Status page</Link>.
+                </AlertDescription>
+            </Alert>
+        </div>
+    )
+  }
 
   return (
     <div className="space-y-8">

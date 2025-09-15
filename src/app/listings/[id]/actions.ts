@@ -60,23 +60,23 @@ export async function submitReview(
 
   const { productId, rating, comment } = validatedFields.data;
 
-  const { db } = initializeAdmin();
-  const reviewsRef = db.ref(`products/${productId}/reviews`);
-  const newReviewRef = db.ref(`products/${productId}/reviews`).push();
-
-  const newReview: Review = {
-    id: newReviewRef.key!,
-    user: {
-      id: currentUser.id,
-      name: currentUser.name,
-      avatarUrl: currentUser.profileImageUrl,
-    },
-    rating,
-    comment,
-    date: new Date().toISOString(),
-  };
-
   try {
+    const { db } = initializeAdmin();
+    const reviewsRef = db.ref(`products/${productId}/reviews`);
+    const newReviewRef = db.ref(`products/${productId}/reviews`).push();
+
+    const newReview: Review = {
+      id: newReviewRef.key!,
+      user: {
+        id: currentUser.id,
+        name: currentUser.name,
+        avatarUrl: currentUser.profileImageUrl,
+      },
+      rating,
+      comment,
+      date: new Date().toISOString(),
+    };
+    
     await newReviewRef.set(newReview);
     revalidatePath(`/listings/${productId}`);
     return { success: true, message: 'Thank you for your review!' };

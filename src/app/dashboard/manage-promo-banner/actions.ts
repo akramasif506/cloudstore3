@@ -100,18 +100,17 @@ export async function updatePromoBanner(
 
 
 export async function clearPromoBanner(): Promise<{ success: boolean; message: string }> {
-  const { db } = initializeAdmin();
-  try {
-    const bannerRef = db.ref(PROMO_BANNER_PATH);
-    await bannerRef.remove();
-    
-    revalidatePath('/');
-    revalidatePath('/dashboard/manage-promo-banner');
-    
-    return { success: true, message: 'Promotional banner has been cleared.' };
-  } catch (error) {
-    console.error('Error clearing promo banner:', error);
-    return { success: false, message: 'Failed to clear banner.' };
-  }
+    try {
+        const { db } = initializeAdmin();
+        const bannerRef = db.ref(PROMO_BANNER_PATH);
+        await bannerRef.remove();
+        
+        revalidatePath('/');
+        revalidatePath('/dashboard/manage-promo-banner');
+        
+        return { success: true, message: 'Promotional banner has been cleared.' };
+    } catch (error) {
+        console.error('Error clearing promo banner:', error);
+        return { success: false, message: 'Failed to clear banner.' };
+    }
 }
-

@@ -27,9 +27,8 @@ export async function setFeaturedProduct(
     return { success: false, message: 'Invalid form data.' };
   }
 
-  const { db } = initializeAdmin();
-
   try {
+    const { db } = initializeAdmin();
     const featuredProductRef = db.ref(FEATURED_PRODUCT_PATH);
     await featuredProductRef.set(validatedFields.data);
 
@@ -45,8 +44,8 @@ export async function setFeaturedProduct(
 }
 
 export async function clearFeaturedProduct(): Promise<{ success: boolean; message: string }> {
-  const { db } = initializeAdmin();
   try {
+    const { db } = initializeAdmin();
     const featuredProductRef = db.ref(FEATURED_PRODUCT_PATH);
     await featuredProductRef.remove();
     
@@ -61,8 +60,8 @@ export async function clearFeaturedProduct(): Promise<{ success: boolean; messag
 }
 
 export async function getFeaturedProduct(): Promise<(FeaturedProductInfo & { product: Product | null }) | null> {
-    const { db } = initializeAdmin();
     try {
+        const { db } = initializeAdmin();
         const featuredProductRef = db.ref(FEATURED_PRODUCT_PATH);
         const snapshot = await featuredProductRef.once('value');
         if (snapshot.exists()) {
