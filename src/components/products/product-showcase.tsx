@@ -63,8 +63,8 @@ export function ProductShowcase({ products, categories, categoryMap }: ProductSh
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-background hover:bg-background/80" />
-              <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-background hover:bg-background/80" />
+              <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-background hover:bg-accent hover:text-accent-foreground shadow-md transition-all duration-300 hover:scale-110" />
+              <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-background hover:bg-accent hover:text-accent-foreground shadow-md transition-all duration-300 hover:scale-110" />
             </Carousel>
             {index < categoriesToShow.length - 1 && <Separator className="mt-8" />}
           </div>
