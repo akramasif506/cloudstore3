@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { getCategories, getVariantSetsForCategories } from './actions';
-import { CategoryForm } from '@/components/dashboard/manage-categories/category-form';
+import { CategoryEditor } from '@/components/dashboard/manage-categories/category-editor';
 
 export default async function ManageCategoriesPage() {
   const [categories, variantSets] = await Promise.all([
@@ -23,7 +23,7 @@ export default async function ManageCategoriesPage() {
               <div>
                 <CardTitle className="text-2xl font-headline">Manage Categories</CardTitle>
                 <CardDescription>
-                  Add, edit, or delete product categories and subcategories.
+                  Select a category to edit, or create a new one.
                 </CardDescription>
               </div>
             </div>
@@ -36,7 +36,7 @@ export default async function ManageCategoriesPage() {
         </div>
       </CardHeader>
       <CardContent>
-        <CategoryForm initialCategories={categories} variantSets={variantSets} />
+        <CategoryEditor initialCategories={categories} variantSets={variantSets} />
       </CardContent>
     </Card>
   );
