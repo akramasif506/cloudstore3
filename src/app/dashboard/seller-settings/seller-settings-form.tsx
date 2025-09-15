@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useState, useTransition } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useState, useTransition, useMemo } from 'react';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -13,27 +13,20 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from '@/components/ui/form';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Info, Users, Shield, User, Trash2, UserPlus } from 'lucide-react';
+import { Loader2, Info, Users, Shield, User, Trash2, Search } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { User as AppUser } from '@/lib/types';
-import { setSellerSettings, type SellerSettings, type SellerMode } from './actions';
+import { setSellerSettings, type SellerSettings } from './actions';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const sellerSettingsSchema = z.object({
   mode: z.enum(['admins_only', 'all_users', 'specific_users']),
@@ -44,13 +37,12 @@ type FormValues = z.infer<typeof sellerSettingsSchema>;
 
 interface SellerSettingsFormProps {
     initialSettings: SellerSettings;
-    searchUsersAction: (query: string) => Promise<AppUser[]>;
+    allUsers: AppUser[];
 }
 
-export function SellerSettingsForm({ initialSettings, searchUsersAction }: SellerSettingsFormProps) {
+export function SellerSettingsForm({ initialSettings, allUsers }: SellerSettingsFormProps) {
   const [isSaving, startTransition] = useTransition();
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<AppUser[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
@@ -62,33 +54,26 @@ export function SellerSettingsForm({ initialSettings, searchUsersAction }: Selle
   });
 
   const watchMode = form.watch('mode');
+  const watchAllowedSellers = form.watch('allowed_sellers');
 
-  const handleSearch = async (query: string) => {
-    if (query.length < 2) {
-      setSearchResults([]);
-      return;
-    }
-    setIsSearching(true);
-    const results = await searchUsersAction(query);
-    setSearchResults(results);
-    setIsSearching(false);
-  };
-
-  const addSeller = (user: AppUser) => {
+  const handleUserToggle = (userId: string, isChecked: boolean) => {
     const currentSellers = form.getValues('allowed_sellers');
-    if (!currentSellers[user.id]) {
-      form.setValue('allowed_sellers', { ...currentSellers, [user.id]: true });
+    if (isChecked) {
+      form.setValue('allowed_sellers', { ...currentSellers, [userId]: true });
+    } else {
+      const { [userId]: _, ...newSellers } = currentSellers;
+      form.setValue('allowed_sellers', newSellers);
     }
   };
-
-  const removeSeller = (userId: string) => {
-    const currentSellers = form.getValues('allowed_sellers');
-    const { [userId]: _, ...newSellers } = currentSellers;
-    form.setValue('allowed_sellers', newSellers);
-  };
-
-  const allowedSellerIds = Object.keys(form.getValues('allowed_sellers'));
-  const approvedSellers = searchResults.filter(user => allowedSellerIds.includes(user.id));
+  
+  const filteredUsers = useMemo(() => {
+    if (!searchQuery) return allUsers;
+    const lowercasedQuery = searchQuery.toLowerCase();
+    return allUsers.filter(user => 
+        user.name.toLowerCase().includes(lowercasedQuery) || 
+        user.email.toLowerCase().includes(lowercasedQuery)
+    );
+  }, [allUsers, searchQuery]);
   
   const onSubmit = async (data: FormValues) => {
     startTransition(async () => {
@@ -171,70 +156,46 @@ export function SellerSettingsForm({ initialSettings, searchUsersAction }: Selle
           <Card>
             <CardHeader>
               <CardTitle>Manage Approved Sellers</CardTitle>
-              <CardDescription>Search for users by name or email and add them to the list of approved sellers.</CardDescription>
+              <CardDescription>Select which users are allowed to sell products on the marketplace.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Command className="rounded-lg border shadow-md">
-                <CommandInput 
-                    placeholder="Type a name or email to search..." 
-                    onValueChange={handleSearch}
-                />
-                <CommandList>
-                    {isSearching && <CommandEmpty>Searching...</CommandEmpty>}
-                    <CommandGroup heading="Search Results">
-                        {searchResults.map((user) => (
-                        <CommandItem key={user.id} onSelect={() => addSeller(user)} className="flex items-center justify-between cursor-pointer">
-                            <div className="flex items-center gap-2">
-                                <Avatar className="h-8 w-8">
-                                    <AvatarImage src={user.profileImageUrl} />
-                                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <p>{user.name}</p>
-                                    <p className="text-xs text-muted-foreground">{user.email}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center text-sm text-muted-foreground">
-                                <UserPlus className="mr-2 h-4 w-4"/>
-                                Add
-                            </div>
-                        </CommandItem>
-                        ))}
-                    </CommandGroup>
-                </CommandList>
-              </Command>
-
-              <div className="mt-6">
-                <h4 className="font-medium mb-2">Approved Sellers ({allowedSellerIds.length})</h4>
-                 <ScrollArea className="h-72 w-full rounded-md border">
+                <div className="relative mb-4">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                        placeholder="Search users..."
+                        className="pl-9"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
+              <ScrollArea className="h-72 w-full rounded-md border">
                     <div className="p-4 space-y-2">
-                    {allowedSellerIds.length > 0 ? (
-                        allowedSellerIds.map(id => {
-                            const user = approvedSellers.find(u => u.id === id);
-                            return user ? (
-                            <div key={id} className="flex items-center justify-between p-2 rounded-md bg-muted">
-                                <div className="flex items-center gap-2">
-                                    <Avatar className="h-8 w-8">
-                                        <AvatarImage src={user.profileImageUrl} />
-                                        <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <p className="text-sm font-medium">{user.name}</p>
-                                        <p className="text-xs text-muted-foreground">{user.email}</p>
+                        {filteredUsers.length > 0 ? (
+                            filteredUsers.map(user => (
+                                <div key={user.id} className="flex items-center justify-between p-2 rounded-md hover:bg-muted">
+                                    <div className="flex items-center gap-3">
+                                        <Avatar className="h-9 w-9">
+                                            <AvatarImage src={user.profileImageUrl} />
+                                            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <p className="text-sm font-medium">{user.name}</p>
+                                            <p className="text-xs text-muted-foreground">{user.email}</p>
+                                        </div>
                                     </div>
+                                    <Checkbox
+                                        checked={!!watchAllowedSellers[user.id]}
+                                        onCheckedChange={(checked) => handleUserToggle(user.id, !!checked)}
+                                        id={`user-checkbox-${user.id}`}
+                                        aria-label={`Approve ${user.name}`}
+                                    />
                                 </div>
-                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeSeller(id)}>
-                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                            </div>
-                           ) : <div key={id} className="p-2 text-sm text-muted-foreground">Loading user {id}...</div>
-                        })
-                    ) : (
-                        <p className="p-4 text-center text-sm text-muted-foreground">No sellers approved yet.</p>
-                    )}
+                            ))
+                        ) : (
+                             <p className="p-4 text-center text-sm text-muted-foreground">No users found for this search.</p>
+                        )}
                     </div>
                 </ScrollArea>
-              </div>
             </CardContent>
           </Card>
         )}

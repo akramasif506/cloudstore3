@@ -5,9 +5,13 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { getSellerSettings, searchUsers } from './actions';
 import { SellerSettingsForm } from './seller-settings-form';
+import { getAllUsers } from '../manage-users/actions';
 
 export default async function SellerSettingsPage() {
-  const settings = await getSellerSettings();
+  const [settings, allUsers] = await Promise.all([
+    getSellerSettings(),
+    getAllUsers(),
+  ]);
 
   return (
     <Card>
@@ -35,7 +39,7 @@ export default async function SellerSettingsPage() {
       <CardContent>
         <SellerSettingsForm 
             initialSettings={settings}
-            searchUsersAction={searchUsers} 
+            allUsers={allUsers}
         />
       </CardContent>
     </Card>
