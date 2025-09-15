@@ -3,6 +3,9 @@ import type { Product } from '@/lib/types';
 import { ProductGrid } from './product-grid';
 import { Separator } from '../ui/separator';
 import type { CategoryMap } from '@/app/dashboard/manage-categories/actions';
+import { Button } from '../ui/button';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 
 interface CategoryInfo {
   id: string;
@@ -36,10 +39,20 @@ export function ProductShowcase({ products, categories, categoryMap }: ProductSh
         if (!productsByCategory[category.id] || productsByCategory[category.id].length === 0) {
           return null;
         }
+        const categoryProducts = productsByCategory[category.id];
         return (
           <div key={category.id}>
             <h3 className="text-2xl font-bold font-headline mb-4">{category.name}</h3>
-            <ProductGrid products={productsByCategory[category.id].slice(0, 6)} /> 
+            <ProductGrid products={categoryProducts.slice(0, 5)} />
+            {categoryProducts.length > 5 && (
+                 <div className="text-center mt-6">
+                    <Button asChild variant="outline">
+                        <Link href={`/?category=${category.id}`}>
+                            View All in {category.name} <ArrowRight className="ml-2" />
+                        </Link>
+                    </Button>
+                </div>
+            )}
             {index < categoriesToShow.length - 1 && <Separator className="mt-8" />}
           </div>
         )
