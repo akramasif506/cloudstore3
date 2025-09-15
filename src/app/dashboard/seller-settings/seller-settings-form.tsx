@@ -25,6 +25,7 @@ import { setSellerSettings, searchUsers, type SellerSettings } from './actions';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { useDebounce } from '@/hooks/use-debounce';
+import { Label } from '@/components/ui/label';
 
 
 const sellerSettingsSchema = z.object({
