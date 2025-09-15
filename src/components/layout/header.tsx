@@ -17,6 +17,7 @@ import { useAuth } from '@/context/auth-context';
 import { useCart } from '@/context/cart-context';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { canUserSell } from '@/lib/seller-utils';
 
 export function Header() {
   const { user, logout } = useAuth();
@@ -45,7 +46,7 @@ export function Header() {
               <DropdownMenuItem asChild>
                 <Link href="/"><Home className="mr-2 h-4 w-4" />Home</Link>
               </DropdownMenuItem>
-              {user?.role === 'admin' && (
+              {canUserSell(user) && (
                 <DropdownMenuItem asChild>
                   <Link href="/listings/new"><Tag className="mr-2 h-4 w-4" />Sell</Link>
                 </DropdownMenuItem>
@@ -80,7 +81,7 @@ export function Header() {
                 <Link href="/" className="transition-colors hover:text-foreground/80 text-foreground">
                     Home
                 </Link>
-                 {user?.role === 'admin' && (
+                 {canUserSell(user) && (
                   <Link href="/listings/new" className="transition-colors hover:text-foreground/80 text-foreground/60">
                       Sell
                   </Link>

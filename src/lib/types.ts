@@ -1,4 +1,5 @@
 
+import type { SellerSettings } from "@/app/dashboard/seller-settings/actions";
 
 export interface User {
   id: string;
@@ -14,6 +15,7 @@ export interface User {
   };
   role?: 'admin' | 'user';
   createdAt: string;
+  sellerSettings?: SellerSettings; // Add seller settings to user type
 }
 
 export interface Review {

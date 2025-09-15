@@ -6,6 +6,7 @@ import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { ref, onValue, off, Unsubscribe } from 'firebase/database';
 import { auth, db } from '@/lib/firebase';
 import type { User as AppUser } from '@/lib/types';
+import { getSellerSettings, type SellerSettings } from '@/app/dashboard/seller-settings/actions';
 
 interface AuthContextType {
   user: AppUser | null;
@@ -48,15 +49,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (newFirebaseUser) {
-        // User is logged in, fetch their profile
+        // User is logged in, fetch their profile and seller settings
         if (db) {
           const userProfileRef = ref(db, `users/${newFirebaseUser.uid}`);
           dbUnsubscribe = onValue(
             userProfileRef,
-            (snapshot) => {
+            async (snapshot) => {
               const userProfile = snapshot.val();
               if (userProfile) {
-                setUser({ id: newFirebaseUser.uid, ...userProfile });
+                // Fetch seller settings to augment user profile
+                const sellerSettings = await getSellerSettings();
+                setUser({ 
+                    id: newFirebaseUser.uid,
+                    ...userProfile,
+                    sellerSettings, // Attach settings to user object
+                });
               } else {
                 // Handle case where user exists in Auth but not DB
                 setUser(null); 
