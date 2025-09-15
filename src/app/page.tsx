@@ -137,7 +137,7 @@ export default async function Home({
         <PromoBanner banner={promoBanner} />
       )}
       
-      {!hasActiveFilters && <CategoryBrowser categories={categories} />}
+      <CategoryBrowser categories={categories} />
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
         <div className="hidden lg:block lg:sticky lg:top-24">
