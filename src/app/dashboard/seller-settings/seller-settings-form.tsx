@@ -183,7 +183,7 @@ export function SellerSettingsForm({ initialSettings, searchUsersAction }: Selle
                     {isSearching && <CommandEmpty>Searching...</CommandEmpty>}
                     <CommandGroup heading="Search Results">
                         {searchResults.map((user) => (
-                        <CommandItem key={user.id} onSelect={() => addSeller(user)} className="flex items-center justify-between">
+                        <CommandItem key={user.id} onSelect={() => addSeller(user)} className="flex items-center justify-between cursor-pointer">
                             <div className="flex items-center gap-2">
                                 <Avatar className="h-8 w-8">
                                     <AvatarImage src={user.profileImageUrl} />
@@ -194,7 +194,10 @@ export function SellerSettingsForm({ initialSettings, searchUsersAction }: Selle
                                     <p className="text-xs text-muted-foreground">{user.email}</p>
                                 </div>
                             </div>
-                            <Button variant="ghost" size="sm"><UserPlus className="mr-2 h-4 w-4"/>Add</Button>
+                            <div className="flex items-center text-sm text-muted-foreground">
+                                <UserPlus className="mr-2 h-4 w-4"/>
+                                Add
+                            </div>
                         </CommandItem>
                         ))}
                     </CommandGroup>
