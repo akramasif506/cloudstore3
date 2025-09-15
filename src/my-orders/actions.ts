@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import type { Order, ReturnPolicy } from '@/lib/types';
@@ -20,7 +21,16 @@ const POLICY_PATH = 'site_config/return_policy';
  * from client components to get up-to-date policy info.
  */
 export async function getMyOrdersReturnPolicy(): Promise<ReturnPolicy> {
-    const { db } = initializeAdmin();
+    const admin = initializeAdmin();
+    if (!admin) {
+        return {
+            isEnabled: false,
+            returnWindowDays: 7,
+            policyText: 'Returns are not currently enabled.',
+        };
+    }
+    const { db } = admin;
+
     try {
         const policyRef = db.ref(POLICY_PATH);
         const snapshot = await policyRef.once('value');
@@ -45,13 +55,10 @@ export async function getMyOrders(): Promise<Order[]> {
     return []; // Not logged in
   }
 
-  let db, adminAuth;
-  try {
-    ({ db, adminAuth } = initializeAdmin());
-  } catch (error) {
-    console.error("Admin SDK init failed:", error);
-    return [];
-  }
+  const admin = initializeAdmin();
+  if (!admin) return [];
+
+  const { db, adminAuth } = admin;
   
   try {
     const decodedClaims = await adminAuth.verifySessionCookie(session, true);
@@ -92,9 +99,12 @@ export async function requestReturn(
     if (!validatedFields.success) {
         return { success: false, message: 'Invalid data provided.' };
     }
+    
+    const admin = initializeAdmin();
+    if (!admin) return { success: false, message: 'Server is not configured.' };
+    const { db, adminAuth } = admin;
 
     const { orderId, reason } = validatedFields.data;
-    const { db, adminAuth } = initializeAdmin();
 
     try {
         const decodedClaims = await adminAuth.verifySessionCookie(session, true);

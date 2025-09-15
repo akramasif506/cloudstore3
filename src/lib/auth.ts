@@ -17,8 +17,11 @@ export async function getCurrentUser(): Promise<AppUser | null> {
     return null;
   }
   
+  const admin = initializeAdmin();
+  if (!admin) return null;
+
   try {
-    const { adminAuth, db } = initializeAdmin();
+    const { adminAuth, db } = admin;
     const decodedIdToken = await adminAuth.verifySessionCookie(session, true);
   
     // Fetch the user's profile from the Realtime Database

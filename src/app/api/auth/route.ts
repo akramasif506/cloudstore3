@@ -4,8 +4,13 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { initializeAdmin } from '@/lib/firebase-admin';
 
 export async function POST(request: NextRequest) {
+  const admin = initializeAdmin();
+  if (!admin) {
+    return NextResponse.json({ error: 'Firebase Admin not configured.' }, { status: 500 });
+  }
+
   try {
-    const { adminAuth } = initializeAdmin();
+    const { adminAuth } = admin;
     const body = await request.json();
     const idToken = body.idToken;
     
@@ -36,8 +41,13 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  const admin = initializeAdmin();
+  if (!admin) {
+    return NextResponse.json({ isLogged: false }, { status: 500 });
+  }
+  
   try {
-    const { adminAuth } = initializeAdmin();
+    const { adminAuth } = admin;
     const session = cookies().get('session')?.value || '';
 
     if (!session) {

@@ -12,18 +12,18 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { RecentOrders } from '@/components/dashboard/recent-orders';
 import { RecentReturns } from '@/components/dashboard/recent-returns';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0; // Or 'no-store'
 
 async function getDashboardStats() {
-    let db;
-    try {
-        ({ db } = initializeAdmin());
-    } catch (error) {
-        console.error("Firebase Admin SDK init error:", error);
-        return { totalProducts: 0, activeProducts: 0, pendingProducts: 0, totalUsers: 0, openOrders: 0, totalMessages: 0, chartData: [] };
+    const admin = initializeAdmin();
+    if (!admin) {
+        return null;
     }
+    const { db } = admin;
 
     try {
         const productsRef = db.ref('products');
@@ -82,7 +82,21 @@ async function getDashboardStats() {
 
 
 export default async function DashboardPage() {
-  const { totalProducts, activeProducts, pendingProducts, totalUsers, openOrders, totalMessages, chartData } = await getDashboardStats();
+  const stats = await getDashboardStats();
+
+  if (!stats) {
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Firebase Admin Not Configured</AlertTitle>
+        <AlertDescription>
+          Server-side data fetching is disabled. Please set up your Firebase Admin SDK credentials in the <code>.env</code> file. Check the <Link href="/config-status" className="underline">Configuration Status</Link> page for more details.
+        </AlertDescription>
+      </Alert>
+    )
+  }
+
+  const { totalProducts, activeProducts, pendingProducts, totalUsers, openOrders, totalMessages, chartData } = stats;
   
   return (
     <div className="space-y-8">

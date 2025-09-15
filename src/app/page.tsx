@@ -15,11 +15,17 @@ import { getPromoBanner } from './dashboard/manage-promo-banner/actions';
 import { getProductConditions } from './dashboard/manage-product-conditions/actions';
 import { PromoBanner } from '@/components/products/promo-banner';
 import { MobileFilterSheet } from '@/components/products/mobile-filter-sheet';
+import Link from 'next/link';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 
 
-async function getProducts(): Promise<Product[]> {
+async function getProducts(): Promise<Product[] | null> {
+  const admin = initializeAdmin();
+  if (!admin) return null; // Return null if admin is not initialized
+
   try {
-    const { db } = initializeAdmin();
+    const { db } = admin;
     const productsRef = db.ref('products');
     const snapshot = await productsRef.once('value');
     if (snapshot.exists()) {
@@ -62,7 +68,22 @@ export default async function Home({
     rating?: string;
   };
 }) {
-  const allProducts = await getProducts();
+  const productsResult = await getProducts();
+  
+  // If products are null, it means Firebase Admin is not configured.
+  if (productsResult === null) {
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Firebase Admin Not Configured</AlertTitle>
+        <AlertDescription>
+          Server-side data fetching is disabled. Please set up your Firebase Admin SDK credentials in the <code>.env</code> file. Check the <Link href="/config-status" className="underline">Configuration Status</Link> page for more details.
+        </AlertDescription>
+      </Alert>
+    )
+  }
+
+  const allProducts = productsResult;
   const featuredProductInfo = await getFeaturedProduct();
   const categoryMap: CategoryMap = await getCategories();
   const promoBanner = await getPromoBanner();

@@ -14,8 +14,11 @@ interface AboutPageContent {
 }
 
 async function getAboutPageContent(): Promise<AboutPageContent | null> {
+    const admin = initializeAdmin();
+    if (!admin) return null;
+
     try {
-        const { db } = initializeAdmin();
+        const { db } = admin;
         const ref = db.ref(ABOUT_PAGE_PATH);
         const snapshot = await ref.once('value');
         if (snapshot.exists()) {
