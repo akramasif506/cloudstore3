@@ -6,7 +6,7 @@ import type { CategoryMap } from '@/app/dashboard/manage-categories/actions';
 import { Button } from '../ui/button';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { ScrollArea, ScrollBar } from '../ui/scroll-area';
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 
 interface CategoryInfo {
   id: string;
@@ -52,16 +52,15 @@ export function ProductShowcase({ products, categories, categoryMap }: ProductSh
                   </Link>
                 </Button>
             </div>
-            <ScrollArea>
-              <div className="flex space-x-4 pb-4">
+            <Carousel opts={{ align: "start", loop: false }}>
+              <CarouselContent className="-ml-2 md:-ml-4">
                 {categoryProducts.map((product) => (
-                  <div key={product.id} className="w-64 shrink-0">
+                  <CarouselItem key={product.id} className="pl-2 md:pl-4 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
                     <ProductCard product={product} />
-                  </div>
+                  </CarouselItem>
                 ))}
-              </div>
-              <ScrollBar orientation="horizontal" />
-            </ScrollArea>
+              </CarouselContent>
+            </Carousel>
             {index < categoriesToShow.length - 1 && <Separator className="mt-8" />}
           </div>
         )
