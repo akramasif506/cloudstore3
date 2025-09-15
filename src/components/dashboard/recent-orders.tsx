@@ -12,13 +12,10 @@ import { Badge } from '../ui/badge';
 import { initializeAdmin } from '@/lib/firebase-admin';
 
 async function getRecentOrders(): Promise<Order[]> {
-    let db;
-    try {
-      ({ db } = initializeAdmin());
-    } catch (error) {
-      console.error("Firebase Admin SDK init error:", error);
-      return [];
-    }
+    const admin = initializeAdmin();
+    if (!admin) return [];
+    
+    const { db } = admin;
 
     try {
         // Fetch from the denormalized global list for recent orders

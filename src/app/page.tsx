@@ -158,8 +158,6 @@ export default async function Home({
         <PromoBanner banner={promoBanner} />
       )}
       
-      <CategoryBrowser categories={categories} />
-
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
         <div className="hidden lg:block lg:sticky lg:top-24">
            <ProductFilters categories={categoryMap} conditions={conditions} />

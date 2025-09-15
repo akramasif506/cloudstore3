@@ -15,13 +15,10 @@ import { OrderPrintButton } from '@/components/my-orders/order-print-button';
 
 
 async function getOrder(internalId: string): Promise<Order | null> {
-    let db;
-    try {
-        ({ db } = initializeAdmin());
-    } catch (error) {
-        console.error("Firebase Admin Init Error:", error);
-        return null;
-    }
+    const admin = initializeAdmin();
+    if (!admin) return null;
+
+    const { db } = admin;
     
     try {
         // Fetch from the denormalized 'all_orders' path for direct lookup

@@ -5,13 +5,10 @@ import Link from 'next/link';
 import { initializeAdmin } from '@/lib/firebase-admin';
 
 async function getRecentProducts(): Promise<Product[]> {
-    let db;
-    try {
-      ({ db } = initializeAdmin());
-    } catch (error) {
-      console.error("Firebase Admin SDK init error:", error);
-      return [];
-    }
+    const admin = initializeAdmin();
+    if (!admin) return [];
+
+    const { db } = admin;
 
     try {
         const productsRef = db.ref('products');
