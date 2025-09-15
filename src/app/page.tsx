@@ -139,7 +139,7 @@ export default async function Home({
                 <ServerCrash className="h-4 w-4" />
                 <AlertTitle>Server Configuration Error</AlertTitle>
                 <AlertDescription>
-                   Could not connect to the database. Please ensure your Firebase Admin credentials are correctly set up in your <strong>.env</strong> file. You can check the status on the <Link href="/config-status" className="underline font-semibold">Configuration Status page</Link>.
+                   Could not connect to the database. Please ensure your Firebase Admin credentials are correctly set up in your <strong>.env</strong> file. You can check the status on the <Link href="/config-status" className="font-semibold">Configuration Status page</Link>.
                 </AlertDescription>
             </Alert>
         </div>
@@ -174,6 +174,11 @@ export default async function Home({
                     </div>
                 </div>
             </div>
+
+            <div className="mb-8">
+              <CategoryBrowser categories={categories} />
+            </div>
+
           {hasActiveFilters ? (
              <ProductGrid 
                 products={productsToShow} 
