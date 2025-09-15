@@ -6,7 +6,7 @@ import type { CategoryMap } from '@/app/dashboard/manage-categories/actions';
 import { Button } from '../ui/button';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 interface CategoryInfo {
   id: string;
@@ -52,7 +52,10 @@ export function ProductShowcase({ products, categories, categoryMap }: ProductSh
                   </Link>
                 </Button>
             </div>
-            <Carousel opts={{ align: "start", loop: false }}>
+            <Carousel 
+              opts={{ align: "start", loop: false }}
+              className="relative"
+            >
               <CarouselContent className="-ml-2 md:-ml-4">
                 {categoryProducts.map((product) => (
                   <CarouselItem key={product.id} className="pl-2 md:pl-4 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
@@ -60,6 +63,8 @@ export function ProductShowcase({ products, categories, categoryMap }: ProductSh
                   </CarouselItem>
                 ))}
               </CarouselContent>
+              <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-background/50 hover:bg-background" />
+              <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-background/50 hover:bg-background" />
             </Carousel>
             {index < categoriesToShow.length - 1 && <Separator className="mt-8" />}
           </div>
